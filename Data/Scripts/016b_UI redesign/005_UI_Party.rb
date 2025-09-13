@@ -733,18 +733,18 @@ end
 class UI::Party < UI::BaseScreen
   attr_reader :party
 
-  SCREEN_ID = :party_screen
+  ACTIONS = HandlerHash.new
 
   # mode is one of:
-  #   :normal                  Can choose Fly/Dig/Teleport to use
+  #   :normal                  Can choose Fly/Dig/Teleport to use.
   #   :choose_pokemon          Result is index of chosen Pokémon; def pbMoveTutorChoose
-  #                            wants this to yield when chosen
+  #                            wants this to yield when chosen.
   #   :battle_choose_pokemon   For battle.
   #   :battle_choose_to_box    For battle. Like :choose_pokemon but with a different help text.
   #   :battle_use_item         For battle.
-  #   :use_item                Like :choose_pokemon but with a different help text
-  #   :teach_pokemon           Like :choose_pokemon but with a different help text
-  #   :choose_entry_order      Battle Frontier thing
+  #   :use_item                Like :choose_pokemon but with a different help text.
+  #   :teach_pokemon           Like :choose_pokemon but with a different help text.
+  #   :choose_entry_order      Battle Frontier thing.
   def initialize(party, mode: :normal)
     @party = (party.is_a?(Array)) ? party : [party]
     @mode  = mode
@@ -795,6 +795,81 @@ class UI::Party < UI::BaseScreen
 
   #-----------------------------------------------------------------------------
 
+  # Shows a choice menu using the MenuHandlers options below.
+  ACTIONS.add(:screen_menu, {
+    :menu         => :party_screen_menu,
+    :menu_message => proc { |screen| _INTL("Choose an option.") }
+  })
+  # Shows a choice menu using the MenuHandlers options below.
+  ACTIONS.add(:interact_menu, {
+    :menu         => :party_screen_interact,
+    :menu_message => proc { |screen| _INTL("Do what with {1}?", screen.pokemon.name) }
+  })
+  # Shows a choice menu using the MenuHandlers options below.
+  ACTIONS.add(:item_menu, {
+    :menu         => :party_screen_interact_item,
+    :menu_message => proc { |screen| _INTL("Do what with an item?") }
+  })
+
+  alias pbShowCommands show_menu
+
+  #-----------------------------------------------------------------------------
+
+  ACTIONS.add(:summary, {
+    :effect => proc { |screen|
+      summary_mode = [:battle_choose_pokemon, :battle_choose_to_box, :battle_use_item].include?(screen.mode) ? :in_battle : :normal
+      pbFadeOutInWithUpdate(screen.sprites) do
+        new_index = UI::PokemonSummary.new(screen.party, screen.index, mode: summary_mode).main
+        screen.set_index(new_index)
+      end
+    }
+  })
+  ACTIONS.add(:debug, {
+    :effect => proc { |screen|
+      screen.pokemon_debug_menu(screen.pokemon, screen.index)
+    }
+  })
+  ACTIONS.add(:open_storage, {
+    :effect => proc { |screen|
+      pbFadeOutInWithUpdate(screen.sprites) do
+        UI::PokemonStorage.new($PokemonStorage, mode: :organize).main
+        screen.refresh_party
+        screen.refresh
+      end
+    }
+  })
+
+  #-----------------------------------------------------------------------------
+
+  ACTIONS.add(:switch_pokemon_start, {
+    :effect => proc { |screen|
+      pbPlayDecisionSE
+      screen.start_switching
+    }
+  })
+  ACTIONS.add(:switch_pokemon_end, {
+    :effect => proc { |screen|
+      screen.switch_pokemon(screen.switch_index, screen.index)
+    }
+  })
+  ACTIONS.add(:switch_pokemon_cancel, {
+    :effect => proc { |screen|
+      pbPlayCancelSE
+      screen.end_switching
+    }
+  })
+  ACTIONS.add(:switch_pokemon_mode, {
+    :effect => proc { |screen|
+      screen.set_sub_mode(:switch_pokemon)
+    }
+  })
+  ACTIONS.add(:clear_sub_mode, {
+    :effect => proc { |screen|
+      pbPlayCancelSE
+      screen.set_sub_mode
+    }
+  })
+
   def switch_index
     return @visuals.switch_index
   end
@@ -824,58 +899,150 @@ class UI::Party < UI::BaseScreen
 
   #-----------------------------------------------------------------------------
 
-  alias pbShowCommands show_menu
-
-  #-----------------------------------------------------------------------------
-
-  def refresh
-    super
-    reset_help_text
-  end
-
-  def reset_help_text
-    case @mode
-    when :normal
-      if switching?
-        set_help_text(_INTL("Move to where?"))
-      else
-        case @visuals.sub_mode
-        when :switch_pokemon
-          set_help_text(_INTL("Choose Pokémon to switch."))
-        when :switch_items
-          set_help_text(_INTL("Choose to switch items."))
-        else
-          set_help_text((@party.length > 1) ? _INTL("Choose a Pokémon.") : _INTL("Choose Pokémon or cancel."))
+  ACTIONS.add(:item_use, {
+    :effect => proc { |screen|
+      pkmn = screen.pokemon
+      used_item = nil
+      pbFadeOutInWithUpdate(screen.sprites) do
+        bag_screen = UI::Bag.new($bag, mode: :choose_item)
+        bag_screen.set_filter_proc(proc { |itm|
+          item_data = GameData::Item.get(itm)
+          next false if !pbCanUseItemOnPokemon?(itm)
+          next false if !pbItemHasEffectOnPokemon?(itm, pkmn)
+          if item_data.is_machine?
+            move = item_data.move
+            next false if pkmn.hasMove?(move) || !pkmn.compatible_with_move?(move)
+          end
+          next true
+        })
+        used_item = bag_screen.choose_item
+      end
+      if used_item
+        pbUseItemOnPokemon(used_item, pkmn, screen)
+        screen.refresh
+      end
+    }
+  })
+  ACTIONS.add(:item_give, {
+    :effect => proc { |screen|
+      pkmn = screen.pokemon
+      given_item = nil
+      pbFadeOutInWithUpdate(screen.sprites) do
+        bag_screen = UI::Bag.new($bag, mode: :choose_item)
+        bag_screen.set_filter_proc(proc { |itm| GameData::Item.get(itm).can_hold? })
+        given_item = bag_screen.choose_item
+      end
+      if given_item
+        pbGiveItemToPokemon(given_item, pkmn, screen, screen.index)
+        screen.refresh
+      end
+    }
+  })
+  ACTIONS.add(:item_take, {
+    :effect => proc { |screen|
+      pkmn = screen.pokemon
+      screen.refresh if pbTakeItemFromPokemon(pkmn, screen)
+    }
+  })
+  # TODO: Switching Pokémon goes through the regular navigate, but switching items
+  #       (here) has the whole switching process in this handler. Be consistent.
+  ACTIONS.add(:item_move, {
+    :effect => proc { |screen|
+      pbPlayDecisionSE
+      old_pkmn = screen.pokemon
+      old_item = old_pkmn.item
+      old_item_name = old_item.name
+      old_item_portion_name = old_item.portion_name
+      screen.set_help_text(_INTL("Move held item to where?"))
+      old_party_idx = screen.index
+      moved = false
+      loop do
+        screen.start_switching(old_party_idx)
+        new_party_idx = screen.choose_pokemon_core
+        if new_party_idx < 0 || new_party_idx == old_party_idx
+          screen.end_switching
+          break
         end
+        new_pkmn = screen.party[new_party_idx]
+        if new_pkmn.egg?
+          screen.show_message(_INTL("Eggs can't hold items."))
+          next
+        elsif !new_pkmn.hasItem?
+          new_pkmn.item = old_item
+          old_pkmn.item = nil
+          screen.end_switching
+          screen.show_message(_INTL("{1} was given the {2} to hold.", new_pkmn.name, old_item_portion_name))
+          moved = true
+          break
+        elsif new_pkmn.item.is_mail?
+          screen.show_message(_INTL("{1}'s mail must be removed before giving it an item.", new_pkmn.name))
+          next
+        end
+        # New Pokémon is also holding an item; ask what to do with it
+        new_item = new_pkmn.item
+        new_item_portion_name = new_item.portion_name
+        if new_item_portion_name.starts_with_vowel?
+          screen.show_message(_INTL("{1} is already holding an {2}.", new_pkmn.name, new_item_portion_name) + "\1")
+        else
+          screen.show_message(_INTL("{1} is already holding a {2}.", new_pkmn.name, new_item_portion_name) + "\1")
+        end
+        next if !screen.show_confirm_message(_INTL("Would you like to switch the two items?"))
+        new_pkmn.item = old_item
+        old_pkmn.item = new_item
+        screen.end_switching
+        screen.show_message(_INTL("{1} was given the {2} to hold.", new_pkmn.name, old_item_portion_name) + "\1")
+        screen.show_message(_INTL("{1} was given the {2} to hold.", old_pkmn.name, new_item_portion_name))
+        moved = true
+        break
       end
-    when :choose_pokemon, :battle_choose_pokemon
-      if switching?
-        set_help_text(_INTL("Move to where?"))
-      else
-        set_help_text(_INTL("Choose a Pokémon."))
+      screen.set_index(old_party_idx) if !moved
+    }
+  })
+  ACTIONS.add(:mail_menu, {
+    :menu         => :party_screen_interact_mail,
+    :menu_message => proc { |screen| _INTL("Do what with the Mail?") }
+  })
+  ACTIONS.add(:item_move_mode, {
+    :effect => proc { |screen|
+      screen.set_sub_mode(:switch_items)
+    }
+  })
+  ACTIONS.add(:mail_read, {
+    :effect => proc { |screen|
+      pbFadeOutInWithUpdate(screen.sprites) do
+        pbDisplayMail(screen.pokemon.mail, screen.pokemon)
       end
-    when :use_item, :battle_use_item
-      set_help_text(_INTL("Use on which Pokémon?"))
-    when :teach_pokemon
-      set_help_text(_INTL("Teach which Pokémon?"))
-    when :battle_choose_to_box
-      set_help_text(_INTL("Send which Pokémon to Boxes?"))
-    when :choose_entry_order
-      set_help_text(_INTL("Choose Pokémon and confirm."))
-    end
-  end
-
-  def refresh_party
-    @visuals.refresh_party
-  end
-
-  # TODO: Get rid of this method once ItemHandlers have been rewritten.
-  def pbHardRefresh
-    refresh_party
-    refresh
-  end
+    }
+  })
+  ACTIONS.add(:mail_take, {
+    :effect => proc { |screen|
+      screen.refresh if pbTakeItemFromPokemon(screen.pokemon, screen)
+    }
+  })
 
   #-----------------------------------------------------------------------------
+
+  # NOTE: This code adds a number of ACTIONS, one per move usable in the
+  #       overworld.
+  HiddenMoveHandlers.eachHandler do |move_id|
+    eval <<-__END__
+      ACTIONS.add(:use_#{move_id}, {
+        :effect => proc { |screen|
+          screen.use_field_move(:#{move_id})
+        }
+      })
+    __END__
+  end
+  ACTIONS.add(:use_MILKDRINK, {
+    :effect => proc { |screen|
+      screen.use_field_move(:MILKDRINK)
+    }
+  })
+  ACTIONS.add(:use_SOFTBOILED, {
+    :effect => proc { |screen|
+      screen.use_field_move(:SOFTBOILED)
+    }
+  })
 
   # For Soft-Boiled and Milk Drink.
   def use_field_move(move_id)
@@ -935,6 +1102,55 @@ class UI::Party < UI::BaseScreen
         end
       end
     end
+  end
+
+  #-----------------------------------------------------------------------------
+
+  def refresh
+    super
+    reset_help_text
+  end
+
+  def reset_help_text
+    case @mode
+    when :normal
+      if switching?
+        set_help_text(_INTL("Move to where?"))
+      else
+        case @visuals.sub_mode
+        when :switch_pokemon
+          set_help_text(_INTL("Choose Pokémon to switch."))
+        when :switch_items
+          set_help_text(_INTL("Choose to switch items."))
+        else
+          set_help_text((@party.length > 1) ? _INTL("Choose a Pokémon.") : _INTL("Choose Pokémon or cancel."))
+        end
+      end
+    when :choose_pokemon, :battle_choose_pokemon
+      if switching?
+        set_help_text(_INTL("Move to where?"))
+      else
+        set_help_text(_INTL("Choose a Pokémon."))
+      end
+    when :use_item, :battle_use_item
+      set_help_text(_INTL("Use on which Pokémon?"))
+    when :teach_pokemon
+      set_help_text(_INTL("Teach which Pokémon?"))
+    when :battle_choose_to_box
+      set_help_text(_INTL("Send which Pokémon to Boxes?"))
+    when :choose_entry_order
+      set_help_text(_INTL("Choose Pokémon and confirm."))
+    end
+  end
+
+  def refresh_party
+    @visuals.refresh_party
+  end
+
+  # TODO: Get rid of this method once ItemHandlers have been rewritten.
+  def pbHardRefresh
+    refresh_party
+    refresh
   end
 
   #-----------------------------------------------------------------------------
@@ -1085,239 +1301,6 @@ class UI::Party < UI::BaseScreen
 end
 
 #===============================================================================
-# Actions that can be triggered in the party screen.
-#===============================================================================
-# Shows a choice menu using the MenuHandlers options below.
-UIActionHandlers.add(UI::Party::SCREEN_ID, :screen_menu, {
-  :menu         => :party_screen_menu,
-  :menu_message => proc { |screen| _INTL("Choose an option.") }
-})
-
-# Shows a choice menu using the MenuHandlers options below.
-UIActionHandlers.add(UI::Party::SCREEN_ID, :interact_menu, {
-  :menu         => :party_screen_interact,
-  :menu_message => proc { |screen| _INTL("Do what with {1}?", screen.pokemon.name) }
-})
-
-UIActionHandlers.add(UI::Party::SCREEN_ID, :summary, {
-  :effect => proc { |screen|
-    summary_mode = [:battle_choose_pokemon, :battle_choose_to_box, :battle_use_item].include?(screen.mode) ? :in_battle : :normal
-    pbFadeOutInWithUpdate(screen.sprites) do
-      new_index = UI::PokemonSummary.new(screen.party, screen.index, mode: summary_mode).main
-      screen.set_index(new_index)
-    end
-  }
-})
-
-UIActionHandlers.add(UI::Party::SCREEN_ID, :debug, {
-  :effect => proc { |screen|
-    screen.pokemon_debug_menu(screen.pokemon, screen.index)
-  }
-})
-
-UIActionHandlers.add(UI::Party::SCREEN_ID, :switch_pokemon_start, {
-  :effect => proc { |screen|
-    pbPlayDecisionSE
-    screen.start_switching
-  }
-})
-
-UIActionHandlers.add(UI::Party::SCREEN_ID, :switch_pokemon_end, {
-  :effect => proc { |screen|
-    screen.switch_pokemon(screen.switch_index, screen.index)
-  }
-})
-
-UIActionHandlers.add(UI::Party::SCREEN_ID, :switch_pokemon_cancel, {
-  :effect => proc { |screen|
-    pbPlayCancelSE
-    screen.end_switching
-  }
-})
-
-UIActionHandlers.add(UI::Party::SCREEN_ID, :switch_pokemon_mode, {
-  :effect => proc { |screen|
-    screen.set_sub_mode(:switch_pokemon)
-  }
-})
-
-# Shows a choice menu using the MenuHandlers options below.
-UIActionHandlers.add(UI::Party::SCREEN_ID, :item_menu, {
-  :menu         => :party_screen_interact_item,
-  :menu_message => proc { |screen| _INTL("Do what with an item?") }
-})
-
-UIActionHandlers.add(UI::Party::SCREEN_ID, :item_use, {
-  :effect => proc { |screen|
-    pkmn = screen.pokemon
-    used_item = nil
-    pbFadeOutInWithUpdate(screen.sprites) do
-      bag_screen = UI::Bag.new($bag, mode: :choose_item)
-      bag_screen.set_filter_proc(proc { |itm|
-        item_data = GameData::Item.get(itm)
-        next false if !pbCanUseItemOnPokemon?(itm)
-        next false if !pbItemHasEffectOnPokemon?(itm, pkmn)
-        if item_data.is_machine?
-          move = item_data.move
-          next false if pkmn.hasMove?(move) || !pkmn.compatible_with_move?(move)
-        end
-        next true
-      })
-      used_item = bag_screen.choose_item
-    end
-    if used_item
-      pbUseItemOnPokemon(used_item, pkmn, screen)
-      screen.refresh
-    end
-  }
-})
-
-UIActionHandlers.add(UI::Party::SCREEN_ID, :item_give, {
-  :effect => proc { |screen|
-    pkmn = screen.pokemon
-    given_item = nil
-    pbFadeOutInWithUpdate(screen.sprites) do
-      bag_screen = UI::Bag.new($bag, mode: :choose_item)
-      bag_screen.set_filter_proc(proc { |itm| GameData::Item.get(itm).can_hold? })
-      given_item = bag_screen.choose_item
-    end
-    if given_item
-      pbGiveItemToPokemon(given_item, pkmn, screen, screen.index)
-      screen.refresh
-    end
-  }
-})
-
-UIActionHandlers.add(UI::Party::SCREEN_ID, :item_take, {
-  :effect => proc { |screen|
-    pkmn = screen.pokemon
-    screen.refresh if pbTakeItemFromPokemon(pkmn, screen)
-  }
-})
-
-# TODO: Switching Pokémon goes through the regular navigate, but switching items
-#       (here) has the whole switching process in this handler. Be consistent.
-UIActionHandlers.add(UI::Party::SCREEN_ID, :item_move, {
-  :effect => proc { |screen|
-    pbPlayDecisionSE
-    old_pkmn = screen.pokemon
-    old_item = old_pkmn.item
-    old_item_name = old_item.name
-    old_item_portion_name = old_item.portion_name
-    screen.set_help_text(_INTL("Move held item to where?"))
-    old_party_idx = screen.index
-    moved = false
-    loop do
-      screen.start_switching(old_party_idx)
-      new_party_idx = screen.choose_pokemon_core
-      if new_party_idx < 0 || new_party_idx == old_party_idx
-        screen.end_switching
-        break
-      end
-      new_pkmn = screen.party[new_party_idx]
-      if new_pkmn.egg?
-        screen.show_message(_INTL("Eggs can't hold items."))
-        next
-      elsif !new_pkmn.hasItem?
-        new_pkmn.item = old_item
-        old_pkmn.item = nil
-        screen.end_switching
-        screen.show_message(_INTL("{1} was given the {2} to hold.", new_pkmn.name, old_item_portion_name))
-        moved = true
-        break
-      elsif new_pkmn.item.is_mail?
-        screen.show_message(_INTL("{1}'s mail must be removed before giving it an item.", new_pkmn.name))
-        next
-      end
-      # New Pokémon is also holding an item; ask what to do with it
-      new_item = new_pkmn.item
-      new_item_portion_name = new_item.portion_name
-      if new_item_portion_name.starts_with_vowel?
-        screen.show_message(_INTL("{1} is already holding an {2}.", new_pkmn.name, new_item_portion_name) + "\1")
-      else
-        screen.show_message(_INTL("{1} is already holding a {2}.", new_pkmn.name, new_item_portion_name) + "\1")
-      end
-      next if !screen.show_confirm_message(_INTL("Would you like to switch the two items?"))
-      new_pkmn.item = old_item
-      old_pkmn.item = new_item
-      screen.end_switching
-      screen.show_message(_INTL("{1} was given the {2} to hold.", new_pkmn.name, old_item_portion_name) + "\1")
-      screen.show_message(_INTL("{1} was given the {2} to hold.", old_pkmn.name, new_item_portion_name))
-      moved = true
-      break
-    end
-    screen.set_index(old_party_idx) if !moved
-  }
-})
-
-# Shows a choice menu using the MenuHandlers options below.
-UIActionHandlers.add(UI::Party::SCREEN_ID, :mail_menu, {
-  :menu         => :party_screen_interact_mail,
-  :menu_message => proc { |screen| _INTL("Do what with the Mail?") }
-})
-
-UIActionHandlers.add(UI::Party::SCREEN_ID, :item_move_mode, {
-  :effect => proc { |screen|
-    screen.set_sub_mode(:switch_items)
-  }
-})
-
-UIActionHandlers.add(UI::Party::SCREEN_ID, :mail_read, {
-  :effect => proc { |screen|
-    pbFadeOutInWithUpdate(screen.sprites) do
-      pbDisplayMail(screen.pokemon.mail, screen.pokemon)
-    end
-  }
-})
-
-UIActionHandlers.add(UI::Party::SCREEN_ID, :mail_take, {
-  :effect => proc { |screen|
-    screen.refresh if pbTakeItemFromPokemon(screen.pokemon, screen)
-  }
-})
-
-UIActionHandlers.add(UI::Party::SCREEN_ID, :clear_sub_mode, {
-  :effect => proc { |screen|
-    pbPlayCancelSE
-    screen.set_sub_mode
-  }
-})
-
-UIActionHandlers.add(UI::Party::SCREEN_ID, :open_storage, {
-  :effect => proc { |screen|
-    pbFadeOutInWithUpdate(screen.sprites) do
-      UI::PokemonStorage.new($PokemonStorage, mode: :organize).main
-      screen.refresh_party
-      screen.refresh
-    end
-  }
-})
-
-# NOTE: This code adds a number of UIActionHandlers, one per move usable in the
-#       overworld.
-HiddenMoveHandlers.eachHandler do |move_id|
-  eval <<-__END__
-    UIActionHandlers.add(UI::Party::SCREEN_ID, :use_#{move_id}, {
-      :effect => proc { |screen|
-        screen.use_field_move(:#{move_id})
-      }
-    })
-  __END__
-end
-
-UIActionHandlers.add(UI::Party::SCREEN_ID, :use_MILKDRINK, {
-  :effect => proc { |screen|
-    screen.use_field_move(:MILKDRINK)
-  }
-})
-
-UIActionHandlers.add(UI::Party::SCREEN_ID, :use_SOFTBOILED, {
-  :effect => proc { |screen|
-    screen.use_field_move(:SOFTBOILED)
-  }
-})
-
-#===============================================================================
 # Menu options for choice menus that exist in the party screen.
 #===============================================================================
 MenuHandlers.add(:party_screen_menu, :open_storage, {
@@ -1364,7 +1347,7 @@ MenuHandlers.add(:party_screen_interact, :field_moves, {
     screen.pokemon.moves.each do |move|
       next if !HiddenMoveHandlers.hasHandler(move.id) &&
               ![:MILKDRINK, :SOFTBOILED].include?(move.id)
-      ret.push(["use_#{move.id}".to_sym, nil, "<c3=0050A0,80C0F0>" + move.name + "</c3>"])
+      ret.push(["use_#{move.id}".to_sym, "<c3=0050A0,80C0F0>" + move.name + "</c3>"])
     end
     next ret
   }

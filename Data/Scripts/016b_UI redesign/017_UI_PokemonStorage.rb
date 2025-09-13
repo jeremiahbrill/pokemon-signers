@@ -1594,7 +1594,7 @@ end
 class UI::PokemonStorage < UI::BaseScreen
   attr_reader :storage
 
-  SCREEN_ID = :pokemon_storage_screen
+  ACTIONS = HandlerHash.new
 
   # mode is one of:
   #     :withdraw
@@ -1623,6 +1623,236 @@ class UI::PokemonStorage < UI::BaseScreen
 
   #-----------------------------------------------------------------------------
 
+  # Shows a choice menu using the MenuHandlers options below.
+  ACTIONS.add(:screen_menu, {
+    :menu         => :storage_screen_menu,
+    :menu_message => proc { |screen| _INTL("What do you want to do?") }
+  })
+  # Shows a choice menu using the MenuHandlers options below.
+  ACTIONS.add(:interact_menu, {
+    :menu         => :storage_pokemon_interact,
+    :menu_message => proc { |screen| _INTL("Do what with {1}?", screen.pokemon.name) }
+  })
+  # Shows a choice menu using the MenuHandlers options below.
+  ACTIONS.add(:interact_box_name_menu, {
+    :menu         => :storage_box_interact,
+    :menu_message => proc { |screen| _INTL("Choose an option.") }
+  })
+  ACTIONS.add(:clear_sub_mode, {
+    :effect => proc { |screen|
+      if screen.holding_pokemon?
+        screen.show_message(_INTL("You're holding a Pokémon!"))
+        next
+      elsif screen.holding_item?
+        item_name = GameData::Item.get(screen.item).name
+        if screen.show_confirm_message(_INTL("Put the {1} in your Bag?", item_name))
+          $bag.add(screen.item)
+          screen.visuals.sprites[:cursor].held_item = nil
+        end
+        next
+      end
+      screen.set_sub_mode
+    }
+  })
+
+  #-----------------------------------------------------------------------------
+
+  ACTIONS.add(:rearrange_pokemon_mode, {
+    :effect => proc { |screen|
+      if screen.holding_item?
+        screen.show_message(_INTL("You're holding an item!"))
+        next
+      end
+      screen.set_sub_mode(:rearrange_pokemon)
+    }
+  })
+  ACTIONS.add(:rearrange_pokemon, {
+    :effect => proc { |screen|
+      if screen.holding_pokemon?
+        if screen.slot_pokemon
+          screen.perform_action(:swap_pokemon)
+        else
+          screen.perform_action(:put_down_pokemon)
+        end
+      else
+        screen.perform_action(:pick_up_pokemon)
+      end
+    }
+  })
+  ACTIONS.add(:select_pokemon, {
+    :returns_value => true,
+    :effect        => proc { |screen|
+      if screen.slot_pokemon
+        screen.result = [screen.box, screen.index]
+        next :quit
+      end
+      next nil
+    }
+  })
+  ACTIONS.add(:pick_up_pokemon, {
+    :effect => proc { |screen|
+      raise _INTL("Tried picking up a Pokémon when holding one.") if screen.holding_pokemon?
+      raise _INTL("Position {1},{2} is empty...", screen.box, screen.index) if !screen.slot_pokemon
+      if screen.box < 0 && screen.slot_pokemon.able? && screen.party_able_count <= 1
+        pbPlayBuzzerSE
+        screen.show_message(_INTL("That's your last Pokémon!"))
+        next
+      end
+      screen.visuals.pick_up_pokemon
+      screen.storage.pbDelete(screen.box, screen.index)
+      screen.refresh
+    }
+  })
+  ACTIONS.add(:swap_pokemon, {
+    :effect => proc { |screen|
+      raise _INTL("Tried swapping a Pokémon when not holding one.") if !screen.holding_pokemon?
+      raise _INTL("Position {1},{2} is empty...", screen.box, screen.index) if !screen.slot_pokemon
+      held_pkmn = screen.pokemon
+      slot_pkmn = screen.slot_pokemon
+      if screen.box >= 0
+        if screen.index >= @storage.maxPokemon(screen.box)
+          screen.show_message("Can't place that there.")
+          next
+        elsif held_pkmn.mail
+          screen.show_message("Please remove the mail.")
+          next
+        elsif held_pkmn.cannot_store
+          screen.show_message(_INTL("{1} refuses to go into storage!", held_pkmn.name))
+          next
+        end
+      elsif screen.box < 0 && slot_pkmn.able? && screen.party_able_count <= 1 && !held_pkmn.able?
+        pbPlayBuzzerSE
+        screen.show_message(_INTL("That's your last Pokémon!"))
+        next
+      end
+      screen.visuals.swap_pokemon
+      screen.storage[screen.box, screen.index] = held_pkmn
+      if Settings::HEAL_STORED_POKEMON && screen.box >= 0
+        old_ready_evo = held_pkmn.ready_to_evolve
+        held_pkmn.heal
+        held_pkmn.ready_to_evolve = old_ready_evo
+      end
+      screen.refresh
+      screen.refresh_selected_pokemon
+    }
+  })
+  ACTIONS.add(:put_down_pokemon, {
+    :effect => proc { |screen|
+      raise _INTL("Tried placing a Pokémon when not holding one.") if !screen.holding_pokemon?
+      raise _INTL("Position {1},{2} is not empty...", screen.box, screen.index) if screen.slot_pokemon
+      pkmn = screen.pokemon   # The held Pokémon
+      if screen.box >= 0
+        if screen.index >= screen.storage.maxPokemon(screen.box)
+          screen.show_message("Can't place that there.")
+          next
+        elsif pkmn.mail
+          screen.show_message("Please remove the mail.")
+          next
+        elsif pkmn.cannot_store
+          screen.show_message(_INTL("{1} refuses to go into storage!", pkmn.name))
+          next
+        end
+      end
+      screen.visuals.put_down_pokemon
+      screen.storage[screen.box, screen.index] = pkmn
+      screen.storage.party.compact! if screen.box < 0
+      if Settings::HEAL_STORED_POKEMON && screen.box >= 0
+        old_ready_evo = pkmn.ready_to_evolve
+        pkmn.heal
+        pkmn.ready_to_evolve = old_ready_evo
+      end
+      screen.refresh
+    }
+  })
+  ACTIONS.add(:withdraw_pokemon, {
+    :effect => proc { |screen|
+      raise _INTL("Can't withdraw from party...") if screen.box < 0
+      if screen.storage.party_full?
+        screen.show_message(_INTL("Your party's full!"))
+        next
+      end
+      was_holding = screen.holding_pokemon?
+      pkmn = screen.pokemon
+      screen.visuals.withdraw_pokemon
+      if was_holding
+        screen.storage.pbMoveCaughtToParty(pkmn)
+      else
+        screen.storage.pbMove(-1, -1, screen.box, screen.index)
+      end
+      screen.refresh
+      screen.refresh_selected_pokemon
+    }
+  })
+  ACTIONS.add(:store_pokemon, {
+    :effect => proc { |screen|
+      raise _INTL("Can't deposit from box...") if screen.box >= 0
+      was_holding = screen.holding_pokemon?
+      pkmn = screen.pokemon
+      if pkmn.able? && screen.party_able_count <= 1 && !screen.holding_pokemon?
+        pbPlayBuzzerSE
+        screen.show_message(_INTL("That's your last Pokémon!"))
+        next
+      elsif pkmn.mail
+        screen.show_message("Please remove the mail.")
+        next
+      elsif pkmn.cannot_store
+        screen.show_message(_INTL("{1} refuses to go into storage!", pkmn.name))
+        next
+      end
+      old_box = screen.box
+      old_index = screen.index
+      loop do
+        new_box = screen.choose_box(_INTL("Deposit in which Box?"), old_box)
+        break if !new_box
+        new_index = screen.storage.pbFirstFreePos(new_box)
+        if new_index < 0
+          screen.show_message(_INTL("The Box is full."))
+          next
+        end
+        screen.visuals.store_pokemon(new_box, new_index) {
+          if was_holding
+            screen.storage.pbMoveCaughtToBox(pkmn, new_box)
+          else
+            screen.storage.pbMove(new_box, new_index, old_box, old_index)
+          end
+        }
+        screen.refresh
+        screen.refresh_selected_pokemon
+        break
+      end
+    }
+  })
+  ACTIONS.add(:release_pokemon, {
+    :effect => proc { |screen|
+      raise _INTL("Tried releasing a Pokémon when not selecting or holding one.", screen.box, screen.index) if !screen.pokemon
+      pkmn = screen.pokemon
+      if pkmn.egg?
+        screen.show_message(_INTL("You can't release an Egg."))
+        next
+      elsif pkmn.mail
+        screen.show_message(_INTL("Please remove the mail."))
+        next
+      elsif pkmn.cannot_release
+        screen.show_message(_INTL("{1} refuses to leave you!", pkmn.name))
+        next
+      elsif screen.box < 0 && pkmn.able? && screen.party_able_count <= 1 && !screen.holding_pokemon?
+        pbPlayBuzzerSE
+        screen.show_message(_INTL("That's your last Pokémon!"))
+        next
+      end
+      if screen.show_confirm_serious_message(_INTL("Release this Pokémon?"))
+        $bag.add(pkmn.item_id) if pkmn.hasItem?
+        pkmn_name = pkmn.name
+        screen.visuals.release_pokemon
+        screen.storage.pbDelete(screen.box, screen.index) if !screen.holding_pokemon?
+        screen.refresh
+        screen.show_message(_INTL("{1} was released.", pkmn_name))
+        screen.show_message(_INTL("Bye-bye, {1}!", pkmn_name))
+        $stats.pokemon_release_count += 1
+      end
+    }
+  })
+
   # Returns the "active" Pokémon, i.e. the one that gets interacted with and is
   # shown in the side pane.
   def pokemon
@@ -1638,6 +1868,106 @@ class UI::PokemonStorage < UI::BaseScreen
     return @visuals.holding_pokemon?
   end
 
+  #-----------------------------------------------------------------------------
+
+  ACTIONS.add(:rearrange_items_mode, {
+    :effect => proc { |screen|
+      if screen.holding_pokemon?
+        screen.show_message(_INTL("You're holding a Pokémon!"))
+        next
+      end
+      screen.set_sub_mode(:rearrange_items)
+    }
+  })
+  ACTIONS.add(:rearrange_items, {
+    :effect => proc { |screen|
+      next if !screen.slot_pokemon
+      if screen.holding_item?
+        if screen.slot_pokemon && screen.slot_pokemon.hasItem?
+          screen.perform_action(:swap_items)
+        else
+          screen.perform_action(:put_down_item)
+        end
+      elsif screen.slot_pokemon && screen.slot_pokemon.hasItem?
+        screen.perform_action(:pick_up_item)
+      end
+    }
+  })
+  ACTIONS.add(:pick_up_item, {
+    :effect => proc { |screen|
+      next if screen.holding_item? || !screen.slot_pokemon || !screen.slot_pokemon.hasItem?
+      if screen.slot_pokemon.mail
+        screen.show_message("You can't move mail.")
+        next
+      end
+      screen.visuals.pick_up_item
+    }
+  })
+  ACTIONS.add(:swap_items, {
+    :effect => proc { |screen|
+      next if !screen.holding_item? || !screen.slot_pokemon || !screen.slot_pokemon.hasItem?
+      held_item = screen.item
+      slot_pkmn = screen.slot_pokemon
+      if slot_pkmn.mail
+        screen.show_message("You can't move mail.")
+        next
+      end
+      screen.visuals.swap_items
+      slot_pkmn.item = held_item
+      screen.refresh_selected_pokemon
+    }
+  })
+  ACTIONS.add(:put_down_item, {
+    :effect => proc { |screen|
+      next if !screen.holding_item? || !screen.slot_pokemon || screen.slot_pokemon.hasItem?
+      pkmn = screen.slot_pokemon
+      screen.visuals.put_down_item
+    }
+  })
+  ACTIONS.add(:give_or_take_item, {
+    :effect => proc { |screen|
+      pkmn = screen.pokemon
+      if pkmn.egg?
+        screen.show_message(_INTL("Eggs can't hold items."))
+        next
+      elsif pkmn.mail
+        screen.show_message(_INTL("Please remove the mail."))
+        next
+      end
+      # Take an item
+      if pkmn.hasItem?
+        item_name = pkmn.item.portion_name
+        if screen.show_confirm_message(_INTL("Take the {1}?", item_name))
+          if $bag.add(pkmn.item)
+            pkmn.item = nil
+            screen.refresh
+            screen.show_message(_INTL("Took the {1}.", item_name))
+          else
+            screen.show_message(_INTL("Can't store the {1}.", item_name))
+          end
+        end
+        screen.deselect_pokemon
+        next
+      end
+      # Give an item
+      new_item = nil
+      pbFadeOutInWithUpdate(screen.sprites) do
+        bag_screen = UI::Bag.new($bag, mode: :choose_item)
+        bag_screen.set_filter_proc(proc { |itm| GameData::Item.get(itm).can_hold? })
+        new_item = bag_screen.choose_item
+        screen.deselect_pokemon if !new_item
+      end
+      if new_item
+        item_name = GameData::Item.get(new_item).name
+        pkmn.item = new_item
+        $bag.remove(new_item)
+        screen.refresh
+        screen.show_message(_INTL("{1} is now being held.", item_name))
+        screen.deselect_pokemon
+      end
+    }
+  })
+
   def item
     return @visuals.item
   end
@@ -1646,10 +1976,101 @@ class UI::PokemonStorage < UI::BaseScreen
     return @visuals.holding_item?
   end
 
+  #-----------------------------------------------------------------------------
+
+  ACTIONS.add(:jump_to_box, {
+    :effect => proc { |screen|
+      new_box = screen.choose_box(_INTL("Jump to which Box?"))
+      next if !new_box || new_box == screen.box
+      (new_box > screen.box) ? screen.visuals.go_to_next_box(new_box) : screen.visuals.go_to_previous_box(new_box)
+    }
+  })
+  ACTIONS.add(:rename_box, {
+    :effect => proc { |screen|
+      pbFadeOutInWithUpdate(screen.sprites) do
+        ret = pbEnterBoxName(_INTL("Box name?"), 0, 16)
+        if ret.length > 0
+          screen.storage[screen.storage.currentBox].name = ret
+          screen.refresh_box
+        end
+      end
+    }
+  })
+  ACTIONS.add(:change_box_wallpaper, {
+    :effect => proc { |screen|
+      papers = screen.storage.availableWallpapers
+      old_paper = screen.storage[screen.storage.currentBox].background
+      index = papers.keys.index(old_paper) || 0
+      new_paper = screen.visuals.choose_box_wallpaper(_INTL("Pick the wallpaper."), papers, index)
+      if new_paper && new_paper != old_paper
+        screen.storage[screen.storage.currentBox].background = new_paper
+        screen.refresh_box
+      end
+    }
+  })
+
   # -1 is the party, 0+ is a box.
   def box
     return @visuals.box
   end
+
+  #-----------------------------------------------------------------------------
+
+  ACTIONS.add(:show_party_panel, {
+    :effect => proc { |screen|
+      screen.visuals.show_party_panel
+    }
+  })
+  ACTIONS.add(:hide_party_panel, {
+    :effect => proc { |screen|
+      screen.visuals.hide_party_panel
+    }
+  })
+
+  #-----------------------------------------------------------------------------
+
+  ACTIONS.add(:summary, {
+    :effect => proc { |screen|
+      pbFadeOutInWithUpdate(screen.sprites) do
+        screen.deselect_pokemon
+        if screen.holding_pokemon?
+          UI::PokemonSummary.new(screen.pokemon, 0).main
+        else
+          party = (screen.box >= 0) ? screen.storage[screen.box].pokemon : screen.storage[screen.box]
+          new_index = UI::PokemonSummary.new(party, screen.index).main
+          screen.set_index(new_index)
+        end
+      end
+    }
+  })
+  ACTIONS.add(:mark_pokemon, {
+    :effect => proc { |screen|
+      screen.visuals.navigate_markings
+      screen.deselect_pokemon
+      screen.refresh
+    }
+  })
+  ACTIONS.add(:debug, {
+    :effect => proc { |screen|
+      screen.pokemon_debug_menu(screen.pokemon, [screen.box, screen.index])
+    }
+  })
+  ACTIONS.add(:exit_screen, {
+    :returns_value => true,
+    :effect        => proc { |screen|
+      if screen.holding_pokemon?
+        screen.show_message(_INTL("You're holding a Pokémon!"))
+        next nil
+      elsif screen.holding_item?
+        screen.show_message(_INTL("You're holding an item!"))
+        next nil
+      end
+      next :quit if screen.show_confirm_message(_INTL("Exit from the Box?"))
+      next nil
+    }
+  })
+
+  #-----------------------------------------------------------------------------
 
   def choose_box(message, start_box = -1)
     return @visuals.choose_box(message, start_box)
@@ -1679,458 +2100,6 @@ class UI::PokemonStorage < UI::BaseScreen
 end
 
 #===============================================================================
-# Actions that can be triggered in the Pokémon storage screen.
-#===============================================================================
-# Shows a choice menu using the MenuHandlers options below.
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :screen_menu, {
-  :menu         => :storage_screen_menu,
-  :menu_message => proc { |screen| _INTL("What do you want to do?") }
-})
-
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :rearrange_pokemon_mode, {
-  :effect => proc { |screen|
-    if screen.holding_item?
-      screen.show_message(_INTL("You're holding an item!"))
-      next
-    end
-    screen.set_sub_mode(:rearrange_pokemon)
-  }
-})
-
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :rearrange_items_mode, {
-  :effect => proc { |screen|
-    if screen.holding_pokemon?
-      screen.show_message(_INTL("You're holding a Pokémon!"))
-      next
-    end
-    screen.set_sub_mode(:rearrange_items)
-  }
-})
-
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :clear_sub_mode, {
-  :effect => proc { |screen|
-    if screen.holding_pokemon?
-      screen.show_message(_INTL("You're holding a Pokémon!"))
-      next
-    elsif screen.holding_item?
-      item_name = GameData::Item.get(screen.item).name
-      if screen.show_confirm_message(_INTL("Put the {1} in your Bag?", item_name))
-        $bag.add(screen.item)
-        screen.visuals.sprites[:cursor].held_item = nil
-      end
-      next
-    end
-    screen.set_sub_mode
-  }
-})
-
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :rearrange_pokemon, {
-  :effect => proc { |screen|
-    if screen.holding_pokemon?
-      if screen.slot_pokemon
-        screen.perform_action(:swap_pokemon)
-      else
-        screen.perform_action(:put_down_pokemon)
-      end
-    else
-      screen.perform_action(:pick_up_pokemon)
-    end
-  }
-})
-
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :rearrange_items, {
-  :effect => proc { |screen|
-    next if !screen.slot_pokemon
-    if screen.holding_item?
-      if screen.slot_pokemon && screen.slot_pokemon.hasItem?
-        screen.perform_action(:swap_items)
-      else
-        screen.perform_action(:put_down_item)
-      end
-    elsif screen.slot_pokemon && screen.slot_pokemon.hasItem?
-      screen.perform_action(:pick_up_item)
-    end
-  }
-})
-
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :pick_up_item, {
-  :effect => proc { |screen|
-    next if screen.holding_item? || !screen.slot_pokemon || !screen.slot_pokemon.hasItem?
-    if screen.slot_pokemon.mail
-      screen.show_message("You can't move mail.")
-      next
-    end
-    screen.visuals.pick_up_item
-  }
-})
-
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :swap_items, {
-  :effect => proc { |screen|
-    next if !screen.holding_item? || !screen.slot_pokemon || !screen.slot_pokemon.hasItem?
-    held_item = screen.item
-    slot_pkmn = screen.slot_pokemon
-    if slot_pkmn.mail
-      screen.show_message("You can't move mail.")
-      next
-    end
-    screen.visuals.swap_items
-    slot_pkmn.item = held_item
-    screen.refresh_selected_pokemon
-  }
-})
-
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :put_down_item, {
-  :effect => proc { |screen|
-    next if !screen.holding_item? || !screen.slot_pokemon || screen.slot_pokemon.hasItem?
-    pkmn = screen.slot_pokemon
-    screen.visuals.put_down_item
-  }
-})
-
-#-------------------------------------------------------------------------------
-
-# Shows a choice menu using the MenuHandlers options below.
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :interact_menu, {
-  :menu         => :storage_pokemon_interact,
-  :menu_message => proc { |screen| _INTL("Do what with {1}?", screen.pokemon.name) }
-})
-
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :select_pokemon, {
-  :returns_value => true,
-  :effect        => proc { |screen|
-    if screen.slot_pokemon
-      screen.result = [screen.box, screen.index]
-      next :quit
-    end
-    next nil
-  }
-})
-
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :pick_up_pokemon, {
-  :effect => proc { |screen|
-    raise _INTL("Tried picking up a Pokémon when holding one.") if screen.holding_pokemon?
-    raise _INTL("Position {1},{2} is empty...", screen.box, screen.index) if !screen.slot_pokemon
-    if screen.box < 0 && screen.slot_pokemon.able? && screen.party_able_count <= 1
-      pbPlayBuzzerSE
-      screen.show_message(_INTL("That's your last Pokémon!"))
-      next
-    end
-    screen.visuals.pick_up_pokemon
-    screen.storage.pbDelete(screen.box, screen.index)
-    screen.refresh
-  }
-})
-
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :swap_pokemon, {
-  :effect => proc { |screen|
-    raise _INTL("Tried swapping a Pokémon when not holding one.") if !screen.holding_pokemon?
-    raise _INTL("Position {1},{2} is empty...", screen.box, screen.index) if !screen.slot_pokemon
-    held_pkmn = screen.pokemon
-    slot_pkmn = screen.slot_pokemon
-    if screen.box >= 0
-      if screen.index >= @storage.maxPokemon(screen.box)
-        screen.show_message("Can't place that there.")
-        next
-      elsif held_pkmn.mail
-        screen.show_message("Please remove the mail.")
-        next
-      elsif held_pkmn.cannot_store
-        screen.show_message(_INTL("{1} refuses to go into storage!", held_pkmn.name))
-        next
-      end
-    elsif screen.box < 0 && slot_pkmn.able? && screen.party_able_count <= 1 && !held_pkmn.able?
-      pbPlayBuzzerSE
-      screen.show_message(_INTL("That's your last Pokémon!"))
-      next
-    end
-    screen.visuals.swap_pokemon
-    screen.storage[screen.box, screen.index] = held_pkmn
-    if Settings::HEAL_STORED_POKEMON && screen.box >= 0
-      old_ready_evo = held_pkmn.ready_to_evolve
-      held_pkmn.heal
-      held_pkmn.ready_to_evolve = old_ready_evo
-    end
-    screen.refresh
-    screen.refresh_selected_pokemon
-  }
-})
-
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :put_down_pokemon, {
-  :effect => proc { |screen|
-    raise _INTL("Tried placing a Pokémon when not holding one.") if !screen.holding_pokemon?
-    raise _INTL("Position {1},{2} is not empty...", screen.box, screen.index) if screen.slot_pokemon
-    pkmn = screen.pokemon   # The held Pokémon
-    if screen.box >= 0
-      if screen.index >= screen.storage.maxPokemon(screen.box)
-        screen.show_message("Can't place that there.")
-        next
-      elsif pkmn.mail
-        screen.show_message("Please remove the mail.")
-        next
-      elsif pkmn.cannot_store
-        screen.show_message(_INTL("{1} refuses to go into storage!", pkmn.name))
-        next
-      end
-    end
-    screen.visuals.put_down_pokemon
-    screen.storage[screen.box, screen.index] = pkmn
-    screen.storage.party.compact! if screen.box < 0
-    if Settings::HEAL_STORED_POKEMON && screen.box >= 0
-      old_ready_evo = pkmn.ready_to_evolve
-      pkmn.heal
-      pkmn.ready_to_evolve = old_ready_evo
-    end
-    screen.refresh
-  }
-})
-
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :summary, {
-  :effect => proc { |screen|
-    pbFadeOutInWithUpdate(screen.sprites) do
-      screen.deselect_pokemon
-      if screen.holding_pokemon?
-        UI::PokemonSummary.new(screen.pokemon, 0).main
-      else
-        party = (screen.box >= 0) ? screen.storage[screen.box].pokemon : screen.storage[screen.box]
-        new_index = UI::PokemonSummary.new(party, screen.index).main
-        screen.set_index(new_index)
-      end
-    end
-  }
-})
-
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :withdraw, {
-  :effect => proc { |screen|
-    screen.perform_action(:withdraw_pokemon)
-  }
-})
-
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :withdraw_pokemon, {
-  :effect => proc { |screen|
-    raise _INTL("Can't withdraw from party...") if screen.box < 0
-    if screen.storage.party_full?
-      screen.show_message(_INTL("Your party's full!"))
-      next
-    end
-    was_holding = screen.holding_pokemon?
-    pkmn = screen.pokemon
-    screen.visuals.withdraw_pokemon
-    if was_holding
-      screen.storage.pbMoveCaughtToParty(pkmn)
-    else
-      screen.storage.pbMove(-1, -1, screen.box, screen.index)
-    end
-    screen.refresh
-    screen.refresh_selected_pokemon
-  }
-})
-
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :store, {
-  :effect => proc { |screen|
-    screen.perform_action(:store_pokemon)
-  }
-})
-
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :store_pokemon, {
-  :effect => proc { |screen|
-    raise _INTL("Can't deposit from box...") if screen.box >= 0
-    was_holding = screen.holding_pokemon?
-    pkmn = screen.pokemon
-    if pkmn.able? && screen.party_able_count <= 1 && !screen.holding_pokemon?
-      pbPlayBuzzerSE
-      screen.show_message(_INTL("That's your last Pokémon!"))
-      next
-    elsif pkmn.mail
-      screen.show_message("Please remove the mail.")
-      next
-    elsif pkmn.cannot_store
-      screen.show_message(_INTL("{1} refuses to go into storage!", pkmn.name))
-      next
-    end
-    old_box = screen.box
-    old_index = screen.index
-    loop do
-      new_box = screen.choose_box(_INTL("Deposit in which Box?"), old_box)
-      break if !new_box
-      new_index = screen.storage.pbFirstFreePos(new_box)
-      if new_index < 0
-        screen.show_message(_INTL("The Box is full."))
-        next
-      end
-      screen.visuals.store_pokemon(new_box, new_index) {
-        if was_holding
-          screen.storage.pbMoveCaughtToBox(pkmn, new_box)
-        else
-          screen.storage.pbMove(new_box, new_index, old_box, old_index)
-        end
-      }
-      screen.refresh
-      screen.refresh_selected_pokemon
-      break
-    end
-  }
-})
-
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :give_or_take_item, {
-  :effect => proc { |screen|
-    pkmn = screen.pokemon
-    if pkmn.egg?
-      screen.show_message(_INTL("Eggs can't hold items."))
-      next
-    elsif pkmn.mail
-      screen.show_message(_INTL("Please remove the mail."))
-      next
-    end
-    # Take an item
-    if pkmn.hasItem?
-      item_name = pkmn.item.portion_name
-      if screen.show_confirm_message(_INTL("Take the {1}?", item_name))
-        if $bag.add(pkmn.item)
-          pkmn.item = nil
-          screen.refresh
-          screen.show_message(_INTL("Took the {1}.", item_name))
-        else
-          screen.show_message(_INTL("Can't store the {1}.", item_name))
-        end
-      end
-      screen.deselect_pokemon
-      next
-    end
-    # Give an item
-    new_item = nil
-    pbFadeOutInWithUpdate(screen.sprites) do
-      bag_screen = UI::Bag.new($bag, mode: :choose_item)
-      bag_screen.set_filter_proc(proc { |itm| GameData::Item.get(itm).can_hold? })
-      new_item = bag_screen.choose_item
-      screen.deselect_pokemon if !new_item
-    end
-    if new_item
-      item_name = GameData::Item.get(new_item).name
-      pkmn.item = new_item
-      $bag.remove(new_item)
-      screen.refresh
-      screen.show_message(_INTL("{1} is now being held.", item_name))
-      screen.deselect_pokemon
-    end
-  }
-})
-
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :mark_pokemon, {
-  :effect => proc { |screen|
-    screen.visuals.navigate_markings
-    screen.deselect_pokemon
-    screen.refresh
-  }
-})
-
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :release_pokemon, {
-  :effect => proc { |screen|
-    raise _INTL("Tried releasing a Pokémon when not selecting or holding one.", screen.box, screen.index) if !screen.pokemon
-    pkmn = screen.pokemon
-    if pkmn.egg?
-      screen.show_message(_INTL("You can't release an Egg."))
-      next
-    elsif pkmn.mail
-      screen.show_message(_INTL("Please remove the mail."))
-      next
-    elsif pkmn.cannot_release
-      screen.show_message(_INTL("{1} refuses to leave you!", pkmn.name))
-      next
-    elsif screen.box < 0 && pkmn.able? && screen.party_able_count <= 1 && !screen.holding_pokemon?
-      pbPlayBuzzerSE
-      screen.show_message(_INTL("That's your last Pokémon!"))
-      next
-    end
-    if screen.show_confirm_serious_message(_INTL("Release this Pokémon?"))
-      $bag.add(pkmn.item_id) if pkmn.hasItem?
-      pkmn_name = pkmn.name
-      screen.visuals.release_pokemon
-      screen.storage.pbDelete(screen.box, screen.index) if !screen.holding_pokemon?
-      screen.refresh
-      screen.show_message(_INTL("{1} was released.", pkmn_name))
-      screen.show_message(_INTL("Bye-bye, {1}!", pkmn_name))
-      $stats.pokemon_release_count += 1
-    end
-  }
-})
-
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :debug, {
-  :effect => proc { |screen|
-    screen.pokemon_debug_menu(screen.pokemon, [screen.box, screen.index])
-  }
-})
-
-#-------------------------------------------------------------------------------
-
-# Shows a choice menu using the MenuHandlers options below.
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :interact_box_name_menu, {
-  :menu         => :storage_box_interact,
-  :menu_message => proc { |screen| _INTL("Choose an option.") }
-})
-
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :jump_to_box, {
-  :effect => proc { |screen|
-    new_box = screen.choose_box(_INTL("Jump to which Box?"))
-    next if !new_box || new_box == screen.box
-    (new_box > screen.box) ? screen.visuals.go_to_next_box(new_box) : screen.visuals.go_to_previous_box(new_box)
-  }
-})
-
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :rename_box, {
-  :effect => proc { |screen|
-    pbFadeOutInWithUpdate(screen.sprites) do
-      ret = pbEnterBoxName(_INTL("Box name?"), 0, 16)
-      if ret.length > 0
-        screen.storage[screen.storage.currentBox].name = ret
-        screen.refresh_box
-      end
-    end
-  }
-})
-
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :change_box_wallpaper, {
-  :effect => proc { |screen|
-    papers = screen.storage.availableWallpapers
-    old_paper = screen.storage[screen.storage.currentBox].background
-    index = papers.keys.index(old_paper) || 0
-    new_paper = screen.visuals.choose_box_wallpaper(_INTL("Pick the wallpaper."), papers, index)
-    if new_paper && new_paper != old_paper
-      screen.storage[screen.storage.currentBox].background = new_paper
-      screen.refresh_box
-    end
-  }
-})
-
-#-------------------------------------------------------------------------------
-
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :show_party_panel, {
-  :effect => proc { |screen|
-    screen.visuals.show_party_panel
-  }
-})
-
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :hide_party_panel, {
-  :effect => proc { |screen|
-    screen.visuals.hide_party_panel
-  }
-})
-
-UIActionHandlers.add(UI::PokemonStorage::SCREEN_ID, :exit_screen, {
-  :returns_value => true,
-  :effect        => proc { |screen|
-    if screen.holding_pokemon?
-      screen.show_message(_INTL("You're holding a Pokémon!"))
-      next nil
-    elsif screen.holding_item?
-      screen.show_message(_INTL("You're holding an item!"))
-      next nil
-    end
-    next :quit if screen.show_confirm_message(_INTL("Exit from the Box?"))
-    next nil
-  }
-})
-
-#===============================================================================
 # Menu options for choice menus that exist in the Pokémon storage screen.
 #===============================================================================
 MenuHandlers.add(:storage_screen_menu, :rearrange_pokemon_mode, {
@@ -2154,14 +2123,16 @@ MenuHandlers.add(:storage_screen_menu, :cancel, {
 MenuHandlers.add(:storage_pokemon_interact, :withdraw, {
   "name"      => _INTL("Withdraw"),
   "order"     => 10,
-  "condition" => proc { |screen| next screen.mode == :withdraw && screen.box >= 0 }
+  "condition" => proc { |screen| next screen.mode == :withdraw && screen.box >= 0 },
+  "action"    => :withdraw_pokemon
 })
 
 # NOTE: This option is first in store mode.
 MenuHandlers.add(:storage_pokemon_interact, :store, {
   "name"      => _INTL("Store"),
   "order"     => 10,
-  "condition" => proc { |screen| next screen.mode == :deposit && screen.box < 0 }
+  "condition" => proc { |screen| next screen.mode == :deposit && screen.box < 0 },
+  "action"    => :store_pokemon
 })
 
 # NOTE: This option is for when in "choose a Pokémon" mode.

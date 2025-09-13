@@ -217,6 +217,10 @@ module UI
       @sprites[:overlay].bitmap.clear if @sprites[:overlay]
     end
 
+    def full_refresh
+      refresh
+    end
+
     #---------------------------------------------------------------------------
 
     def update_visuals
@@ -804,8 +808,8 @@ module UI
 
     def show_choice_from_menu_handler(menu_handler_id, message = nil)
       commands = {}
-      MenuHandlers.each_available(menu_handler_id, self) do |option, _hash, name|
-        commands[option] = name
+      MenuHandlers.each_available(menu_handler_id, self) do |option, hash, name|
+        commands[hash["action"] || option] = name
       end
       return show_menu(message, commands) if message
       return show_choice(commands)
@@ -828,6 +832,10 @@ module UI
     end
 
     alias pbRefresh refresh
+
+    def full_refresh
+      @visuals.full_refresh
+    end
 
     def update
       @visuals.update
@@ -861,8 +869,8 @@ module UI
     end
 
     def perform_action(command)
-      return nil if !self.class::SCREEN_ID
-      action_hash = UIActionHandlers.get(self.class::SCREEN_ID, command)
+      return nil if !self.class::ACTIONS
+      action_hash = self.class::ACTIONS[command]
       return nil if !action_hash
       return nil if action_hash[:condition] && !action_hash[:condition].call(self)
       if action_hash[:menu]

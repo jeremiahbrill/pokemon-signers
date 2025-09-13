@@ -15,6 +15,10 @@ class UI::MartStockWrapper
     return @stock[index]
   end
 
+  def money
+    return $player.money
+  end
+
   def buy_price(item)
     return 0 if item.nil?
     if $game_temp.mart_prices && $game_temp.mart_prices[item]
@@ -34,6 +38,24 @@ class UI::MartStockWrapper
       return $game_temp.mart_prices[item][1] if $game_temp.mart_prices[item][1] >= 0
     end
     return GameData::Item.get(item).sell_price
+  end
+
+  def stock_quantity(item)
+    return -1
+  end
+
+  def maximum_affordable_quantity(item)
+    item_price = buy_price(item)
+    return 0 if money < item_price
+    return 1 if GameData::Item.get(item).is_important?
+    max_quantity = (item_price <= 0) ? PokemonBag::MAX_PER_SLOT : money / item_price
+    max_quantity = [max_quantity, PokemonBag::MAX_PER_SLOT].min
+    max_stock = stock_quantity(item)
+    max_quantity = [max_quantity, max_stock].min if max_quantity >= 0
+    return max_quantity
+  end
+
+  def remove_from_stock(item, quantity)
   end
 
   def refresh
@@ -77,7 +99,7 @@ class UI::MartVisualsList < Window_DrawableCommand
   end
 
   def expensive?(this_item)
-    return @stock.buy_price(this_item) > $player.money
+    return @stock.buy_price(this_item) > @stock.money
   end
 
   #-----------------------------------------------------------------------------
@@ -298,7 +320,7 @@ end
 class UI::Mart < UI::BaseScreen
   attr_reader :stock, :bag
 
-  SCREEN_ID = :mart_screen
+  ACTIONS = HandlerHash.new
 
   def initialize(stock, bag)
     pbScrollMap(6, 5, 5)   # Direction 6 (right), 5 tiles, speed 5 (cycling speed, 10 tiles/second)
@@ -328,92 +350,85 @@ class UI::Mart < UI::BaseScreen
 
   #-----------------------------------------------------------------------------
 
-  def item
+  def item_data
     return nil if @visuals.item.nil?
     return GameData::Item.get(@visuals.item)
   end
-end
 
-#===============================================================================
-#
-#===============================================================================
-UIActionHandlers.add(UI::Mart::SCREEN_ID, :interact, {
-  :effect => proc { |screen|
-    item = screen.item
-    item_price = screen.stock.buy_price(item)
-    # Check affordability
-    if $player.money < item_price
-      screen.show_message(_INTL("You don't have enough money."))
-      next
-    end
-    # Choose how many of the item to buy
-    quantity = 0
-    if item.is_important?
+  #-----------------------------------------------------------------------------
+
+  ACTIONS.add(:interact, {
+    :effect => proc { |screen|
+      item_data = screen.item_data
+      item_price = screen.stock.buy_price(item_data.id)
+      max_quantity = screen.stock.maximum_affordable_quantity(item_data.id)
+      # Check affordability
+      if max_quantity == 0
+        screen.show_message(_INTL("You don't have enough money."))
+        next
+      end
+      # Choose how many of the item to buy
       quantity = 1
-      next if !screen.show_confirm_message(
-        _INTL("So you want the {1}?\nIt'll be ${2}. All right?",
-              item.portion_name, item_price.to_s_formatted)
-      )
-    else
-      max_quantity = (item_price <= 0) ? PokemonBag::MAX_PER_SLOT : $player.money / item_price
-      max_quantity = [max_quantity, PokemonBag::MAX_PER_SLOT].min
-      quantity = screen.choose_number_as_money_multiplier(
-        _INTL("How many {1} would you like?", item.portion_name_plural), item_price, max_quantity
-      )
-      next if quantity == 0
-      item_price *= quantity
-      if quantity > 1
+      if item_data.is_important?
         next if !screen.show_confirm_message(
-          _INTL("So you want {1} {2}?\nThey'll be ${3}. All right?",
-                quantity, item.portion_name_plural, item_price.to_s_formatted)
+          _INTL("So you want the {1}?\nIt'll be ${2}. All right?",
+                item_data.portion_name, item_price.to_s_formatted)
         )
-      elsif quantity > 0
-        next if !screen.show_confirm_message(
-          _INTL("So you want {1} {2}?\nIt'll be ${3}. All right?",
-                quantity, item.portion_name, item_price.to_s_formatted)
+      else
+        quantity = screen.choose_number_as_money_multiplier(
+          _INTL("How many {1} would you like?", item_data.portion_name_plural), item_price, max_quantity
         )
-      end
-    end
-    # Check affordability (should always be possible, but just make sure)
-    if $player.money < item_price
-      screen.show_message(_INTL("You don't have enough money."))
-      next
-    end
-    # Check the item can be put in the Bag
-    if !screen.bag.can_add?(item.id, quantity)
-      screen.show_message(_INTL("You have no room in your Bag."))
-      next
-    end
-    # Add the bought item(s)
-    screen.bag.add(item.id, quantity)
-    $stats.money_spent_at_marts += item_price
-    $stats.mart_items_bought += quantity
-    $player.money -= item_price
-    screen.stock.refresh
-    screen.refresh
-    screen.show_message(_INTL("Here you are! Thank you!")) { pbSEPlay("Mart buy item") }
-    # Give bonus Premier Ball(s)
-    if quantity >= 10 && item.is_poke_ball? && GameData::Item.exists?(:PREMIERBALL)
-      if Settings::MORE_BONUS_PREMIER_BALLS || item.id == :POKEBALL
-        premier_balls_earned = (Settings::MORE_BONUS_PREMIER_BALLS) ? (quantity / 10) : 1
-        premier_balls_added = 0
-        premier_balls_earned.times do
-          break if !screen.bag.add(:PREMIERBALL)
-          premier_balls_added += 1
+        next if quantity == 0
+        item_price *= quantity
+        if quantity > 1
+          next if !screen.show_confirm_message(
+            _INTL("So you want {1} {2}?\nThey'll be ${3}. All right?",
+                  quantity, item_data.portion_name_plural, item_price.to_s_formatted)
+          )
+        elsif quantity > 0
+          next if !screen.show_confirm_message(
+            _INTL("So you want {1} {2}?\nIt'll be ${3}. All right?",
+                  quantity, item_data.portion_name, item_price.to_s_formatted)
+          )
         end
-        if premier_balls_added > 0
-          $stats.premier_balls_earned += premier_balls_added
-          if premier_balls_added > 1
-            ball_name = GameData::Item.get(:PREMIERBALL).portion_name_plural
-          else
-            ball_name = GameData::Item.get(:PREMIERBALL).portion_name
+      end
+      # Check the item can be put in the Bag
+      if !screen.bag.can_add?(item_data.id, quantity)
+        screen.show_message(_INTL("You have no room in your Bag."))
+        next
+      end
+      # Add the bought item(s)
+      screen.bag.add(item_data.id, quantity)
+      $stats.money_spent_at_marts += item_price
+      $stats.mart_items_bought += quantity
+      $player.money -= item_price
+      screen.stock.remove_from_stock(item_data.id, quantity)
+      screen.stock.refresh   # Removes bought important items
+      screen.refresh
+      screen.show_message(_INTL("Here you are! Thank you!")) { pbSEPlay("Mart buy item") }
+      # Give bonus Premier Ball(s)
+      if quantity >= 10 && item_data.is_poke_ball? && GameData::Item.exists?(:PREMIERBALL)
+        if Settings::MORE_BONUS_PREMIER_BALLS || item_data.id == :POKEBALL
+          premier_balls_earned = (Settings::MORE_BONUS_PREMIER_BALLS) ? (quantity / 10) : 1
+          premier_balls_added = 0
+          premier_balls_earned.times do
+            break if !screen.bag.add(:PREMIERBALL)
+            premier_balls_added += 1
           end
-          screen.show_message(_INTL("And have {1} {2} on the house!", premier_balls_added, ball_name))
+          if premier_balls_added > 0
+            $stats.premier_balls_earned += premier_balls_added
+            if premier_balls_added > 1
+              ball_name = GameData::Item.get(:PREMIERBALL).portion_name_plural
+            else
+              ball_name = GameData::Item.get(:PREMIERBALL).portion_name
+            end
+            screen.show_message(_INTL("And have {1} {2} on the house!", premier_balls_added, ball_name))
+          end
         end
       end
-    end
-  }
-})
+    }
+  })
+end
 
 #===============================================================================
 #

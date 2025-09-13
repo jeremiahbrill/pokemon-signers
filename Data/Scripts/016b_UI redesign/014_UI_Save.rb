@@ -409,8 +409,6 @@ end
 class UI::Save < UI::BaseScreen
   attr_reader :save_data
 
-  SCREEN_ID = :save_screen
-
   include UI::LoadSaveDataMixin
 
   def initialize
@@ -506,12 +504,6 @@ class UI::Save < UI::BaseScreen
     ret = $~[1].to_i
     ret += 1 if slot_index < 0 || !@save_data[slot_index]
     return ret
-  end
-
-  #-----------------------------------------------------------------------------
-
-  def full_refresh
-    @visuals.full_refresh
   end
 
   #-----------------------------------------------------------------------------

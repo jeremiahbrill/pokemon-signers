@@ -934,7 +934,7 @@ end
 #
 #===============================================================================
 class UI::TownMap < UI::BaseScreen
-  SCREEN_ID = :town_map_screen
+  ACTIONS = HandlerHash.new
 
   # mode is one of:
   #   :normal
@@ -956,6 +956,29 @@ class UI::TownMap < UI::BaseScreen
 
   #-----------------------------------------------------------------------------
 
+  # Shows a choice menu using the MenuHandlers options below.
+  ACTIONS.add(:screen_menu, {
+    :menu         => :town_map_menu,
+    :menu_message => proc { |screen| _INTL("Choose an option.") }
+  })
+
+  #-----------------------------------------------------------------------------
+
+  ACTIONS.add(:change_region, {
+    :effect => proc { |screen|
+      commands = {}
+      index = 0
+      screen.visited_regions.each do |region|
+        region_data = GameData::TownMap.get(region)
+        index = commands.length if region_data.id == screen.region
+        commands[region] = region_data.name
+      end
+      commands[:cancel] = _INTL("Cancel")
+      region = screen.show_choice_message(_INTL("Which region's map do you want to view?"), commands, screen.region)
+      screen.set_region(region) if region && region != :cancel
+    }
+  })
+
   def visited_regions
     return @visuals.visited_regions
   end
@@ -967,6 +990,20 @@ class UI::TownMap < UI::BaseScreen
   def set_region(new_region)
     @visuals.set_region(new_region)
   end
+
+  #-----------------------------------------------------------------------------
+
+  ACTIONS.add(:fly_mode, {
+    :effect => proc { |screen|
+      screen.start_fly_mode
+    }
+  })
+  ACTIONS.add(:use_fly, {
+    :returns_value => true,
+    :effect => proc { |screen|
+      next (screen.set_fly_destination) ? :quit : :none
+    }
+  })
 
   def has_fly_points?
     return @visuals.has_fly_points?
@@ -988,51 +1025,16 @@ class UI::TownMap < UI::BaseScreen
     @result = point_data[:fly_spot]
     return true
   end
+
+  #-----------------------------------------------------------------------------
+
+  ACTIONS.add(:marking, {
+    :effect => proc { |screen|
+      screen.visuals.navigate_markings
+      screen.refresh
+    }
+  })
 end
-
-#===============================================================================
-#
-#===============================================================================
-# Shows a choice menu using the MenuHandlers options below.
-UIActionHandlers.add(UI::TownMap::SCREEN_ID, :screen_menu, {
-  :menu         => :town_map_menu,
-  :menu_message => proc { |screen| _INTL("Choose an option.") }
-})
-
-UIActionHandlers.add(UI::TownMap::SCREEN_ID, :fly_mode, {
-  :effect => proc { |screen|
-    screen.start_fly_mode
-  }
-})
-
-UIActionHandlers.add(UI::TownMap::SCREEN_ID, :use_fly, {
-  :returns_value => true,
-  :effect => proc { |screen|
-    next (screen.set_fly_destination) ? :quit : :none
-  }
-})
-
-UIActionHandlers.add(UI::TownMap::SCREEN_ID, :change_region, {
-  :effect => proc { |screen|
-    commands = {}
-    index = 0
-    screen.visited_regions.each do |region|
-      region_data = GameData::TownMap.get(region)
-      index = commands.length if region_data.id == screen.region
-      commands[region] = region_data.name
-    end
-    commands[:cancel] = _INTL("Cancel")
-    region = screen.show_choice_message(_INTL("Which region's map do you want to view?"), commands, screen.region)
-    screen.set_region(region) if region && region != :cancel
-  }
-})
-
-UIActionHandlers.add(UI::TownMap::SCREEN_ID, :marking, {
-  :effect => proc { |screen|
-    screen.visuals.navigate_markings
-    screen.refresh
-  }
-})
 
 #===============================================================================
 # Menu options for choice menus that exist in the party screen.

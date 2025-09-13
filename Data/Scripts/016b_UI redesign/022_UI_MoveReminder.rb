@@ -259,7 +259,7 @@ end
 class UI::MoveReminder < UI::BaseScreen
   attr_reader :pokemon
 
-  SCREEN_ID = :move_reminder_screen
+  ACTIONS = HandlerHash.new
 
   # mode is either :normal or :single.
   def initialize(pokemon, mode: :normal)
@@ -306,6 +306,21 @@ class UI::MoveReminder < UI::BaseScreen
 
   #-----------------------------------------------------------------------------
 
+  ACTIONS.add(:learn, {
+    :effect => proc { |screen|
+      next if !screen.show_confirm_message(_INTL("Teach {1}?", GameData::Move.get(screen.move).name))
+      next if !pbLearnMove(screen.pokemon, screen.move, false, false, screen)
+      $stats.moves_taught_by_reminder += 1
+      if screen.mode == :normal
+        screen.refresh_move_list
+      else
+        screen.end_screen
+      end
+    }
+  })
+
+  #-----------------------------------------------------------------------------
+
   def main
     return if @disposed
     start_screen
@@ -328,24 +343,6 @@ class UI::MoveReminder < UI::BaseScreen
     return @result
   end
 end
-
-#===============================================================================
-# Actions that can be triggered in the Move Reminder screen.
-#===============================================================================
-UIActionHandlers.add(UI::MoveReminder::SCREEN_ID, :learn, {
-  :effect => proc { |screen|
-    if screen.show_confirm_message(_INTL("Teach {1}?", GameData::Move.get(screen.move).name))
-      if pbLearnMove(screen.pokemon, screen.move, false, false, screen)
-        $stats.moves_taught_by_reminder += 1
-        if screen.mode == :normal
-          screen.refresh_move_list
-        else
-          screen.end_screen
-        end
-      end
-    end
-  }
-})
 
 #===============================================================================
 #

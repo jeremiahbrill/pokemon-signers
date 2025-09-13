@@ -445,7 +445,7 @@ class UI::LoadVisuals < UI::BaseVisuals
   end
 
   def full_refresh
-    refresh
+    super
     refresh_labels
     @sprites.each_pair { |key, sprite| sprite.refresh if sprite.respond_to?(:refresh) }
   end
@@ -572,7 +572,7 @@ end
 class UI::Load < UI::BaseScreen
   attr_reader :save_data
 
-  SCREEN_ID = :load_screen
+  ACTIONS = HandlerHash.new
 
   include UI::LoadSaveDataMixin
 
@@ -636,83 +636,69 @@ class UI::Load < UI::BaseScreen
 
   #-----------------------------------------------------------------------------
 
-  def full_refresh
-    @visuals.full_refresh
-  end
-end
-
-#===============================================================================
-# Actions that can be triggered in the load screen.
-#===============================================================================
-UIActionHandlers.add(UI::Load::SCREEN_ID, :continue, {
-  :effect => proc { |screen|
-    screen.end_screen
-    Game.load(screen.save_data[screen.slot_index][1])
-  }
-})
-
-UIActionHandlers.add(UI::Load::SCREEN_ID, :mystery_gift, {
-  :effect => proc { |screen|
-    pbFadeOutInWithUpdate(screen.sprites) do
-      pbDownloadMysteryGift(screen.save_data[screen.slot_index][1][:player])
-    end
-  }
-})
-
-UIActionHandlers.add(UI::Load::SCREEN_ID, :new_game, {
-  :effect => proc { |screen|
-    screen.end_screen
-    Game.start_new
-  }
-})
-
-UIActionHandlers.add(UI::Load::SCREEN_ID, :options, {
-  :effect => proc { |screen|
-    pbFadeOutInWithUpdate(screen.sprites) do
-      options_scene = PokemonOption_Scene.new
-      options_screen = PokemonOptionScreen.new(options_scene)
-      options_screen.pbStartScreen(true)
-      screen.full_refresh
-    end
-  }
-})
-
-UIActionHandlers.add(UI::Load::SCREEN_ID, :language, {
-  :effect => proc { |screen|
-    screen.end_screen
-    $PokemonSystem.language = pbChooseLanguage
-    MessageTypes.load_message_files(Settings::LANGUAGES[$PokemonSystem.language][1])
-    if screen.save_data[screen.slot_index]
-      screen.save_data[screen.slot_index][1][:pokemon_system] = $PokemonSystem
-      File.open(SaveData::DIRECTORY + screen.save_data[screen.slot_index][0], "wb") do |file|
-        Marshal.dump(screen.save_data[screen.slot_index][1], file)
+  ACTIONS.add(:continue, {
+    :effect => proc { |screen|
+      screen.end_screen
+      Game.load(screen.save_data[screen.slot_index][1])
+    }
+  })
+  ACTIONS.add(:mystery_gift, {
+    :effect => proc { |screen|
+      pbFadeOutInWithUpdate(screen.sprites) do
+        pbDownloadMysteryGift(screen.save_data[screen.slot_index][1][:player])
       end
-    end
-    $scene = pbCallTitle
-  }
-})
-
-UIActionHandlers.add(UI::Load::SCREEN_ID, :debug, {
-  :effect => proc { |screen|
-    pbFadeOutInWithUpdate(screen.sprites) do
-      pbDebugMenu(false)
-    end
-  }
-})
-
-UIActionHandlers.add(UI::Load::SCREEN_ID, :quit_game, {
-  :effect => proc { |screen|
-    pbPlayCloseMenuSE
-    screen.end_screen
-    $scene = nil
-  }
-})
-
-UIActionHandlers.add(UI::Load::SCREEN_ID, :delete_save, {
-  :effect => proc { |screen|
-    screen.prompt_save_deletion(screen.save_data[screen.slot_index][0])
-  }
-})
+    }
+  })
+  ACTIONS.add(:new_game, {
+    :effect => proc { |screen|
+      screen.end_screen
+      Game.start_new
+    }
+  })
+  ACTIONS.add(:options, {
+    :effect => proc { |screen|
+      pbFadeOutInWithUpdate(screen.sprites) do
+        options_scene = PokemonOption_Scene.new
+        options_screen = PokemonOptionScreen.new(options_scene)
+        options_screen.pbStartScreen(true)
+        screen.full_refresh
+      end
+    }
+  })
+  ACTIONS.add(:language, {
+    :effect => proc { |screen|
+      screen.end_screen
+      $PokemonSystem.language = pbChooseLanguage
+      MessageTypes.load_message_files(Settings::LANGUAGES[$PokemonSystem.language][1])
+      if screen.save_data[screen.slot_index]
+        screen.save_data[screen.slot_index][1][:pokemon_system] = $PokemonSystem
+        File.open(SaveData::DIRECTORY + screen.save_data[screen.slot_index][0], "wb") do |file|
+          Marshal.dump(screen.save_data[screen.slot_index][1], file)
+        end
+      end
+      $scene = pbCallTitle
+    }
+  })
+  ACTIONS.add(:debug, {
+    :effect => proc { |screen|
+      pbFadeOutInWithUpdate(screen.sprites) do
+        pbDebugMenu(false)
+      end
+    }
+  })
+  ACTIONS.add(:quit_game, {
+    :effect => proc { |screen|
+      pbPlayCloseMenuSE
+      screen.end_screen
+      $scene = nil
+    }
+  })
+  ACTIONS.add(:delete_save, {
+    :effect => proc { |screen|
+      screen.prompt_save_deletion(screen.save_data[screen.slot_index][0])
+    }
+  })
+end
 
 #===============================================================================
 # Menu options that exist in the load screen.

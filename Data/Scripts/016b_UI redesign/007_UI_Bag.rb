@@ -744,7 +744,7 @@ end
 class UI::Bag < UI::BaseScreen
   attr_reader :bag
 
-  SCREEN_ID = :bag_screen
+  ACTIONS = HandlerHash.new
 
   def initialize(bag, mode: :normal)
     @bag = bag
@@ -767,6 +767,51 @@ class UI::Bag < UI::BaseScreen
     @visuals.set_filter_proc(filter_proc)
   end
 
+  #-----------------------------------------------------------------------------
+
+  # Shows a choice menu using the MenuHandlers options below.
+  ACTIONS.add(:screen_menu, {
+    :menu         => :bag_screen_menu,
+    :menu_message => proc { |screen| _INTL("Choose an option.") }
+  })
+  # Shows a choice menu using the MenuHandlers options below.
+  ACTIONS.add(:interact_menu, {
+    :menu         => :bag_screen_interact,
+    :menu_message => proc { |screen| _INTL("{1} is selected.", screen.item.name) }
+  })
+
+  #-----------------------------------------------------------------------------
+
+  ACTIONS.add(:switch_item_start, {
+    :effect => proc { |screen|
+      pbPlayDecisionSE
+      screen.start_switching
+    }
+  })
+  ACTIONS.add(:switch_item_end, {
+    :effect => proc { |screen|
+      pbPlayDecisionSE
+      screen.switch_items(screen.switch_index, screen.index)
+    }
+  })
+  ACTIONS.add(:switch_item_cancel, {
+    :effect => proc { |screen|
+      pbPlayCancelSE
+      screen.cancel_switching
+    }
+  })
+  ACTIONS.add(:rearrange_items_mode, {
+    :effect => proc { |screen|
+      screen.set_sub_mode(:rearrange_items)
+    }
+  })
+  ACTIONS.add(:clear_sub_mode, {
+    :effect => proc { |screen|
+      pbPlayCancelSE
+      screen.set_sub_mode
+    }
+  })
+
   def switch_index
     return @visuals.switch_index
   end
@@ -787,6 +832,19 @@ class UI::Bag < UI::BaseScreen
     @visuals.end_switching
   end
 
+  #-----------------------------------------------------------------------------
+
+  ACTIONS.add(:sort_alphabetically, {
+    :effect => proc { |screen|
+      screen.autosort_pocket(:alphabetical)
+    }
+  })
+  ACTIONS.add(:sort_by_definition, {
+    :effect => proc { |screen|
+      screen.autosort_pocket(:definition)
+    }
+  })
+
   def autosort_pocket(order)
     pocket = @bag.pockets[@visuals.pocket]
     item_id = @visuals.item
@@ -799,6 +857,111 @@ class UI::Bag < UI::BaseScreen
     new_index = pocket.index { |slot| slot[0] == item_id }
     @visuals.set_index(new_index)
   end
+
+  #-----------------------------------------------------------------------------
+
+  ACTIONS.add(:use, {
+    :returns_value => true,
+    :effect        => proc { |screen|
+      item = screen.item.id
+      ret = pbUseItem(screen.bag, item, screen)
+      # ret: 0=Item wasn't used; 1=Item used; 2=Close Bag to use in field
+      if ret == 2
+        screen.result = item
+        next :quit
+      end
+      screen.refresh
+      next nil
+    }
+  })
+  ACTIONS.add(:read_mail, {
+    :effect => proc { |screen|
+      pbFadeOutInWithUpdate(screen.sprites) do
+        pbDisplayMail(Mail.new(screen.item.id, "", ""))
+      end
+    }
+  })
+  ACTIONS.add(:give, {
+    :effect => proc { |screen|
+      if $player.pokemon_count == 0
+        screen.show_message(_INTL("There is no Pokémon."))
+      elsif screen.item.is_important?
+        screen.show_message(_INTL("The {1} can't be held.", screen.item.portion_name))
+      else
+        pbFadeOutInWithUpdate(screen.sprites) do
+          party_screen = UI::Party.new($player.party, mode: :choose_pokemon)
+          party_screen.choose_pokemon do |pkmn, party_index|
+            pbGiveItemToPokemon(screen.item.id, party_screen.pokemon, party_screen, party_index) if party_index >= 0
+            next true
+          end
+          screen.refresh
+        end
+      end
+    }
+  })
+  ACTIONS.add(:toss, {
+    :effect => proc { |screen|
+      qty = screen.bag.quantity(screen.item.id)
+      if qty > 1
+        help_text = _INTL("Toss out how many {1}?", screen.item.portion_name_plural)
+        qty = screen.choose_number(help_text, qty)
+      end
+      if qty > 0
+        item_name = (qty > 1) ? screen.item.portion_name_plural : screen.item.portion_name
+        if screen.show_confirm_message(_INTL("Is it OK to throw away {1} {2}?", qty, item_name))
+          qty.times { screen.bag.remove(screen.item.id) }
+          screen.refresh
+          screen.show_message(_INTL("Threw away {1} {2}.", qty, item_name))
+        end
+      end
+    }
+  })
+
+  #-----------------------------------------------------------------------------
+
+  # Handles both registering and unregistering the item.
+  ACTIONS.add(:register, {
+    :effect => proc { |screen|
+      if screen.bag.registered?(screen.item.id)
+        screen.bag.unregister(screen.item.id)
+      else
+        screen.bag.register(screen.item.id)
+      end
+      screen.refresh
+    }
+  })
+  ACTIONS.add(:debug, {
+    :effect => proc { |screen|
+      command = 0
+      loop do
+        command = screen.show_menu(
+          _INTL("Do what with {1}?", screen.item.name),
+          [_INTL("Change quantity"), _INTL("Make Mystery Gift"), _INTL("Cancel")], command)
+        case command
+        when 0   # Change quantity
+          qty = screen.bag.quantity(screen.item.id)
+          item_name_plural = screen.item.name_plural
+          params = ChooseNumberParams.new
+          params.setRange(0, PokemonBag::MAX_PER_SLOT)
+          params.setDefaultValue(qty)
+          new_qty = screen.choose_number(
+            _INTL("Choose new quantity of {1} (max. {2}).", item_name_plural, PokemonBag::MAX_PER_SLOT), params
+          )
+          if new_qty > qty
+            screen.bag.add(screen.item.id, new_qty - qty)
+          elsif new_qty < qty
+            screen.bag.remove(screen.item.id, qty - new_qty)
+          end
+          screen.refresh
+          break if new_qty == 0
+        when 1   # Make Mystery Gift
+          pbCreateMysteryGift(1, screen.item.id)
+        else
+          break
+        end
+      end
+    }
+  })
 
   #-----------------------------------------------------------------------------
 
@@ -827,176 +990,6 @@ class UI::Bag < UI::BaseScreen
     return nil
   end
 end
-
-#===============================================================================
-#
-#===============================================================================
-# Shows a choice menu using the MenuHandlers options below.
-UIActionHandlers.add(UI::Bag::SCREEN_ID, :screen_menu, {
-  :menu         => :bag_screen_menu,
-  :menu_message => proc { |screen| _INTL("Choose an option.") }
-})
-
-#-------------------------------------------------------------------------------
-
-UIActionHandlers.add(UI::Bag::SCREEN_ID, :switch_item_start, {
-  :effect => proc { |screen|
-    pbPlayDecisionSE
-    screen.start_switching
-  }
-})
-
-UIActionHandlers.add(UI::Bag::SCREEN_ID, :switch_item_end, {
-  :effect => proc { |screen|
-    pbPlayDecisionSE
-    screen.switch_items(screen.switch_index, screen.index)
-  }
-})
-
-UIActionHandlers.add(UI::Bag::SCREEN_ID, :switch_item_cancel, {
-  :effect => proc { |screen|
-    pbPlayCancelSE
-    screen.cancel_switching
-  }
-})
-
-UIActionHandlers.add(UI::Bag::SCREEN_ID, :rearrange_items_mode, {
-  :effect => proc { |screen|
-    screen.set_sub_mode(:rearrange_items)
-  }
-})
-
-UIActionHandlers.add(UI::Bag::SCREEN_ID, :clear_sub_mode, {
-  :effect => proc { |screen|
-    pbPlayCancelSE
-    screen.set_sub_mode
-  }
-})
-
-UIActionHandlers.add(UI::Bag::SCREEN_ID, :sort_alphabetically, {
-  :effect => proc { |screen|
-    screen.autosort_pocket(:alphabetical)
-  }
-})
-
-UIActionHandlers.add(UI::Bag::SCREEN_ID, :sort_by_definition, {
-  :effect => proc { |screen|
-    screen.autosort_pocket(:definition)
-  }
-})
-
-#-------------------------------------------------------------------------------
-
-# Shows a choice menu using the MenuHandlers options below.
-UIActionHandlers.add(UI::Bag::SCREEN_ID, :interact_menu, {
-  :menu         => :bag_screen_interact,
-  :menu_message => proc { |screen| _INTL("{1} is selected.", screen.item.name) }
-})
-
-UIActionHandlers.add(UI::Bag::SCREEN_ID, :read_mail, {
-  :effect => proc { |screen|
-    pbFadeOutInWithUpdate(screen.sprites) do
-      pbDisplayMail(Mail.new(screen.item.id, "", ""))
-    end
-  }
-})
-
-UIActionHandlers.add(UI::Bag::SCREEN_ID, :use, {
-  :returns_value => true,
-  :effect        => proc { |screen|
-    item = screen.item.id
-    ret = pbUseItem(screen.bag, item, screen)
-    # ret: 0=Item wasn't used; 1=Item used; 2=Close Bag to use in field
-    if ret == 2
-      screen.result = item
-      next :quit
-    end
-    screen.refresh
-    next nil
-  }
-})
-
-UIActionHandlers.add(UI::Bag::SCREEN_ID, :give, {
-  :effect => proc { |screen|
-    if $player.pokemon_count == 0
-      screen.show_message(_INTL("There is no Pokémon."))
-    elsif screen.item.is_important?
-      screen.show_message(_INTL("The {1} can't be held.", screen.item.portion_name))
-    else
-      pbFadeOutInWithUpdate(screen.sprites) do
-        party_screen = UI::Party.new($player.party, mode: :choose_pokemon)
-        party_screen.choose_pokemon do |pkmn, party_index|
-          pbGiveItemToPokemon(screen.item.id, party_screen.pokemon, party_screen, party_index) if party_index >= 0
-          next true
-        end
-        screen.refresh
-      end
-    end
-  }
-})
-
-UIActionHandlers.add(UI::Bag::SCREEN_ID, :toss, {
-  :effect => proc { |screen|
-    qty = screen.bag.quantity(screen.item.id)
-    if qty > 1
-      help_text = _INTL("Toss out how many {1}?", screen.item.portion_name_plural)
-      qty = screen.choose_number(help_text, qty)
-    end
-    if qty > 0
-      item_name = (qty > 1) ? screen.item.portion_name_plural : screen.item.portion_name
-      if screen.show_confirm_message(_INTL("Is it OK to throw away {1} {2}?", qty, item_name))
-        qty.times { screen.bag.remove(screen.item.id) }
-        screen.refresh
-        screen.show_message(_INTL("Threw away {1} {2}.", qty, item_name))
-      end
-    end
-  }
-})
-
-# Handles both registering and unregistering the item.
-UIActionHandlers.add(UI::Bag::SCREEN_ID, :register, {
-  :effect => proc { |screen|
-    if screen.bag.registered?(screen.item.id)
-      screen.bag.unregister(screen.item.id)
-    else
-      screen.bag.register(screen.item.id)
-    end
-    screen.refresh
-  }
-})
-
-UIActionHandlers.add(UI::Bag::SCREEN_ID, :debug, {
-  :effect => proc { |screen|
-    command = 0
-    loop do
-      command = screen.show_menu(
-        _INTL("Do what with {1}?", screen.item.name),
-        [_INTL("Change quantity"), _INTL("Make Mystery Gift"), _INTL("Cancel")], command)
-      case command
-      when 0   # Change quantity
-        qty = screen.bag.quantity(screen.item.id)
-        item_name_plural = screen.item.name_plural
-        params = ChooseNumberParams.new
-        params.setRange(0, PokemonBag::MAX_PER_SLOT)
-        params.setDefaultValue(qty)
-        new_qty = screen.choose_number(
-          _INTL("Choose new quantity of {1} (max. {2}).", item_name_plural, PokemonBag::MAX_PER_SLOT), params
-        )
-        if new_qty > qty
-          screen.bag.add(screen.item.id, new_qty - qty)
-        elsif new_qty < qty
-          screen.bag.remove(screen.item.id, qty - new_qty)
-        end
-        screen.refresh
-        break if new_qty == 0
-      when 1   # Make Mystery Gift
-        pbCreateMysteryGift(1, screen.item.id)
-      else
-        break
-      end
-    end
-  }
-})
 
 #===============================================================================
 # Menu options for choice menus that exist in the party screen.

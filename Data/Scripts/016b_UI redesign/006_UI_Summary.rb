@@ -1370,7 +1370,7 @@ class UI::PokemonSummary < UI::BaseScreen
   attr_reader   :party
   attr_accessor :party_index, :pokemon
 
-  SCREEN_ID = :summary_screen
+  ACTIONS = HandlerHash.new
 
   # party is an array of Pokemon objects or a single Pokemon object.
   # mode is :normal or :choose_move or :in_battle.
@@ -1395,6 +1395,106 @@ class UI::PokemonSummary < UI::BaseScreen
 
   #-----------------------------------------------------------------------------
 
+  # Shows a choice menu using the MenuHandlers options below.
+  ACTIONS.add(:interact_menu, {
+    :menu      => :summary_screen_interact,
+    :condition => proc { |screen| next screen.mode != :in_battle }
+  })
+
+  #-----------------------------------------------------------------------------
+
+  ACTIONS.add(:go_to_previous_pokemon, {
+    :effect => proc { |screen|
+      if screen.party_index > 0
+        new_index = screen.party_index
+        loop do
+          new_index -= 1
+          break if screen.party[new_index]
+          break if new_index <= 0
+        end
+        if new_index != screen.party_index && screen.party[new_index]
+          # NOTE: @visuals.set_party_index plays an SE.
+          screen.party_index = new_index
+          screen.pokemon = screen.party[screen.party_index]
+          screen.visuals.set_party_index(screen.party_index)
+        end
+      end
+    }
+  })
+  ACTIONS.add(:go_to_next_pokemon, {
+    :effect => proc { |screen|
+      if screen.party_index < screen.party.length - 1
+        new_index = screen.party_index
+        loop do
+          new_index += 1
+          break if screen.party[new_index]
+          break if new_index >= screen.party.length - 1
+        end
+        if new_index != screen.party_index && screen.party[new_index]
+          # NOTE: @visuals.set_party_index plays an SE.
+          screen.party_index = new_index
+          screen.pokemon = screen.party[screen.party_index]
+          screen.visuals.set_party_index(screen.party_index)
+        end
+      end
+    }
+  })
+  ACTIONS.add(:navigate_moves, {
+    :returns_value => true,
+    :effect => proc { |screen|
+      # NOTE: Doesn't have pbPlayDecisionSE here because this is also called by
+      #       def choose_move, which plays its own SE at the same time.
+      move_index = screen.visuals.navigate_moves
+      next move_index if screen.mode == :choose_move
+      screen.refresh
+      next nil
+    }
+  })
+  ACTIONS.add(:navigate_ribbons, {
+    :effect => proc { |screen|
+      pbPlayDecisionSE
+      screen.visuals.navigate_ribbons
+      screen.refresh
+    }
+  })
+
+  #-----------------------------------------------------------------------------
+
+  ACTIONS.add(:marking, {
+    :effect => proc { |screen|
+      screen.visuals.navigate_markings
+      screen.refresh
+    }
+  })
+  ACTIONS.add(:pokedex, {
+    :effect => proc { |screen|
+      $player.pokedex.register_last_seen(screen.pokemon)
+      pbFadeOutInWithUpdate(screen.sprites) do
+        dex_scene = PokemonPokedexInfo_Scene.new
+        dex_screen = PokemonPokedexInfoScreen.new(dex_scene)
+        dex_screen.pbStartSceneSingle(screen.pokemon.species)
+      end
+    }
+  })
+  ACTIONS.add(:give_item, {
+    :effect => proc { |screen|
+      item = nil
+      pbFadeOutInWithUpdate(screen.sprites) do
+        bag_screen = UI::Bag.new($bag, mode: :choose_item)
+        bag_screen.set_filter_proc(proc { |itm| GameData::Item.get(itm).can_hold? })
+        item = bag_screen.choose_item
+      end
+      screen.refresh if pbGiveItemToPokemon(item, screen.pokemon, screen, screen.party_index)
+    }
+  })
+  ACTIONS.add(:take_item, {
+    :effect => proc { |screen|
+      screen.refresh if pbTakeItemFromPokemon(screen.pokemon, screen)
+    }
+  })
+
+  #-----------------------------------------------------------------------------
+
   def main
     return choose_move if @mode == :choose_move
     super
@@ -1409,109 +1509,6 @@ class UI::PokemonSummary < UI::BaseScreen
     return @result
   end
 end
-
-#===============================================================================
-# Actions that can be triggered in the Pokémon summary screen.
-#===============================================================================
-UIActionHandlers.add(UI::PokemonSummary::SCREEN_ID, :go_to_previous_pokemon, {
-  :effect => proc { |screen|
-    if screen.party_index > 0
-      new_index = screen.party_index
-      loop do
-        new_index -= 1
-        break if screen.party[new_index]
-        break if new_index <= 0
-      end
-      if new_index != screen.party_index && screen.party[new_index]
-        # NOTE: @visuals.set_party_index plays an SE.
-        screen.party_index = new_index
-        screen.pokemon = screen.party[screen.party_index]
-        screen.visuals.set_party_index(screen.party_index)
-      end
-    end
-  }
-})
-
-UIActionHandlers.add(UI::PokemonSummary::SCREEN_ID, :go_to_next_pokemon, {
-  :effect => proc { |screen|
-    if screen.party_index < screen.party.length - 1
-      new_index = screen.party_index
-      loop do
-        new_index += 1
-        break if screen.party[new_index]
-        break if new_index >= screen.party.length - 1
-      end
-      if new_index != screen.party_index && screen.party[new_index]
-        # NOTE: @visuals.set_party_index plays an SE.
-        screen.party_index = new_index
-        screen.pokemon = screen.party[screen.party_index]
-        screen.visuals.set_party_index(screen.party_index)
-      end
-    end
-  }
-})
-
-UIActionHandlers.add(UI::PokemonSummary::SCREEN_ID, :navigate_moves, {
-  :returns_value => true,
-  :effect => proc { |screen|
-    # NOTE: Doesn't have pbPlayDecisionSE here because this is also called by
-    #       def choose_move, which plays its own SE at the same time.
-    move_index = screen.visuals.navigate_moves
-    next move_index if screen.mode == :choose_move
-    screen.refresh
-    next nil
-  }
-})
-
-UIActionHandlers.add(UI::PokemonSummary::SCREEN_ID, :navigate_ribbons, {
-  :effect => proc { |screen|
-    pbPlayDecisionSE
-    screen.visuals.navigate_ribbons
-    screen.refresh
-  }
-})
-
-UIActionHandlers.add(UI::PokemonSummary::SCREEN_ID, :marking, {
-  :effect => proc { |screen|
-    screen.visuals.navigate_markings
-    screen.refresh
-  }
-})
-
-# Shows a choice menu using the MenuHandlers options below.
-UIActionHandlers.add(UI::PokemonSummary::SCREEN_ID, :interact_menu, {
-  :menu      => :summary_screen_interact,
-  :condition => proc { |screen| next screen.mode != :in_battle }
-})
-
-UIActionHandlers.add(UI::PokemonSummary::SCREEN_ID, :give_item, {
-  :effect => proc { |screen|
-    item = nil
-    pbFadeOutInWithUpdate(screen.sprites) do
-      bag_screen = UI::Bag.new($bag, mode: :choose_item)
-      bag_screen.set_filter_proc(proc { |itm| GameData::Item.get(itm).can_hold? })
-      item = bag_screen.choose_item
-    end
-    screen.refresh if pbGiveItemToPokemon(item, screen.pokemon, screen, screen.party_index)
-  }
-})
-
-UIActionHandlers.add(UI::PokemonSummary::SCREEN_ID, :take_item, {
-  :effect => proc { |screen|
-    screen.refresh if pbTakeItemFromPokemon(screen.pokemon, screen)
-  }
-})
-
-UIActionHandlers.add(UI::PokemonSummary::SCREEN_ID, :pokedex, {
-  :effect => proc { |screen|
-    $player.pokedex.register_last_seen(screen.pokemon)
-    pbFadeOutInWithUpdate(screen.sprites) do
-      dex_scene = PokemonPokedexInfo_Scene.new
-      dex_screen = PokemonPokedexInfoScreen.new(dex_scene)
-      dex_screen.pbStartSceneSingle(screen.pokemon.species)
-    end
-  }
-})
 
 #===============================================================================
 # Menu options for choice menus that exist in the Pokémon summary screen.

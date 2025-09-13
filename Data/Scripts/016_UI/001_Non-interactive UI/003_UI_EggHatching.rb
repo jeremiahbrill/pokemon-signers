@@ -96,6 +96,7 @@ class PokemonEggHatch_Scene
       updateScene
       break if tone_val <= 0
     end
+    # TODO: Show the shiny battle animation if the hatched Pokémon is shiny.
     # Finish scene
     cry_duration = GameData::Species.cry_length(@pokemon)
     @pokemon.play_cry

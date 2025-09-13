@@ -2,6 +2,10 @@
 #
 #===============================================================================
 class UI::BPShopStockWrapper < UI::MartStockWrapper
+  def money
+    return $player.battle_points
+  end
+
   def buy_price(item)
     return 0 if item.nil?
     if $game_temp.mart_prices && $game_temp.mart_prices[item]
@@ -13,15 +17,6 @@ class UI::BPShopStockWrapper < UI::MartStockWrapper
   def buy_price_string(item)
     price = buy_price(item)
     return _INTL("{1} BP", price.to_s_formatted)
-  end
-end
-
-#===============================================================================
-# Pokémon Mart.
-#===============================================================================
-class UI::BPShopVisualsList < UI::MartVisualsList
-  def expensive?(this_item)
-    return @stock.buy_price(this_item) > $player.battle_points
   end
 end
 
@@ -116,7 +111,7 @@ end
 #
 #===============================================================================
 class UI::BPShop < UI::Mart
-  SCREEN_ID = :bp_shop
+  ACTIONS = HandlerHash.new
 
   def initialize_stock(stock)
     @stock = UI::BPShopStockWrapper.new(stock)
@@ -125,68 +120,61 @@ class UI::BPShop < UI::Mart
   def initialize_visuals
     @visuals = UI::BPShopVisuals.new(@stock, @bag)
   end
-end
 
-#===============================================================================
-#
-#===============================================================================
-UIActionHandlers.add(UI::BPShop::SCREEN_ID, :interact, {
-  :effect => proc { |screen|
-    item = screen.item
-    item_price = screen.stock.buy_price(item)
-    # Check affordability
-    if $player.battle_points < item_price
-      screen.show_message(_INTL("I'm sorry, you don't have enough BP."))
-      next
-    end
-    # Choose how many of the item to buy
-    quantity = 0
-    if item.is_important?
-      quantity = 1
-      next if !screen.show_confirm_message(
-        _INTL("You would like the {1}?\nThat will be {2} BP.",
-              item.portion_name, item_price.to_s_formatted)
-      )
-    else
-      max_quantity = (item_price <= 0) ? PokemonBag::MAX_PER_SLOT : $player.battle_points / item_price
-      max_quantity = [max_quantity, PokemonBag::MAX_PER_SLOT].min
-      quantity = screen.choose_number_as_money_multiplier(
-        _INTL("How many {1} would you like?", item.portion_name_plural), item_price, max_quantity
-      )
-      next if quantity == 0
-      item_price *= quantity
-      if quantity > 1
-        next if !screen.show_confirm_message(
-          _INTL("You would like {1} {2}?\nThey'll be {3} BP.",
-                quantity, item.portion_name_plural, item_price.to_s_formatted)
-        )
-      elsif quantity > 0
-        next if !screen.show_confirm_message(
-          _INTL("You would like {1} {2}?\nThat will be {3} BP.",
-                quantity, item.portion_name, item_price.to_s_formatted)
-        )
+  #-----------------------------------------------------------------------------
+
+  ACTIONS.add(:interact, {
+    :effect => proc { |screen|
+      item_data = screen.item_data
+      item_price = screen.stock.buy_price(item_data.id)
+      max_quantity = screen.stock.maximum_affordable_quantity(item_data.id)
+      # Check affordability
+      if max_quantity == 0
+        screen.show_message(_INTL("I'm sorry, you don't have enough BP."))
+        next
       end
-    end
-    # Check affordability (should always be possible, but just make sure)
-    if $player.battle_points < item_price
-      screen.show_message(_INTL("I'm sorry, you don't have enough BP."))
-      next
-    end
-    # Check the item can be put in the Bag
-    if !screen.bag.can_add?(item.id, quantity)
-      screen.show_message(_INTL("You have no room in your Bag."))
-      next
-    end
-    # Add the bought item(s)
-    screen.bag.add(item.id, quantity)
-    $stats.battle_points_spent += item_price
-    $stats.mart_items_bought += quantity
-    $player.battle_points -= item_price
-    screen.stock.refresh
-    screen.refresh
-    screen.show_message(_INTL("Here you are! Thank you!")) { pbSEPlay("Mart buy item") }
-  }
-})
+      # Choose how many of the item to buy
+      quantity = 1
+      if item_data.is_important?
+        next if !screen.show_confirm_message(
+          _INTL("You would like the {1}?\nThat will be {2} BP.",
+                item_data.portion_name, item_price.to_s_formatted)
+        )
+      else
+        quantity = screen.choose_number_as_money_multiplier(
+          _INTL("How many {1} would you like?", item_data.portion_name_plural), item_price, max_quantity
+        )
+        next if quantity == 0
+        item_price *= quantity
+        if quantity > 1
+          next if !screen.show_confirm_message(
+            _INTL("So you want {1} {2}?\nThey'll be {3} BP. All right?",
+                  quantity, item_data.portion_name_plural, item_price.to_s_formatted)
+          )
+        elsif quantity > 0
+          next if !screen.show_confirm_message(
+            _INTL("So you want {1} {2}?\nIt'll be {3} BP. All right?",
+                  quantity, item_data.portion_name, item_price.to_s_formatted)
+          )
+        end
+      end
+      # Check the item can be put in the Bag
+      if !screen.bag.can_add?(item_data.id, quantity)
+        screen.show_message(_INTL("You have no room in your Bag."))
+        next
+      end
+      # Add the bought item(s)
+      screen.bag.add(item_data.id, quantity)
+      $stats.battle_points_spent += item_price
+      $stats.mart_items_bought += quantity
+      $player.battle_points -= item_price
+      screen.stock.remove_from_stock(item_data.id, quantity)
+      screen.stock.refresh   # Removes bought important items
+      screen.refresh
+      screen.show_message(_INTL("Here you are! Thank you!")) { pbSEPlay("Mart buy item") }
+    }
+  })
+end
 
 #===============================================================================
 #
