@@ -735,6 +735,7 @@ module UI
 
     def initialize
       @disposed = false
+      return if @skip_ui
       initialize_visuals
     end
 
@@ -852,6 +853,10 @@ module UI
     end
 
     def main
+      if @skip_ui
+        main_skipped
+        @disposed = true
+      end
       return if @disposed
       start_screen
       loop do
@@ -863,6 +868,9 @@ module UI
         break if @disposed
       end
       end_screen
+    end
+
+    def main_skipped
     end
 
     def on_start_main_loop

@@ -274,9 +274,9 @@ class PokemonPokedex_Scene
     addBackgroundPlane(@sprites, "background", "Pokedex/bg_list", @viewport)
     # Suggestion for changing the background depending on region. You can
     # comment out the line above and uncomment the following lines:
-#    if pbGetPokedexRegion == -1   # Using national Pokédex
+#    if pbGetRegionalDexNumber == -1   # Using national Pokédex
 #      addBackgroundPlane(@sprites, "background", "Pokedex/bg_national", @viewport)
-#    elsif pbGetPokedexRegion == 0   # Using first regional Pokédex
+#    elsif pbGetRegionalDexNumber == 0   # Using first regional Pokédex
 #      addBackgroundPlane(@sprites, "background", "Pokedex/bg_regional", @viewport)
 #    end
     addBackgroundPlane(@sprites, "searchbg", "Pokedex/bg_search", @viewport)
@@ -309,26 +309,16 @@ class PokemonPokedex_Scene
     @viewport.dispose
   end
 
-  # Gets the region used for displaying Pokédex entries. Species will be listed
-  # according to the given region's numbering and the returned region can have
-  # any value defined in the town map data file. It is currently set to the
-  # return value of pbGetCurrentRegion, and thus will change according to the
-  # current map's MapPosition metadata setting.
-  def pbGetPokedexRegion
-    if Settings::USE_CURRENT_REGION_DEX
-      region = pbGetCurrentRegion
-      region = -1 if region >= $player.pokedex.dexes_count - 1
-      return region
-    else
-      return $PokemonGlobal.pokedexDex   # National Dex -1, regional Dexes 0, 1, etc.
-    end
+  # Gets the number of the Regional Dex to be listed.
+  def pbGetRegionalDexNumber
+    return $PokemonGlobal.pokedexDex   # National Dex -1, regional Dexes 0, 1, etc.
   end
 
   # Determines which index of the array $PokemonGlobal.pokedexIndex to save the
   # "last viewed species" in. All regional dexes come first in order, then the
   # National Dex at the end.
   def pbGetSavePositionIndex
-    index = pbGetPokedexRegion
+    index = pbGetRegionalDexNumber
     if index == -1   # National Dex (comes after regional Dex indices)
       index = $player.pokedex.dexes_count - 1
     end
@@ -346,7 +336,7 @@ class PokemonPokedex_Scene
   end
 
   def pbGetDexList
-    region = pbGetPokedexRegion
+    region = pbGetRegionalDexNumber
     regionalSpecies = pbAllRegionalSpecies(region)
     if !regionalSpecies || regionalSpecies.length == 0
       # If no Regional Dex defined for the given region, use the National Pokédex
@@ -438,9 +428,9 @@ class PokemonPokedex_Scene
       textpos.push([@dexlist.length.to_s, 112, 346, :center, base, shadow])
     else
       textpos.push([_INTL("Seen:"), 42, 314, :left, base, shadow])
-      textpos.push([$player.pokedex.seen_count(pbGetPokedexRegion).to_s, 182, 314, :right, base, shadow])
+      textpos.push([$player.pokedex.seen_count(pbGetRegionalDexNumber).to_s, 182, 314, :right, base, shadow])
       textpos.push([_INTL("Owned:"), 42, 346, :left, base, shadow])
-      textpos.push([$player.pokedex.owned_count(pbGetPokedexRegion).to_s, 182, 346, :right, base, shadow])
+      textpos.push([$player.pokedex.owned_count(pbGetRegionalDexNumber).to_s, 182, 346, :right, base, shadow])
     end
     # Draw all text
     pbDrawTextPositions(overlay, textpos)
@@ -520,7 +510,7 @@ class PokemonPokedex_Scene
     wt1 = (params[6] < 0) ? 0 : (params[6] >= @weightCommands.length) ? 9999 : @weightCommands[params[6]]
     wt2 = (params[7] < 0) ? 9999 : (params[7] >= @weightCommands.length) ? 0 : @weightCommands[params[7]]
     hwoffset = false
-    if System.user_language[3..4] == "US"   # If the user is in the United States
+    if Translation.imperial_measurements?
       ht1 = (params[4] >= @heightCommands.length) ? 99 * 12 : (ht1 / 0.254).round
       ht2 = (params[5] < 0) ? 99 * 12 : (ht2 / 0.254).round
       wt1 = (params[6] >= @weightCommands.length) ? 99_990 : (wt1 / 0.254).round
@@ -632,7 +622,7 @@ class PokemonPokedex_Scene
       ht1 = (sel[0] < 0) ? 0 : (sel[0] >= @heightCommands.length) ? 999 : @heightCommands[sel[0]]
       ht2 = (sel[1] < 0) ? 999 : (sel[1] >= @heightCommands.length) ? 0 : @heightCommands[sel[1]]
       hwoffset = false
-      if System.user_language[3..4] == "US"    # If the user is in the United States
+      if Translation.imperial_measurements?
         ht1 = (sel[0] >= @heightCommands.length) ? 99 * 12 : (ht1 / 0.254).round
         ht2 = (sel[1] < 0) ? 99 * 12 : (ht2 / 0.254).round
         txt1 = sprintf("%d'%02d''", ht1 / 12, ht1 % 12)
@@ -649,7 +639,7 @@ class PokemonPokedex_Scene
       wt1 = (sel[0] < 0) ? 0 : (sel[0] >= @weightCommands.length) ? 9999 : @weightCommands[sel[0]]
       wt2 = (sel[1] < 0) ? 9999 : (sel[1] >= @weightCommands.length) ? 0 : @weightCommands[sel[1]]
       hwoffset = false
-      if System.user_language[3..4] == "US"   # If the user is in the United States
+      if Translation.imperial_measurements?
         wt1 = (sel[0] >= @weightCommands.length) ? 99_990 : (wt1 / 0.254).round
         wt2 = (sel[1] < 0) ? 99_990 : (wt2 / 0.254).round
         txt1 = sprintf("%.1f", wt1 / 10.0)
@@ -866,31 +856,17 @@ class PokemonPokedex_Scene
   end
 
   def pbDexEntry(index)
-    oldsprites = pbFadeOutAndHide(@sprites)
-    region = -1
-    if !Settings::USE_CURRENT_REGION_DEX
-      dexnames = Settings.pokedex_names
-      if dexnames[pbGetSavePositionIndex].is_a?(Array)
-        region = dexnames[pbGetSavePositionIndex][1]
-      end
-    end
-    scene = PokemonPokedexInfo_Scene.new
-    screen = PokemonPokedexInfoScreen.new(scene)
-    ret = screen.pbStartScreen(@dexlist, index, region)
-    if @searchResults
-      dexlist = pbSearchDexList(@searchParams)
-      @dexlist = dexlist
-      @sprites["pokedex"].commands = @dexlist
-      ret = @dexlist.length - 1 if ret >= @dexlist.length
-      ret = 0 if ret < 0
-    else
+    new_index = index
+    entry_dex_list = []
+    entry_dex_list = @dexlist.map { |entry| [entry[:number] + (entry[:shift] ? -1 : 0), entry[:species]] }
+    pbFadeOutIn do
+      new_index = UI::PokedexEntry.new(entry_dex_list, index).main
       pbRefreshDexList($PokemonGlobal.pokedexIndex[pbGetSavePositionIndex])
-      $PokemonGlobal.pokedexIndex[pbGetSavePositionIndex] = ret
+      $PokemonGlobal.pokedexIndex[pbGetSavePositionIndex] = new_index
+      @sprites["pokedex"].index = new_index
+      @sprites["pokedex"].refresh
+      pbRefresh
     end
-    @sprites["pokedex"].index = ret
-    @sprites["pokedex"].refresh
-    pbRefresh
-    pbFadeInAndShow(@sprites, oldsprites)
   end
 
   def pbDexSearchCommands(mode, selitems, mainindex)

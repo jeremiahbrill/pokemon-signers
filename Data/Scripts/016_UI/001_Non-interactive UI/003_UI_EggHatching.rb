@@ -116,9 +116,7 @@ class PokemonEggHatch_Scene
       pbMessage(_INTL("{1}'s data was added to the Pokédex.", @pokemon.name)) { update }
       $player.pokedex.register_last_seen(@pokemon)
       pbFadeOutIn do
-        scene = PokemonPokedexInfo_Scene.new
-        screen = PokemonPokedexInfoScreen.new(scene)
-        screen.pbDexEntry(@pokemon.species)
+        pbShowPokedexEntry(@pokemon.species)
       end
     end
     # Nickname the Pokémon
@@ -238,9 +236,7 @@ def pbHatch(pokemon)
       pbMessage(_INTL("{1}'s data was added to the Pokédex.", speciesname))
       $player.pokedex.register_last_seen(pokemon)
       pbFadeOutIn do
-        scene = PokemonPokedexInfo_Scene.new
-        screen = PokemonPokedexInfoScreen.new(scene)
-        screen.pbDexEntry(pokemon.species)
+        pbShowPokedexEntry(pokemon.species)
       end
     end
     # Nickname the Pokémon

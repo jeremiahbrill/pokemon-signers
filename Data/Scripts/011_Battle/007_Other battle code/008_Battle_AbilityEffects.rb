@@ -2765,8 +2765,7 @@ Battle::AbilityEffects::TrappingByTarget.add(:ARENATRAP,
 
 Battle::AbilityEffects::TrappingByTarget.add(:MAGNETPULL,
   proc { |ability, switcher, bearer, battle|
-    # TODO: This should only apply if switcher is near to bearer.
-    next true if switcher.pbHasType?(:STEEL)
+    next true if switcher.near?(bearer) && switcher.pbHasType?(:STEEL)
   }
 )
 

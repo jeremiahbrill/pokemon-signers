@@ -295,9 +295,9 @@ module Settings
   # Pokédex
   #-----------------------------------------------------------------------------
 
-  # The names of the Pokédex lists, in the order they are defined in the PBS
-  # file "regional_dexes.txt". The last name is for the National Dex and is
-  # added onto the end of this array.
+  # The names of the Regional Pokédex lists, in the order they are defined in
+  # the PBS file "regional_dexes.txt". The National Dex is (and must be) added
+  # to the end of this array of names.
   # Each entry is either just a name, or is an array containing a name and a
   # number. If there is a number, it is a region number as defined in
   # town_map.txt. If there is no number, the number of the region the player is
@@ -310,10 +310,6 @@ module Settings
       _INTL("National Pokédex")
     ]
   end
-  # Whether the Pokédex list shown is the one for the player's current region
-  # (true), or whether a menu pops up for the player to manually choose which
-  # Dex list to view if more than one is available (false).
-  USE_CURRENT_REGION_DEX                    = false
   # Whether all forms of a given species will be immediately available to view
   # in the Pokédex so long as that species has been seen at all (true), or
   # whether each form needs to be seen specifically before that form appears in

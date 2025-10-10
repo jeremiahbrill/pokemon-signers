@@ -102,8 +102,8 @@ class UI::TownMapVisuals < UI::BaseVisuals
       each_active_roamer do |roamer, i|
         next if !roamer[:icon]
         roamer_map = GameData::MapMetadata.try_get($PokemonGlobal.roamPosition[i])
-        return if !roamer_map || !roamer_map.town_map_position
-        return if roamer_map.town_map_position[0] != @region
+        next if !roamer_map || !roamer_map.town_map_position
+        next if roamer_map.town_map_position[0] != @region
         key = "roamer_#{i}".to_sym
         @pins_pos[key] = [roamer_map.town_map_position[1], roamer_map.town_map_position[2]]
         if roamer_map.town_map_size
@@ -533,7 +533,9 @@ class UI::TownMapVisuals < UI::BaseVisuals
       next if !graphic[5] && @mode == :wall_map
       return if graphic[1] <= 0 || !$game_switches[graphic[1]]
       draw_image(graphics_folder + graphic[4],
-                 graphic[2] * @map_data.point_size[0], graphic[3] * @map_data.point_size[1], overlay: :map_overlay)
+                 (graphic[2] * @map_data.point_size[0]) + @map_data.margins[0],
+                 (graphic[3] * @map_data.point_size[1]) + @map_data.margins[1],
+                 overlay: :map_overlay)
     end
   end
 
@@ -573,12 +575,16 @@ class UI::TownMapVisuals < UI::BaseVisuals
       input_x += input_spacing
     end
     if @mode == :fly || @sub_mode == :fly
-      draw_input.call(0, _INTL("Fly to here"))
+      draw_input.call(1, _INTL("Cancel")) if @sub_mode == :fly
+      draw_input.call(0, _INTL("Fly"))
       return
     end
     if can_zoom?
       draw_input.call(0, _INTL("Zoom"))
-    elsif can_mark?
+    elsif zoomed?
+      draw_input.call(1, _INTL("Zoom"))
+    end
+    if can_mark?
       draw_input.call(0, _INTL("Mark"))
     end
     if can_access_screen_menu?
@@ -783,7 +789,10 @@ class UI::TownMapVisuals < UI::BaseVisuals
         return :marking
       end
     when Input::ACTION
-      if can_access_screen_menu?
+      if @sub_mode == :fly
+        pbPlayCancelSE
+        end_fly_mode
+      elsif can_access_screen_menu?
         pbPlayDecisionSE
         options = screen_menu_options
         return :fly_mode if options.length == 2 && options.include?(:fly_mode)   # Also contains :cancel

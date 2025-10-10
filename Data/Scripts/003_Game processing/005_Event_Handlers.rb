@@ -105,7 +105,7 @@ class HandlerHash
   end
 
   def keys
-    return @hash.keys
+    return @hash.keys.clone
   end
 
   def add(id, handler = nil, &handlerBlock)
@@ -131,10 +131,6 @@ class HandlerHash
 
   def each
     @hash.each_pair { |key, value| yield key, value }
-  end
-
-  def keys
-    return @hash.keys.clone
   end
 
   # NOTE: The call does not pass id as a parameter to the proc/block.

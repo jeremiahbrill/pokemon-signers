@@ -51,6 +51,10 @@ module Settings
   # Whether points in the Town Map can be marked.
   ENABLE_TOWN_MAP_MARKING = true
 
+  # Whether the Forms page of the Pokédex entry lists (seen) shiny variants of
+  # the available forms.
+  SHOW_SHINY_SPRITES_IN_POKEDEX = true
+
   # TODO: Allow renaming a Pokémon from the party screen/summary screen (not
   #       sure which). Gen 9 feature.
   # TODO: Allow forgetting/remembering moves from the summary screen. Gen 9

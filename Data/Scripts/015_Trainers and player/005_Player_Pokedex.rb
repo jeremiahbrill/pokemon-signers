@@ -133,6 +133,7 @@ class Player < Trainer
     # @param species [Symbol, GameData::Species] Pokémon species
     def last_form_seen(species)
       @last_seen_forms[species] ||= []
+      @last_seen_forms[species][2] = [false, true][@last_seen_forms[species][2]] if @last_seen_forms[species][2].is_a?(Integer)
       return @last_seen_forms[species][0] || 0, @last_seen_forms[species][1] || 0, @last_seen_forms[species][2] || false
     end
 
@@ -305,7 +306,8 @@ class Player < Trainer
       return @unlocked_dexes[dex] == true
     end
 
-    # @return [Integer] the number of defined Dexes (including the National Dex)
+    # @return [Integer] the number of defined Dexes (as defined in the PBS file)
+    #                   plus 1 (for the National Dex)
     def dexes_count
       return @unlocked_dexes.length
     end
@@ -319,12 +321,6 @@ class Player < Trainer
     # regions.
     def refresh_accessible_dexes
       @accessible_dexes = []
-      if Settings::USE_CURRENT_REGION_DEX
-        region = pbGetCurrentRegion
-        region = -1 if region >= dexes_count - 1
-        @accessible_dexes[0] = region if self.seen_any?(region)
-        return
-      end
       if dexes_count == 1   # Only National Dex is defined
         @accessible_dexes.push(-1) if self.unlocked?(0) && self.seen_any?
       else   # Regional Dexes + National Dex

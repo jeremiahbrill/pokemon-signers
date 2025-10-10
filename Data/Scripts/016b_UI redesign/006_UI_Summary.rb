@@ -899,7 +899,7 @@ class UI::PokemonSummaryVisuals < UI::BaseVisuals
       date  = @pokemon.timeReceived.day
       month = pbGetMonthName(@pokemon.timeReceived.mon)
       year  = @pokemon.timeReceived.year
-      if System.user_language[3..4] == "US"
+      if Translation.month_day_date_format?
         memo += black_text_tag + _INTL("{1} {2}, {3}", month, date, year) + "\n"
       else
         memo += black_text_tag + _INTL("{1} {2}, {3}", date, month, year) + "\n"
@@ -917,7 +917,7 @@ class UI::PokemonSummaryVisuals < UI::BaseVisuals
         date  = @pokemon.timeEggHatched.day
         month = pbGetMonthName(@pokemon.timeEggHatched.mon)
         year  = @pokemon.timeEggHatched.year
-        if System.user_language[3..4] == "US"
+        if Translation.month_day_date_format?
           memo += black_text_tag + _INTL("{1} {2}, {3}", month, date, year) + "\n"
         else
           memo += black_text_tag + _INTL("{1} {2}, {3}", date, month, year) + "\n"
@@ -941,7 +941,7 @@ class UI::PokemonSummaryVisuals < UI::BaseVisuals
       date  = @pokemon.timeReceived.day
       month = pbGetMonthName(@pokemon.timeReceived.mon)
       year  = @pokemon.timeReceived.year
-      if System.user_language[3..4] == "US"
+      if Translation.month_day_date_format?
         memo += black_text_tag + _INTL("{1} {2}, {3}", month, date, year) + "\n"
       else
         memo += black_text_tag + _INTL("{1} {2}, {3}", date, month, year) + "\n"
@@ -1470,9 +1470,7 @@ class UI::PokemonSummary < UI::BaseScreen
     :effect => proc { |screen|
       $player.pokedex.register_last_seen(screen.pokemon)
       pbFadeOutInWithUpdate(screen.sprites) do
-        dex_scene = PokemonPokedexInfo_Scene.new
-        dex_screen = PokemonPokedexInfoScreen.new(dex_scene)
-        dex_screen.pbStartSceneSingle(screen.pokemon.species)
+        pbShowPokedexEntry(screen.pokemon.species, false)
       end
     }
   })

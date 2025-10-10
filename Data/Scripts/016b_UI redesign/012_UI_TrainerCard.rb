@@ -57,7 +57,7 @@ class UI::TrainerCardVisuals < UI::BaseVisuals
     play_time_text = (hour > 0) ? _INTL("{1}h {2}m", hour, min) : _INTL("{1}m", min)
     # Create start date text
     $PokemonGlobal.startTime = Time.now if !$PokemonGlobal.startTime
-    if System.user_language[3..4] == "US"
+    if Translation.month_day_date_format?
       start_date_text = _INTL("{1} {2}, {3}",
                               pbGetAbbrevMonthName($PokemonGlobal.startTime.mon),
                               $PokemonGlobal.startTime.day,

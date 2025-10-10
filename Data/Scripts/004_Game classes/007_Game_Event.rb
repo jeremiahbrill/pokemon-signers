@@ -235,6 +235,8 @@ class Game_Event < Game_Character
       @trigger        = nil
       @list           = nil
       @interpreter    = nil
+      # TODO: Should this erase @move_route and related things set in def
+      #       force_move_route?
       return
     end
     @tile_id              = @page.graphic.tile_id

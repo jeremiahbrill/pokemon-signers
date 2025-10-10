@@ -189,7 +189,7 @@ class UI::SavePanel < UI::SpriteContainer
     save_time = @save_data[:stats]&.real_time_saved
     if save_time && save_time != 0
       save_time = Time.at(save_time)
-      if System.user_language[3..4] == "US"   # If the user is in the United States
+      if Translation.month_day_date_format?
         save_text = save_time.strftime("%-m/&-d/%Y")
       else
         save_text = save_time.strftime("%-d/%-m/%Y")
@@ -339,7 +339,7 @@ class UI::SaveVisuals < UI::BaseVisuals
       end
     elsif $stats.save_count > 0 && $stats.real_time_saved && $stats.real_time_saved > 0
       save_time = Time.at($stats.real_time_saved)
-      if System.user_language[3..4] == "US"   # If the user is in the United States
+      if Translation.month_day_date_format?
         date_text = save_time.strftime("%-m/&-d/%Y")
       else
         date_text = save_time.strftime("%-d/%-m/%Y")

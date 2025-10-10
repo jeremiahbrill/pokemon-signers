@@ -167,28 +167,9 @@ MenuHandlers.add(:pause_menu, :pokedex, {
   "condition" => proc { next $player.has_pokedex && $player.pokedex.accessible_dexes.length > 0 },
   "effect"    => proc { |menu|
     pbPlayDecisionSE
-    if Settings::USE_CURRENT_REGION_DEX
-      pbFadeOutIn do
-        scene = PokemonPokedex_Scene.new
-        screen = PokemonPokedexScreen.new(scene)
-        screen.pbStartScreen
-        menu.refresh
-      end
-    elsif $player.pokedex.accessible_dexes.length == 1
-      $PokemonGlobal.pokedexDex = $player.pokedex.accessible_dexes[0]
-      pbFadeOutIn do
-        scene = PokemonPokedex_Scene.new
-        screen = PokemonPokedexScreen.new(scene)
-        screen.pbStartScreen
-        menu.refresh
-      end
-    else
-      pbFadeOutIn do
-        scene = PokemonPokedexMenu_Scene.new
-        screen = PokemonPokedexMenuScreen.new(scene)
-        screen.pbStartScreen
-        menu.refresh
-      end
+    pbFadeOutIn do
+      UI::PokedexDexes.new.main
+      menu.refresh
     end
     next false
   }

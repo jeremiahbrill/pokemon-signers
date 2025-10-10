@@ -57,7 +57,7 @@ def pbGetLanguage
   when "es" then return 7   # Spanish
   when "ko" then return 8   # Korean
   end
-  return 2 # Use 'English' by default
+  return 2   # Use 'English' by default
 end
 
 def pbChooseLanguage

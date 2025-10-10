@@ -891,10 +891,10 @@ end
 
 def renderLineBrokenChunksWithShadow(bitmap, xDst, yDst, normtext, maxheight, baseColor, shadowColor)
   normtext.each do |text|
-    width = text[3]
+    next if maxheight != 0 && text[2] >= maxheight
     textx = text[1] + xDst
     texty = text[2] + yDst
-    next if maxheight != 0 && text[2] >= maxheight
+    width = text[3]
     height = text[4]
     text = text[0]
     bitmap.font.color = shadowColor

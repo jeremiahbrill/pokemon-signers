@@ -169,8 +169,8 @@ module GameData
       DATA.each_value { |species| yield species if species.form == 0 }
     end
 
-    def self.each_form_for_species(species)
-      DATA.each_value { |species| yield species if species.species == species }
+    def self.each_form_for_species(this_species)
+      DATA.each_value { |species| yield species if species.species == this_species }
     end
 
     def self.species_count

@@ -1,3 +1,4 @@
+=begin
 #===============================================================================
 #
 #===============================================================================
@@ -586,8 +587,8 @@ class PokemonPokedexInfoScreen
     @scene = scene
   end
 
-  def pbStartScreen(dexlist, index, region)
-    @scene.pbStartScene(dexlist, index, region)
+  def pbStartScreen(dexlist, index)
+    @scene.pbStartScene(dexlist, index)
     ret = @scene.pbScene
     @scene.pbEndScene
     return ret   # Index of last species viewed in dexlist
@@ -595,13 +596,7 @@ class PokemonPokedexInfoScreen
 
   # For use from a Pokémon's summary screen.
   def pbStartSceneSingle(species)
-    region = -1
-    if Settings::USE_CURRENT_REGION_DEX
-      region = pbGetCurrentRegion
-      region = -1 if region >= $player.pokedex.dexes_count - 1
-    else
-      region = $PokemonGlobal.pokedexDex   # National Dex -1, regional Dexes 0, 1, etc.
-    end
+    region = $PokemonGlobal.pokedexDex   # National Dex -1, regional Dexes 0, 1, etc.
     dexnum = pbGetRegionalNumber(region, species)
     dexnumshift = Settings::DEXES_WITH_OFFSETS.include?(region)
     dexlist = [{
@@ -624,3 +619,4 @@ class PokemonPokedexInfoScreen
     @scene.pbEndScene
   end
 end
+=end

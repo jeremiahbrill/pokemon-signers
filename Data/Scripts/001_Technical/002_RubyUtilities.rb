@@ -63,13 +63,8 @@ class Numeric
   # Turns a number into a string formatted like 12,345,678. Some languages use
   # different characters as the thousands separator.
   def to_s_formatted
-    case System.user_language[0..1]
-    when "fr", "es"
-      return self.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\1 ').reverse
-    when "it", "de"
-      return self.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\1.').reverse
-    end
-    return self.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\1,').reverse
+    separator = '\1' + Translation.thousands_separator
+    return self.to_s.reverse.gsub(/(\d{3})(?=\d)/, separator).reverse
   end
 
   def to_word

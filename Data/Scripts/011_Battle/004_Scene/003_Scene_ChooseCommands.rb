@@ -471,9 +471,7 @@ class Battle::Scene
 
   def pbShowPokedex(species)
     pbFadeOutIn do
-      scene = PokemonPokedexInfo_Scene.new
-      screen = PokemonPokedexInfoScreen.new(scene)
-      screen.pbDexEntry(species)
+      pbShowPokedexEntry(species)
     end
   end
 end

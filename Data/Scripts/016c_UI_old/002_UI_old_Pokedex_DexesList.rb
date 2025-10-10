@@ -1,3 +1,4 @@
+=begin
 #===============================================================================
 # Pokédex Regional Dexes list menu screen
 # * For choosing which region list to view. Only appears when there is more
@@ -127,3 +128,4 @@ class PokemonPokedexMenuScreen
     @scene.pbEndScene
   end
 end
+=end
