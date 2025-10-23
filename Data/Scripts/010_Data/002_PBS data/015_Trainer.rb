@@ -32,8 +32,8 @@ module GameData
       "Ability"      => [:ability,         "e", :Ability],
       "AbilityIndex" => [:ability_index,   "u"],
       "Item"         => [:item,            "e", :Item],
-      "Gender"       => [:gender,          "e", {"M" => 0, "m" => 0, "Male" => 0, "male" => 0, "0" => 0,
-                                                 "F" => 1, "f" => 1, "Female" => 1, "female" => 1, "1" => 1}],
+      "Gender"       => [:gender,          "e", {"male" => 0, "Male" => 0, "m" => 0, "M" => 0, "0" => 0,
+                                                 "female" => 1, "Female" => 1, "f" => 1, "F" => 1, "1" => 1}],
       "Nature"       => [:nature,          "e", :Nature],
       "IV"           => [:iv,              "uUUUUU"],
       "EV"           => [:ev,              "uUUUUU"],
@@ -205,8 +205,6 @@ module GameData
       ret = @pokemon[index][SUB_SCHEMA[key][0]]
       ret = nil if ret == false || (ret.is_a?(Array) && ret.length == 0) || ret == ""
       case key
-      when "Gender"
-        ret = ["male", "female"][ret] if ret
       when "IV", "EV"
         if ret
           new_ret = []

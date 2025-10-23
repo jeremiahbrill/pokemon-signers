@@ -383,38 +383,38 @@ VictoryBGM = Battle victory leader
 Name = Elite Four
 Gender = Female
 BaseMoney = 100
+PokeBall = ULTRABALL
 BattleBGM = Battle Elite
 VictoryBGM = Battle victory leader
-PokeBall = ULTRABALL
 #-------------------------------
 [ELITEFOUR_Bruno]
 Name = Elite Four
 Gender = Male
 BaseMoney = 100
+PokeBall = ULTRABALL
 BattleBGM = Battle Elite
 VictoryBGM = Battle victory leader
-PokeBall = ULTRABALL
 #-------------------------------
 [ELITEFOUR_Agatha]
 Name = Elite Four
 Gender = Female
 BaseMoney = 100
+PokeBall = ULTRABALL
 BattleBGM = Battle Elite
 VictoryBGM = Battle victory leader
-PokeBall = ULTRABALL
 #-------------------------------
 [ELITEFOUR_Lance]
 Name = Elite Four
 Gender = Male
 BaseMoney = 100
+PokeBall = ULTRABALL
 BattleBGM = Battle Elite
 VictoryBGM = Battle victory leader
-PokeBall = ULTRABALL
 #-------------------------------
 [CHAMPION]
 Name = Champion
 Gender = Male
 BaseMoney = 100
+PokeBall = ULTRABALL
 BattleBGM = Battle Champion
 VictoryBGM = Battle victory leader
-PokeBall = ULTRABALL
