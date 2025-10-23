@@ -97,6 +97,13 @@ module UI::PC
           bag_screen = UI::Bag.new($bag, mode: :choose_item)
           given_item = bag_screen.choose_item do |item|
             item_data = GameData::Item.get(item)
+            if Settings::DISABLE_STORING_IMPORTANT_ITEMS && item_data.is_important?
+              bag_screen.show_message(_INTL("You couldn't deposit such an important item!"))
+              next false
+            elsif item_data.has_flag?("CannotDeposit")
+              bag_screen.show_message(_INTL("You couldn't deposit such an important item!"))
+              next false
+            end
             qty = $bag.quantity(item)
             if qty > 1 && !item_data.is_important?
               qty = bag_screen.choose_number(_INTL("How many do you want to deposit?"), qty)

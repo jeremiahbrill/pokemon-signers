@@ -55,6 +55,10 @@ module Settings
   # the available forms.
   SHOW_SHINY_SPRITES_IN_POKEDEX = true
 
+  # Whether the player is prevented from depositing a Key Item, TM or HM into
+  # item storage.
+  DISABLE_STORING_IMPORTANT_ITEMS = true
+
   # TODO: Allow renaming a Pokémon from the party screen/summary screen (not
   #       sure which). Gen 9 feature.
   # TODO: Allow forgetting/remembering moves from the summary screen. Gen 9

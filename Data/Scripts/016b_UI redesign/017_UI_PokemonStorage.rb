@@ -1827,7 +1827,14 @@ class UI::PokemonStorage < UI::BaseScreen
       raise _INTL("Tried releasing a Pokémon when not selecting or holding one.", screen.box, screen.index) if !screen.pokemon
       pkmn = screen.pokemon
       if pkmn.egg?
-        screen.show_message(_INTL("You can't release an Egg."))
+        screen.show_message(_INTL("You can't release an Egg!"))
+        next
+      elsif pkmn.fused
+        if pkmn.isSpecies?(:CALYREX)
+          screen.show_message(_INTL("You can’t release {1} when it's united with another Pokémon!", pkmn.name))
+        else   # Kyurem, Necrozma
+          screen.show_message(_INTL("You can’t release {1} when it's fused with another Pokémon!", pkmn.name))
+        end
         next
       elsif pkmn.mail
         screen.show_message(_INTL("Please remove the mail."))
@@ -1837,10 +1844,10 @@ class UI::PokemonStorage < UI::BaseScreen
         next
       elsif screen.box < 0 && pkmn.able? && screen.party_able_count <= 1 && !screen.holding_pokemon?
         pbPlayBuzzerSE
-        screen.show_message(_INTL("That's your last Pokémon!"))
+        screen.show_message(_INTL("You'll be left without any Pokémon that can battle if you do that!"))
         next
       end
-      if screen.show_confirm_serious_message(_INTL("Release this Pokémon?"))
+      if screen.show_confirm_serious_message(_INTL("Do you really want to release this Pokémon?"))
         $bag.add(pkmn.item_id) if pkmn.hasItem?
         pkmn_name = pkmn.name
         screen.visuals.release_pokemon

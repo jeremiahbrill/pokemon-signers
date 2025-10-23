@@ -70,7 +70,7 @@ class Pokemon
   # @return [Integer] the map ID where egg was hatched (0 by default)
   attr_accessor :hatched_map
   # Another Pokémon which has been fused with this Pokémon (or nil if there is none).
-  # Currently only used by Kyurem, to record a fused Reshiram or Zekrom.
+  # Currently only used by Kyurem, Necrozma and Calyrex.
   # @return [Pokemon, nil] the Pokémon fused into this one (nil if there is none)
   attr_accessor :fused
   # @return [Integer] this Pokémon's personal ID
@@ -951,6 +951,12 @@ class Pokemon
       gain = [5, 4, 3][happiness_range]
     when "groom"
       gain = [10, 10, 4][happiness_range]
+    when "massage1"
+      gain = 10
+    when "massage2"
+      gain = 20
+    when "massage3"
+      gain = 40
     when "evberry"
       gain = [10, 5, 2][happiness_range]
     when "vitamin"
@@ -973,9 +979,11 @@ class Pokemon
       raise _INTL("Unknown happiness-changing method: {1}", method.to_s)
     end
     if gain > 0
-      gain += 1 if @obtain_map == $game_map.map_id
-      gain += 1 if @poke_ball == :LUXURYBALL
-      gain = (gain * 1.5).floor if hasItem?(:SOOTHEBELL)
+      if !["groom", "massage1", "massage2", "massage3"].include?(method)
+        gain += 1 if @obtain_map == $game_map.map_id
+        gain += 1 if @poke_ball == :LUXURYBALL
+        gain = (gain * 1.5).floor if hasItem?(:SOOTHEBELL)
+      end
       if Settings::APPLY_HAPPINESS_SOFT_CAP && method != "evberry"
         gain = (@happiness >= 179) ? 0 : gain.clamp(0, 179 - @happiness)
       end
