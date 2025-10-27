@@ -1113,6 +1113,7 @@ class UI::PokemonSummaryVisuals < UI::BaseVisuals
     end
     # Check for interaction
     if Input.trigger?(Input::USE)
+      return false if @mode == :in_battle
       pbPlayDecisionSE
       return true if @mode == :choose_move
       if !@pokemon.shadowPokemon?
@@ -1215,6 +1216,7 @@ class UI::PokemonSummaryVisuals < UI::BaseVisuals
     end
     # Check for interaction
     if Input.trigger?(Input::USE)
+      return false if @mode == :in_battle
       if @swap_ribbon_index >= 0
         # End swapping ribbons
         pbPlayDecisionSE

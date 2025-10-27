@@ -67,6 +67,8 @@ end
 # Pokémon Mart.
 #===============================================================================
 class UI::MartVisualsList < Window_DrawableCommand
+  attr_accessor :expensive_base_color, :expensive_shadow_color
+
   def initialize(stock, x, y, width, height, screen, viewport = nil)
     @stock = stock
     super(x, y, width, height, viewport)
@@ -88,14 +90,6 @@ class UI::MartVisualsList < Window_DrawableCommand
 
   def item_id
     return (self.index >= @stock.length) ? nil : @stock[self.index]
-  end
-
-  def expensive_base_color=(value)
-    @expensive_base_color = value
-  end
-
-  def expensive_shadow_color=(value)
-    @expensive_shadow_color = value
   end
 
   def expensive?(this_item)

@@ -425,23 +425,6 @@ class UI::PauseMenu < UI::BaseScreen
   end
 end
 
-# class PokemonPauseMenu
-#   alias __bug_contest_pbShowInfo pbShowInfo unless method_defined?(:__bug_contest_pbShowInfo)
-#
-#   def pbShowInfo
-#     __bug_contest_pbShowInfo
-#     return if !pbInBugContest?
-#     if pbBugContestState.lastPokemon
-#       @scene.pbShowInfo(_INTL("Caught: {1}\nLevel: {2}\nBalls: {3}",
-#                               pbBugContestState.lastPokemon.speciesName,
-#                               pbBugContestState.lastPokemon.level,
-#                               pbBugContestState.ballcount))
-#     else
-#       @scene.pbShowInfo(_INTL("Caught: None\nBalls: {1}", pbBugContestState.ballcount))
-#     end
-#   end
-# end
-
 #===============================================================================
 #
 #===============================================================================
