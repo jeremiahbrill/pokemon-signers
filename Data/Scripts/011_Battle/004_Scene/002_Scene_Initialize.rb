@@ -30,21 +30,25 @@ class Battle::Scene
     # The background image and each side's base graphic
     pbCreateBackdropSprites
     # Create message box graphic
-    messageBox = pbAddSprite("messageBox", 0, Graphics.height - 96,
-                             "Graphics/UI/Battle/overlay_message", @viewport)
+    messageBox = pbCreateMessageWindow(@viewport)
+    messageBox.height = 92
+    messageBox.y = Graphics.height - messageBox.height
     messageBox.z = 10195
+    @sprites["messageBox"] = messageBox
+    $game_temp.message_window_showing = false if $game_temp
     # Create message window (displays the message)
     msgWindow = Window_AdvancedTextPokemon.newWithSize(
-      "", 16, Graphics.height - 96 + 2, Graphics.width - 32, 96, @viewport
+      "", 0, Graphics.height - 96 + 2, Graphics.width, 96, @viewport
     )
+    msgWindow.setSkin(MessageConfig.pbGetSpeechFrame)
     msgWindow.z              = 10200
-    msgWindow.opacity        = 0
     msgWindow.baseColor      = MESSAGE_BASE_COLOR
     msgWindow.shadowColor    = MESSAGE_SHADOW_COLOR
     msgWindow.letterbyletter = true
+    msgWindow.opacity        = 0
     @sprites["messageWindow"] = msgWindow
     # Create command window
-    @sprites["commandWindow"] = CommandMenu.new(@viewport, 10200)
+    @sprites["commandWindow"] = CommandMenu.new(@viewport, 10200, @battle)
     # Create fight window
     @sprites["fightWindow"] = FightMenu.new(@viewport, 10200)
     # Create targeting window

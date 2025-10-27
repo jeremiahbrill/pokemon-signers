@@ -59,6 +59,16 @@ module Settings
   # item storage.
   DISABLE_STORING_IMPORTANT_ITEMS = true
 
+  # Whether the data box for a selected Pokémon in battle (either because you're
+  # choosing a command for it or targeting it) moves up and down a little.
+  BOB_BATTLE_DATA_BOX_IF_SELECTED = true
+  # Whether the sprite of a selected Pokémon in battle (when choosing a command
+  # for it) moves up and down a little.
+  BOB_BATTLER_SPRITE_IF_SELECTED = true
+  # Whether the sprite of a selected Pokémon in battle (when targeting it)
+  # flashes visible/invisible.
+  FLASH_BATTLER_SPRITE_IF_TARGETED = true
+
   # TODO: Allow renaming a Pokémon from the party screen/summary screen (not
   #       sure which). Gen 9 feature.
   # TODO: Allow forgetting/remembering moves from the summary screen. Gen 9

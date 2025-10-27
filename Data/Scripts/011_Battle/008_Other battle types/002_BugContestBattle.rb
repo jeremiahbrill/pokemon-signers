@@ -43,12 +43,8 @@ class BugContestBattle < Battle
   end
 
   def pbCommandMenu(idxBattler, _firstAction)
-    return @scene.pbCommandMenuEx(idxBattler,
-                                  [_INTL("Sport Balls: {1}", @ballCount),
-                                   _INTL("Fight"),
-                                   _INTL("Ball"),
-                                   _INTL("Pokémon"),
-                                   _INTL("Run")], 4)
+    cmds = [:fight, nil, :throw_ball_contest, :run, :pokemon]
+    return @scene.pbCommandMenuEx(idxBattler, cmds)
   end
 
   def pbConsumeItemInBag(_item, _idxBattler)

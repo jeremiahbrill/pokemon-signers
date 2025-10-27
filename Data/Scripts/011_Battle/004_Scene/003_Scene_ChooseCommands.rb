@@ -4,65 +4,53 @@
 class Battle::Scene
   #-----------------------------------------------------------------------------
   # The player chooses a main command for a Pokémon.
-  # Return values: -1=Cancel, 0=Fight, 1=Bag, 2=Pokémon, 3=Run, 4=Call
   #-----------------------------------------------------------------------------
 
   def pbCommandMenu(idxBattler, firstAction)
-    shadowTrainer = (GameData::Type.exists?(:SHADOW) && @battle.trainerBattle?)
-    cmds = [
-      _INTL("What will\n{1} do?", @battle.battlers[idxBattler].name),
-      _INTL("Fight"),
-      _INTL("Bag"),
-      _INTL("Pokémon"),
-      (shadowTrainer) ? _INTL("Call") : (firstAction) ? _INTL("Run") : _INTL("Cancel")
-    ]
-    ret = pbCommandMenuEx(idxBattler, cmds, (shadowTrainer) ? 2 : (firstAction) ? 0 : 1)
-    ret = 4 if ret == 3 && shadowTrainer   # Convert "Run" to "Call"
-    ret = -1 if ret == 3 && !firstAction   # Convert "Run" to "Cancel"
+    cmds = []
+    # Commands for top row
+    if @battle.pbCanShift?(idxBattler)
+      cmds.push(:fight2)
+      cmds.push(:shift)
+    else
+      cmds.push(:fight)
+    end
+    cmds.push(nil)
+    # Commands for bottom row
+    cmds.push(:bag)
+    cmds.push(:call) if @battle.battlers[idxBattler].shadowPokemon?
+    cmds.push(firstAction ? :run : :cancel)
+    cmds.push(:pokemon)
+    # Open the menu
+    ret = pbCommandMenuEx(idxBattler, cmds)
     return ret
   end
 
-  # Mode: 0 = regular battle with "Run" (first choosable action in the round only)
-  #       1 = regular battle with "Cancel"
-  #       2 = regular battle with "Call" (for Shadow Pokémon battles)
-  #       3 = Safari Zone
-  #       4 = Bug-Catching Contest
-  def pbCommandMenuEx(idxBattler, texts, mode = 0)
+  def pbCommandMenuEx(idxBattler, commands)
     pbShowWindow(COMMAND_BOX)
     cw = @sprites["commandWindow"]
-    cw.setTexts(texts)
-    cw.setIndexAndMode(@lastCmd[idxBattler], mode)
+    cw.set_index_and_commands(@lastCmd[idxBattler], commands)
+    cw.active = true
     pbSelectBattler(idxBattler)
-    ret = -1
+    ret = :cancel
     loop do
-      oldIndex = cw.index
       pbUpdate(cw)
-      # Update selected command
-      if Input.trigger?(Input::LEFT)
-        cw.index -= 1 if (cw.index & 1) == 1
-      elsif Input.trigger?(Input::RIGHT)
-        cw.index += 1 if (cw.index & 1) == 0
-      elsif Input.trigger?(Input::UP)
-        cw.index -= 2 if (cw.index & 2) == 2
-      elsif Input.trigger?(Input::DOWN)
-        cw.index += 2 if (cw.index & 2) == 0
-      end
-      pbPlayCursorSE if cw.index != oldIndex
       # Actions
-      if Input.trigger?(Input::USE)                 # Confirm choice
+      if Input.trigger?(Input::USE)   # Confirm choice
         pbPlayDecisionSE
-        ret = cw.index
+        ret = cw.command
         @lastCmd[idxBattler] = ret
         break
-      elsif Input.trigger?(Input::BACK) && mode == 1   # Cancel
+      elsif Input.trigger?(Input::BACK) && commands.include?(:cancel)   # Cancel
         pbPlayCancelSE
         break
-      elsif Input.trigger?(Input::F9) && $DEBUG    # Debug menu
+      elsif Input.trigger?(Input::F9) && $DEBUG   # Debug menu
         pbPlayDecisionSE
-        ret = -2
+        ret = :debug
         break
       end
     end
+    cw.active = false
     return ret
   end
 
@@ -71,69 +59,52 @@ class Battle::Scene
   #-----------------------------------------------------------------------------
 
   def pbFightMenu(idxBattler, megaEvoPossible = false)
+    pbShowWindow(FIGHT_BOX)
     battler = @battle.battlers[idxBattler]
     cw = @sprites["fightWindow"]
-    cw.battler = battler
-    moveIndex = 0
-    if battler.moves[@lastMove[idxBattler]]&.id
-      moveIndex = @lastMove[idxBattler]
-    end
-    cw.shiftMode = (@battle.pbCanShift?(idxBattler)) ? 1 : 0
-    cw.setIndexAndMode(moveIndex, (megaEvoPossible) ? 1 : 0)
-    needFullRefresh = true
-    needRefresh = false
+    move_index = 0
+    move_index = @lastMove[idxBattler] if battler.moves[@lastMove[idxBattler]]&.id
+    cw.set_battler_and_index(battler, move_index)
+    cw.mega_evolution_state = (megaEvoPossible) ? 1 : 0
+    cw.active = true
+    pbSelectBattler(idxBattler)
+    need_full_refresh = false
+    need_refresh = false
     loop do
       # Refresh view if necessary
-      if needFullRefresh
+      if need_full_refresh
         pbShowWindow(FIGHT_BOX)
         pbSelectBattler(idxBattler)
-        needFullRefresh = false
+        need_full_refresh = false
+        need_refresh = true
       end
-      if needRefresh
+      if need_refresh
         if megaEvoPossible
-          newMode = (@battle.pbRegisteredMegaEvolution?(idxBattler)) ? 2 : 1
-          cw.mode = newMode if newMode != cw.mode
+          cw.mega_evolution_state = (@battle.pbRegisteredMegaEvolution?(idxBattler)) ? 2 : 1
         end
-        needRefresh = false
+        need_refresh = false
       end
-      oldIndex = cw.index
       # General update
       pbUpdate(cw)
-      # Update selected command
-      if Input.trigger?(Input::LEFT)
-        cw.index -= 1 if (cw.index & 1) == 1
-      elsif Input.trigger?(Input::RIGHT)
-        cw.index += 1 if battler.moves[cw.index + 1]&.id && (cw.index & 1) == 0
-      elsif Input.trigger?(Input::UP)
-        cw.index -= 2 if (cw.index & 2) == 2
-      elsif Input.trigger?(Input::DOWN)
-        cw.index += 2 if battler.moves[cw.index + 2]&.id && (cw.index & 2) == 0
-      end
-      pbPlayCursorSE if cw.index != oldIndex
       # Actions
       if Input.trigger?(Input::USE)      # Confirm choice
         pbPlayDecisionSE
         break if yield cw.index
-        needFullRefresh = true
-        needRefresh = true
+        need_full_refresh = true
+        need_refresh = true
       elsif Input.trigger?(Input::BACK)   # Cancel fight menu
         pbPlayCancelSE
         break if yield -1
-        needRefresh = true
+        need_refresh = true
       elsif Input.trigger?(Input::ACTION)   # Toggle Mega Evolution
-        if megaEvoPossible
+        if cw.mega_evolution_state > 0
           pbPlayDecisionSE
           break if yield -2
-          needRefresh = true
-        end
-      elsif Input.trigger?(Input::SPECIAL)   # Shift
-        if cw.shiftMode > 0
-          pbPlayDecisionSE
-          break if yield -3
-          needRefresh = true
+          need_refresh = true
         end
       end
     end
+    cw.active = false
     @lastMove[idxBattler] = cw.index
   end
 
@@ -391,42 +362,16 @@ class Battle::Scene
     texts = pbCreateTargetTexts(idxBattler, target_data)
     # Determine mode based on target_data
     mode = (target_data.num_targets == 1) ? 0 : 1
-    cw.setDetails(texts, mode)
+    cw.set_texts_and_mode(texts, mode)
     cw.index = pbFirstTarget(idxBattler, target_data)
     pbSelectBattler((mode == 0) ? cw.index : texts, 2)   # Select initial battler/data box
     pbFadeInAndShow(@sprites, visibleSprites) if visibleSprites
+    cw.active = true
     ret = -1
     loop do
-      oldIndex = cw.index
+      old_index = cw.index
       pbUpdate(cw)
-      # Update selected command
-      if mode == 0   # Choosing just one target, can change index
-        if Input.trigger?(Input::LEFT) || Input.trigger?(Input::RIGHT)
-          inc = (cw.index.even?) ? -2 : 2
-          inc *= -1 if Input.trigger?(Input::RIGHT)
-          indexLength = @battle.sideSizes[cw.index % 2] * 2
-          newIndex = cw.index
-          loop do
-            newIndex += inc
-            break if newIndex < 0 || newIndex >= indexLength
-            next if texts[newIndex].nil?
-            cw.index = newIndex
-            break
-          end
-        elsif (Input.trigger?(Input::UP) && cw.index.even?) ||
-              (Input.trigger?(Input::DOWN) && cw.index.odd?)
-          tryIndex = @battle.pbGetOpposingIndicesInOrder(cw.index)
-          tryIndex.each do |idxBattlerTry|
-            next if texts[idxBattlerTry].nil?
-            cw.index = idxBattlerTry
-            break
-          end
-        end
-        if cw.index != oldIndex
-          pbPlayCursorSE
-          pbSelectBattler(cw.index, 2)   # Select the new battler/data box
-        end
-      end
+      pbSelectBattler(cw.index, 2) if cw.index != old_index   # Select the new battler/data box
       if Input.trigger?(Input::USE)   # Confirm
         ret = cw.index
         pbPlayDecisionSE
@@ -438,6 +383,7 @@ class Battle::Scene
       end
     end
     pbSelectBattler(-1)   # Deselect all battlers/data boxes
+    cw.active = false
     return ret
   end
 

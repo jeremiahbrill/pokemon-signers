@@ -64,7 +64,7 @@ class Battle::Scene::SafariDataBox < Sprite
     super(viewport)
     @selected    = 0
     @battle      = battle
-    @databox     = AnimatedBitmap.new(_INTL("Graphics/UI/Battle/databox_safari"))
+    @databox     = AnimatedBitmap.new("Graphics/UI/Battle/databox_safari")
     self.x       = Graphics.width - 232
     self.y       = Graphics.height - 184
     @contents    = Bitmap.new(@databox.width, @databox.height)
@@ -134,7 +134,7 @@ class Battle::Scene::Animation::ThrowBait < Battle::Scene::Animation
     # Show Pokémon jumping before eating the bait
     delay = ball.totalDuration + 3
     2.times do
-      battler.setSE(delay, "player jump")
+      battler.setSE(delay, "Player jump")
       battler.moveDelta(delay, 3, 0, -16)
       battler.moveDelta(delay + 4, 3, 0, 16)
       delay = battler.totalDuration + 1
@@ -230,12 +230,8 @@ class Battle::Scene
   end
 
   def pbSafariCommandMenu(index)
-    pbCommandMenuEx(index,
-                    [_INTL("What will\n{1} throw?", @battle.pbPlayer.name),
-                     _INTL("Ball"),
-                     _INTL("Bait"),
-                     _INTL("Rock"),
-                     _INTL("Run")], 3)
+    cmds = [:throw_ball, nil, :throw_bait, :run, :throw_rock]
+    return pbCommandMenuEx(index, cmds)
   end
 
   def pbThrowBait
@@ -435,7 +431,7 @@ class SafariBattle
       loop do
         cmd = @scene.pbSafariCommandMenu(0)
         case cmd
-        when 0   # Ball
+        when :throw_ball   # Ball
           if pbBoxesFull?
             pbDisplay(_INTL("The boxes are full! You can't catch any more Pokémon!"))
             next
@@ -450,17 +446,17 @@ class SafariBattle
               @decision = Battle::Outcome::CATCH
             end
           end
-        when 1   # Bait
+        when :throw_bait   # Bait
           pbDisplayBrief(_INTL("{1} threw some bait at the {2}!", self.pbPlayer.name, pkmn.name))
           @scene.pbThrowBait
           catchFactor  /= 2 if pbRandom(100) < 90   # Harder to catch
           escapeFactor /= 2                       # Less likely to escape
-        when 2   # Rock
+        when :throw_rock   # Rock
           pbDisplayBrief(_INTL("{1} threw a rock at the {2}!", self.pbPlayer.name, pkmn.name))
           @scene.pbThrowRock
           catchFactor  *= 2                       # Easier to catch
           escapeFactor *= 2 if pbRandom(100) < 90   # More likely to escape
-        when 3   # Run
+        when :run   # Run
           pbSEPlay("Battle flee")
           pbDisplayPaused(_INTL("You got away safely!"))
           @decision = Battle::Outcome::FLEE
@@ -479,9 +475,9 @@ class SafariBattle
             pbSEPlay("Battle flee")
             pbDisplay(_INTL("{1} fled!", pkmn.name))
             @decision = Battle::Outcome::FLEE
-          elsif cmd == 1   # Bait
+          elsif cmd == :throw_bait   # Bait
             pbDisplay(_INTL("{1} is eating!", pkmn.name))
-          elsif cmd == 2   # Rock
+          elsif cmd == :throw_rock   # Rock
             pbDisplay(_INTL("{1} is angry!", pkmn.name))
           else
             pbDisplay(_INTL("{1} is watching carefully!", pkmn.name))

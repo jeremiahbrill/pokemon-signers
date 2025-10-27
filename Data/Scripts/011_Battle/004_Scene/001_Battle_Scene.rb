@@ -137,7 +137,8 @@ class Battle::Scene
     @battle.battlers.each_with_index do |battler, i|
       next if !battler
       pbChangePokemon(i, @sprites["pokemon_#{i}"].pkmn)
-      @sprites["dataBox_#{i}"].initializeDataBoxGraphic(@battle.pbSideSize(i))
+      @sprites["dataBox_#{i}"].initializeDataBoxBitmap
+      @sprites["dataBox_#{i}"].calculateDataBoxPosition
       @sprites["dataBox_#{i}"].refresh
     end
   end
@@ -156,9 +157,6 @@ class Battle::Scene
   #-----------------------------------------------------------------------------
 
   def pbShowWindow(windowType)
-    # NOTE: If you are not using fancy graphics for the command/fight menus, you
-    #       will need to make "messageBox" also visible if the windowtype if
-    #       COMMAND_BOX/FIGHT_BOX respectively.
     @sprites["messageBox"].visible    = (windowType == MESSAGE_BOX)
     @sprites["messageWindow"].visible = (windowType == MESSAGE_BOX)
     @sprites["commandWindow"].visible = (windowType == COMMAND_BOX)
