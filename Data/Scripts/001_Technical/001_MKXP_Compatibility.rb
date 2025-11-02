@@ -1,6 +1,6 @@
 #===============================================================================
-# Using mkxp-z v2.4.2/ec06cab - built 2025/11/01.
-# https://github.com/mkxp-z/mkxp-z/actions/runs/18989623296
+# Using mkxp-z v2.4.2/d13f35c - built 2025/10/28.
+# https://github.com/mkxp-z/mkxp-z/actions/runs/18874497198
 #===============================================================================
 $VERBOSE = nil
 Font.default_shadow = false if Font.respond_to?(:default_shadow)
