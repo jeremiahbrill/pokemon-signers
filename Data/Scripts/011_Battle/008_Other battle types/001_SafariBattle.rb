@@ -52,6 +52,18 @@ class Battle::FakeBattler
   end
 
   def pbReset; end
+
+  def pbMaxLevelBadgeObedience
+    ret = 10 * (@battle.pbPlayer.badge_count + 1)
+    ret = GameData::GrowthRate.max_level if @battle.pbPlayer.badge_count >= 8
+    return ret
+  end
+
+  # This is the inverse of the above method.
+  def pbBadgesNeededToObey
+    return 8 if level > 80
+    return (level - 1) / 10
+  end
 end
 
 #===============================================================================
