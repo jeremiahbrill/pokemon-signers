@@ -142,6 +142,7 @@ class Battle::Scene::CommandMenu < Battle::Scene::MenuBase
   end
 
   def draw_player_party_icons
+    return if @battle.is_a?(SafariBattle)
     party = @battle.pbParty(0)
     Battle::Scene::NUM_BALLS.times do |i|
       pkmn = party[i]
@@ -161,7 +162,7 @@ class Battle::Scene::CommandMenu < Battle::Scene::MenuBase
   end
 
   def draw_opponent_party_icons
-    return if @battle.wildBattle?
+    return if @battle.wildBattle? || @battle.is_a?(SafariBattle)
     party = @battle.pbParty(1)
     Battle::Scene::NUM_BALLS.times do |i|
       pkmn = party[i]

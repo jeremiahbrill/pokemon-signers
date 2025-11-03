@@ -485,8 +485,8 @@ class UI::LoadVisuals < UI::BaseVisuals
     MenuHandlers.each_available(:load_screen, self) do |option, _hash, name|
       @sprites[option].label = name
       if option == :continue
-        @sprites[:continue_previous].label = name
-        @sprites[:continue_next].label = name
+        @sprites[:continue_previous]&.label = name
+        @sprites[:continue_next]&.label = name
       end
     end
   end

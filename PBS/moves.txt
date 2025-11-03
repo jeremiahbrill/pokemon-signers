@@ -4195,6 +4195,7 @@ TotalPP = 10
 Target = NearOther
 FunctionCode = StartSyrupBombTarget
 Flags = CanProtect,CanMirrorMove,Bomb
+EffectChance = 100
 Description = The user sets off an explosion of sticky syrup. This lowers the target's Speed stat over three turns.
 #-------------------------------
 [RAZORLEAF]
@@ -5143,7 +5144,7 @@ Category = Status
 Accuracy = 0
 TotalPP = 10
 Target = BothSides
-FunctionCode = StartHailWeatherSwitchOutUser
+FunctionCode = StartSnowstormWeatherSwitchOutUser
 Flags = CannotMetronome
 Description = The user tells a really bad joke before switching out. This summons a snowstorm lasting five turns.
 #-------------------------------
@@ -5184,7 +5185,7 @@ Category = Status
 Accuracy = 0
 TotalPP = 10
 Target = BothSides
-FunctionCode = StartHailWeather
+FunctionCode = StartSnowstormWeather
 Flags = CannotMetronome
 Description = The user summons a snowstorm lasting five turns. This boosts the Defense stats of Ice types.
 #-------------------------------
