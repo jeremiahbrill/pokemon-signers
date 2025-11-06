@@ -234,9 +234,10 @@ class Battle::Move::StartSnowstormWeatherSwitchOutUser < Battle::Move
 end
 
 #===============================================================================
-# When used against a sole wild Pokémon, makes target flee and ends the battle;
-# fails if target is a higher level than the user.
-# When used against a trainer's Pokémon, target switches out.
+# When used in a wild Pokémon battle with only 1 Pokémon on each side, makes
+# target flee and ends the battle; fails if target is a higher level than the
+# user.
+# Otherwise, when used against a trainer's Pokémon, target switches out.
 # For status moves. (Roar, Whirlwind)
 #===============================================================================
 class Battle::Move::SwitchOutTargetStatusMove < Battle::Move
@@ -245,7 +246,8 @@ class Battle::Move::SwitchOutTargetStatusMove < Battle::Move
 
   def pbFailsAgainstTarget?(user, target, show_message)
     return true if !target.canBeForcedOutOfBattle?(show_message)
-    if target.wild? && target.allAllies.length == 0 && !@battle.rules[:cannot_run]
+    if user.allAllies.length == 0 && target.allAllies.length == 0 &&
+       @battle.wildBattle? && !@battle.rules[:cannot_run]
       # End the battle
       if target.level > user.level
         @battle.pbDisplay(_INTL("But it failed!")) if show_message
@@ -270,7 +272,10 @@ class Battle::Move::SwitchOutTargetStatusMove < Battle::Move
   end
 
   def pbEffectAgainstTarget(user, target)
-    @battle.decision = Battle::Outcome::FLEE if target.wild?
+    if user.allAllies.length == 0 && target.allAllies.length == 0 &&
+       @battle.wildBattle? && !@battle.rules[:cannot_run]
+      @battle.decision = Battle::Outcome::FLEE
+    end
   end
 
   def pbSwitchOutTargetEffect(user, targets, numHits, switched_battlers)
@@ -293,14 +298,16 @@ class Battle::Move::SwitchOutTargetStatusMove < Battle::Move
 end
 
 #===============================================================================
-# When used against a sole wild Pokémon, makes target flee and ends the battle;
-# fails if target is a higher level than the user.
-# When used against a trainer's Pokémon, target switches out.
+# When used in a wild Pokémon battle with only 1 Pokémon on each side, makes
+# target flee and ends the battle; fails if target is a higher level than the
+# user.
+# Otherwise, when used against a trainer's Pokémon, target switches out.
 # For damaging moves. (Circle Throw, Dragon Tail)
 #===============================================================================
 class Battle::Move::SwitchOutTargetDamagingMove < Battle::Move
   def pbEffectAgainstTarget(user, target)
-    if target.wild? && target.allAllies.length == 0 && !@battle.rules[:cannot_run] &&
+    if user.allAllies.length == 0 && target.allAllies.length == 0 &&
+       @battle.wildBattle? && !@battle.rules[:cannot_run] &&
        target.level <= user.level &&
        (target.effects[PBEffects::Substitute] == 0 || ignoresSubstitute?(user))
       @battle.decision = Battle::Outcome::FLEE
