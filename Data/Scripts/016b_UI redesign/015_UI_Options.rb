@@ -7,14 +7,15 @@ class PokemonSystem
   attr_accessor :sendtoboxes
   attr_accessor :givenicknames
   attr_accessor :textinput
-  attr_accessor :bgmvolume
-  attr_accessor :sevolume
-  attr_accessor :textspeed
+  attr_reader   :bgmvolume
+  attr_reader   :sevolume
+  attr_reader   :textspeed
   attr_accessor :battlescene
-  attr_accessor :textskin
-  attr_accessor :frame
-  attr_accessor :screensize
-  attr_accessor :language
+  attr_reader   :textskin
+  attr_reader   :frame
+  attr_reader   :screensize
+  attr_reader   :language
+  attr_writer   :controls
 
   def initialize
     @battlestyle   = 0     # Battle style (0=switch, 1=set)
@@ -83,6 +84,24 @@ class PokemonSystem
     end
   end
 
+  def controls
+    reset_controls if !@controls
+    return @controls
+  end
+
+  def reset_controls
+    @controls ||= {}
+    keys = Input::DEFAULT_INPUT_MAPPINGS.keys + Input::DEFAULT_INPUT_MAPPINGS_REMAPPABLE.keys
+    keys.uniq!
+    keys.each do |key|
+      @controls[key] = []
+      if Input::DEFAULT_INPUT_MAPPINGS_REMAPPABLE[key]
+        @controls[key][0] = Input::DEFAULT_INPUT_MAPPINGS_REMAPPABLE[key][0]
+        @controls[key][1] = Input::DEFAULT_INPUT_MAPPINGS_REMAPPABLE[key][1]
+      end
+    end
+  end
+
   #-----------------------------------------------------------------------------
 
   def reapply_all_options
@@ -103,11 +122,18 @@ class UI::OptionsVisualsList < Window_DrawableCommand
   attr_writer   :baseColor, :shadowColor
   attr_accessor :optionColor, :optionShadowColor
   attr_accessor :selectedColor, :selectedShadowColor
+  attr_accessor :unsetColor, :unsetShadowColor
   attr_reader   :value_changed
 
   def initialize(x, y, width, height, viewport)
+    @input_icons_bitmap = AnimatedBitmap.new(UI::OptionsVisuals::UI_FOLDER + "input_icons")
     super(x, y, width, height, viewport)
     @index = -1
+  end
+
+  def dispose
+    super
+    @input_icons_bitmap.dispose
   end
 
   #-----------------------------------------------------------------------------
@@ -118,6 +144,7 @@ class UI::OptionsVisualsList < Window_DrawableCommand
 
   def options=(new_options)
     @options = new_options
+    self.top_row = 0
     get_values
     @array_second_value_x = 0
     @options.each do |option|
@@ -130,7 +157,7 @@ class UI::OptionsVisualsList < Window_DrawableCommand
   end
 
   def get_values
-    @values = @options.map { |option| option[:get_proc].call }
+    @values = @options.map { |option| option[:get_proc]&.call }
   end
 
   def lowest_value(option)
@@ -257,12 +284,34 @@ class UI::OptionsVisualsList < Window_DrawableCommand
   def drawItem(this_index, _count, rect)
     rect = drawCursor(this_index, rect)
     option_start_x = (rect.x + rect.width) / 2
-    # Draw option's name
-    option_name = (this_index == @options.length) ? _INTL("Back") : @options[this_index][:name]
-    pbDrawShadowText(self.contents, rect.x, rect.y, option_start_x, rect.height,
-                     option_name, self.optionColor, self.optionShadowColor)
-    # Draw option's values
+    draw_option_name(this_index, rect, option_start_x)
     draw_option_values(this_index, rect, option_start_x) if this_index < @options.length
+  end
+
+  def draw_option_name(this_index, rect, option_start_x)
+    if this_index >= @options.length
+      pbDrawShadowText(self.contents, rect.x, rect.y, option_start_x, rect.height,
+                       _INTL("Back"), self.baseColor, self.shadowColor)
+      return
+    end
+    option = @options[this_index]
+    option_name = option[:name]
+    option_name_x = rect.x
+    option_colors = [self.optionColor, self.optionShadowColor]
+    case option[:type]
+    when :control
+      # Draw icon
+      input_index = UI::BaseVisuals::INPUT_ICONS_ORDER.index(option[:parameters]) || 0
+      src_rect = Rect.new(input_index * @input_icons_bitmap.height, 0,
+                          @input_icons_bitmap.height, @input_icons_bitmap.height)
+      self.contents.blt(rect.x, rect.y + 2, @input_icons_bitmap.bitmap, src_rect)
+      # Adjust text position
+      option_name_x += @input_icons_bitmap.height + 6
+    when :use
+      option_colors = [self.baseColor, self.shadowColor]
+    end
+    pbDrawShadowText(self.contents, option_name_x, rect.y, option_start_x, rect.height,
+                     option_name, *option_colors)
   end
 
   def draw_option_values(this_index, rect, option_start_x)
@@ -311,6 +360,23 @@ class UI::OptionsVisualsList < Window_DrawableCommand
       value = (lowest + @values[this_index]).to_s
       pbDrawShadowText(self.contents, x_pos - rect.x, rect.y, option_width, rect.height,
                        value, self.selectedColor, self.selectedShadowColor, 2)
+    when :control
+      x_pos = option_start_x
+      spacing = option_width / 2
+      @values[this_index].each_with_index do |value, i|
+        if value
+          text = Input.input_name(value, (i == 0) ? :keyboard : :gamepad)
+          text_colors = [self.baseColor, self.shadowColor]
+        else
+          text = "---"
+          text_colors = [self.unsetColor, self.unsetShadowColor]
+        end
+        pbDrawShadowText(self.contents, x_pos, rect.y, option_width, rect.height,
+                         text, *text_colors)
+        x_pos += spacing
+      end
+    when :use
+      # Draw nothing
     else
       value = option[:parameters][@values[this_index]]
       pbDrawShadowText(self.contents, option_start_x, rect.y, option_width, rect.height,
@@ -333,7 +399,8 @@ class UI::OptionsVisualsList < Window_DrawableCommand
     @value_changed = false
     super
     need_refresh = (self.index != old_index)
-    if self.index < @options.length
+    if self.index < @options.length &&
+       [:array, :number_type, :number_slider].include?(@options[self.index][:type])
       old_value = @values[self.index]
       if Input.repeat?(Input::LEFT)
         @values[self.index] = previous_value(self.index)
@@ -362,9 +429,10 @@ class UI::OptionsVisuals < UI::BaseVisuals
     :page_name        => [Color.new(248, 248, 248), Color.new(168, 184, 184)],
     :option_name      => [Color.new(192, 120, 0), Color.new(248, 176, 80)],
     :unselected_value => [Color.new(80, 80, 88), Color.new(160, 160, 168)],
-    :selected_value   => [Color.new(248, 48, 24), Color.new(248, 136, 128)]
+    :selected_value   => [Color.new(248, 48, 24), Color.new(248, 136, 128)],
+    :unset_control    => [Color.new(160, 160, 168), Color.new(224, 224, 232)]
   }
-  OPTIONS_VISIBLE = 6
+  OPTIONS_VISIBLE  = 6
   PAGE_TAB_SPACING = 4
 
   #-----------------------------------------------------------------------------
@@ -439,6 +507,8 @@ class UI::OptionsVisuals < UI::BaseVisuals
     @sprites[:options_list].shadowColor         = get_text_color_theme(:unselected_value)[1]
     @sprites[:options_list].selectedColor       = get_text_color_theme(:selected_value)[0]
     @sprites[:options_list].selectedShadowColor = get_text_color_theme(:selected_value)[1]
+    @sprites[:options_list].unsetColor          = get_text_color_theme(:unset_control)[0]
+    @sprites[:options_list].unsetShadowColor    = get_text_color_theme(:unset_control)[1]
     @sprites[:options_list].options             = options_for_page(@page)
   end
 
@@ -528,7 +598,8 @@ class UI::OptionsVisuals < UI::BaseVisuals
 
   def refresh_page_cursor
     @sprites[:page_cursor].visible = (index < 0)
-    @sprites[:page_cursor].x = @sprites[:page_icons].x - 2 + all_pages.index(@page) * ((@bitmaps[:page_icons].width / 2) + PAGE_TAB_SPACING)
+    @sprites[:page_cursor].x = @sprites[:page_icons].x - 2
+    @sprites[:page_cursor].x += all_pages.index(@page) * ((@bitmaps[:page_icons].width / 2) + PAGE_TAB_SPACING)
   end
 
   def refresh_options_list
@@ -591,16 +662,61 @@ class UI::OptionsVisuals < UI::BaseVisuals
     return update_input_tabs if @sprites[:options_list].index < 0
     # Check for interaction
     if Input.trigger?(Input::USE)
-      # TODO: For "Play Credits" and maybe "Language" option.
-      # if @sprites[:options_list].index >= 0
-      #   pbPlayDecisionSE
-      #   return :interact_menu
-      # end
+      if selected_option && selected_option[:use_proc]
+        pbPlayDecisionSE
+        return :use_option
+      end
     elsif Input.trigger?(Input::BACK)
       pbPlayCancelSE
       set_index(-1)
     end
     return nil
+  end
+
+  def change_key_or_button
+    this_input = selected_option[:parameters]
+    @sprites[:speech_box].text = _INTL("Press a key or Esc to cancel.")
+    pressed_key = nil
+    pressed_button = nil
+    # Detect key/button press
+    loop do
+      Graphics.update
+      Input.update
+      # Cancel
+      if Input::DEFAULT_INPUT_MAPPINGS[Input::BACK].any? { |key| Input.pressex?(key) }
+        pbPlayCancelSE
+        break
+      end
+      # Check for key/button press
+      Input::REMAP_KEYBOARD_KEYS.keys.each do |key|
+        pressed_key = key if Input.triggerex?(key)
+        break if pressed_key
+      end
+      break if pressed_key
+      Input::REMAP_GAMEPAD_BUTTONS.keys.each do |key|
+        pressed_button = key if Input::Controller.triggerex?(key)
+        break if pressed_button
+      end
+      break if pressed_button
+    end
+    # Change input binding if key/button was pressed
+    if pressed_key || pressed_button
+      pbPlayDecisionSE
+      control_index = (pressed_key ? 0 : 1)
+      if $PokemonSystem.controls[this_input][control_index] == (pressed_key || pressed_button)
+        $PokemonSystem.controls[this_input][control_index] = nil
+      else
+        $PokemonSystem.controls[this_input][control_index] = pressed_key || pressed_button
+        $PokemonSystem.controls.each_pair do |ctrl_input, keys|
+          keys[0] = nil if ctrl_input != this_input && pressed_key && keys[0] == pressed_key
+          keys[1] = nil if ctrl_input != this_input && pressed_button && keys[1] == pressed_button
+        end
+      end
+    end
+    # Clean up
+    @sprites[:options_list].get_values
+    refresh
+    Input.update
   end
 end
 
@@ -608,6 +724,8 @@ end
 #
 #===============================================================================
 class UI::Options < UI::BaseScreen
+  ACTIONS = HandlerHash.new
+
   def initialize(in_load_screen = false)
     @in_load_screen = in_load_screen
     @options = get_all_options
@@ -635,12 +753,20 @@ class UI::Options < UI::BaseScreen
         :parameters  => hash["parameters"],
         :on_select   => hash["on_select"],
         :get_proc    => hash["get_proc"],
-        :set_proc    => hash["set_proc"]
+        :set_proc    => hash["set_proc"],
+        :use_proc    => hash["use_proc"]
       })
       ret.last[:parameters].map! { |val| _INTL(val) } if ret.last[:type] == :array
     end
     return ret
   end
+
+  ACTIONS.add(:use_option, {
+    :effect => proc { |screen|
+      option = screen.visuals.selected_option
+      option[:use_proc].call(screen)
+    }
+  })
 end
 
 #===============================================================================
@@ -655,7 +781,7 @@ MenuHandlers.add(:options_menu, :battle_style, {
   "parameters"  => [_INTL("Switch"), _INTL("Set")],
   "description" => _INTL("Choose whether you can switch Pokémon when an opponent's Pokémon faints."),
   "get_proc"    => proc { next $PokemonSystem.battlestyle },
-  "set_proc"    => proc { |value, _scene| $PokemonSystem.battlestyle = value }
+  "set_proc"    => proc { |value, _screen| $PokemonSystem.battlestyle = value }
 })
 
 MenuHandlers.add(:options_menu, :movement_style, {
@@ -679,7 +805,7 @@ MenuHandlers.add(:options_menu, :send_to_boxes, {
   "description" => _INTL("Choose whether caught Pokémon are sent to your Boxes when your party is full."),
   "condition"   => proc { next Settings::NEW_CAPTURE_CAN_REPLACE_PARTY_MEMBER },
   "get_proc"    => proc { next $PokemonSystem.sendtoboxes },
-  "set_proc"    => proc { |value, _scene| $PokemonSystem.sendtoboxes = value }
+  "set_proc"    => proc { |value, _screen| $PokemonSystem.sendtoboxes = value }
 })
 
 MenuHandlers.add(:options_menu, :give_nicknames, {
@@ -690,7 +816,7 @@ MenuHandlers.add(:options_menu, :give_nicknames, {
   "parameters"  => [_INTL("Give"), _INTL("Don't give")],
   "description" => _INTL("Choose whether you can give a nickname to a Pokémon when you obtain it."),
   "get_proc"    => proc { next $PokemonSystem.givenicknames },
-  "set_proc"    => proc { |value, _scene| $PokemonSystem.givenicknames = value }
+  "set_proc"    => proc { |value, _screen| $PokemonSystem.givenicknames = value }
 })
 
 MenuHandlers.add(:options_menu, :text_input_style, {
@@ -701,7 +827,7 @@ MenuHandlers.add(:options_menu, :text_input_style, {
   "parameters"  => [_INTL("Cursor"), _INTL("Keyboard")],
   "description" => _INTL("Choose how you want to enter text."),
   "get_proc"    => proc { next $PokemonSystem.textinput },
-  "set_proc"    => proc { |value, _scene| $PokemonSystem.textinput = value }
+  "set_proc"    => proc { |value, _screen| $PokemonSystem.textinput = value }
 })
 
 #-------------------------------------------------------------------------------
@@ -714,7 +840,7 @@ MenuHandlers.add(:options_menu, :bgm_volume, {
   "parameters"  => [0, 100, 5],   # [minimum_value, maximum_value, interval]
   "description" => _INTL("Adjust the volume of the background music."),
   "get_proc"    => proc { next $PokemonSystem.bgmvolume },
-  "set_proc"    => proc { |value, scene| $PokemonSystem.bgmvolume = value }
+  "set_proc"    => proc { |value, screen| $PokemonSystem.bgmvolume = value }
 })
 
 MenuHandlers.add(:options_menu, :se_volume, {
@@ -725,7 +851,7 @@ MenuHandlers.add(:options_menu, :se_volume, {
   "parameters"  => [0, 100, 5],   # [minimum_value, maximum_value, interval]
   "description" => _INTL("Adjust the volume of sound effects."),
   "get_proc"    => proc { next $PokemonSystem.sevolume },
-  "set_proc"    => proc { |value, _scene|
+  "set_proc"    => proc { |value, _screen|
     next if $PokemonSystem.sevolume == value
     $PokemonSystem.sevolume = value
     pbPlayCursorSE
@@ -741,15 +867,15 @@ MenuHandlers.add(:options_menu, :text_speed, {
   "type"        => :array,
   "parameters"  => [_INTL("Slow"), _INTL("Mid"), _INTL("Fast"), _INTL("Inst")],
   "description" => _INTL("Choose the speed at which text appears."),
-  "on_select"   => proc { |scene| scene.sprites[:speech_box].letterbyletter = true },
+  "on_select"   => proc { |screen| screen.sprites[:speech_box].letterbyletter = true },
   "get_proc"    => proc { next $PokemonSystem.textspeed },
-  "set_proc"    => proc { |value, scene|
+  "set_proc"    => proc { |value, screen|
     next if value == $PokemonSystem.textspeed
     $PokemonSystem.textspeed = value
     # Display the message with the selected text speed to gauge it better.
-    scene.sprites[:speech_box].textspeed      = MessageConfig.pbGetTextSpeed
-    scene.sprites[:speech_box].letterbyletter = true
-    scene.sprites[:speech_box].text           = scene.sprites[:speech_box].text
+    screen.sprites[:speech_box].textspeed      = MessageConfig.pbGetTextSpeed
+    screen.sprites[:speech_box].letterbyletter = true
+    screen.sprites[:speech_box].text           = screen.sprites[:speech_box].text
   }
 })
 
@@ -761,7 +887,7 @@ MenuHandlers.add(:options_menu, :battle_animations, {
   "parameters"  => [_INTL("On"), _INTL("Off")],
   "description" => _INTL("Choose whether you wish to see move animations in battle."),
   "get_proc"    => proc { next $PokemonSystem.battlescene },
-  "set_proc"    => proc { |value, _scene| $PokemonSystem.battlescene = value }
+  "set_proc"    => proc { |value, _screen| $PokemonSystem.battlescene = value }
 })
 
 MenuHandlers.add(:options_menu, :speech_frame, {
@@ -773,10 +899,10 @@ MenuHandlers.add(:options_menu, :speech_frame, {
   "description" => _INTL("Choose the appearance of dialogue boxes."),
   "condition"   => proc { next Settings::SPEECH_WINDOWSKINS.length > 1 },
   "get_proc"    => proc { next $PokemonSystem.textskin },
-  "set_proc"    => proc { |value, scene|
+  "set_proc"    => proc { |value, screen|
     $PokemonSystem.textskin = value
     # Change the windowskin of the options text box to selected one
-    scene.sprites[:speech_box].setSkin(MessageConfig.pbGetSpeechFrame)
+    screen.sprites[:speech_box].setSkin(MessageConfig.pbGetSpeechFrame)
   }
 })
 
@@ -789,10 +915,10 @@ MenuHandlers.add(:options_menu, :menu_frame, {
   "description" => _INTL("Choose the appearance of menu boxes."),
   "condition"   => proc { next Settings::MENU_WINDOWSKINS.length > 1 },
   "get_proc"    => proc { next $PokemonSystem.frame },
-  "set_proc"    => proc { |value, scene|
+  "set_proc"    => proc { |value, screen|
     $PokemonSystem.frame = value
     # Change the windowskin of the options text box to selected one
-    scene.sprites[:options_list].setSkin(MessageConfig.pbGetSystemFrame)
+    screen.sprites[:options_list].setSkin(MessageConfig.pbGetSystemFrame)
   }
 })
 
@@ -804,5 +930,129 @@ MenuHandlers.add(:options_menu, :screen_size, {
   "parameters"  => [_INTL("S"), _INTL("M"), _INTL("L"), _INTL("XL"), _INTL("Full")],
   "description" => _INTL("Choose the size of the game window."),
   "get_proc"    => proc { next [$PokemonSystem.screensize, 4].min },
-  "set_proc"    => proc { |value, _scene| $PokemonSystem.screensize = value }
+  "set_proc"    => proc { |value, _screen| $PokemonSystem.screensize = value }
+})
+
+#-------------------------------------------------------------------------------
+
+MenuHandlers.add(:options_menu, :control_up, {
+  "page"        => :controls,
+  "name"        => _INTL("Up"),
+  "order"       => 10,
+  "type"        => :control,
+  "parameters"  => Input::UP,
+  "description" => _INTL("Moves around in the field. Navigates menus and moves cursors. [Also: Up]"),
+  "get_proc"    => proc { next $PokemonSystem.controls[Input::UP] },
+  "set_proc"    => proc { |value, _screen| $PokemonSystem.controls[Input::UP] = value },
+  "use_proc"    => proc { |screen| screen.visuals.change_key_or_button }
+})
+
+MenuHandlers.add(:options_menu, :control_left, {
+  "page"        => :controls,
+  "name"        => _INTL("Left"),
+  "order"       => 20,
+  "type"        => :control,
+  "parameters"  => Input::LEFT,
+  "description" => _INTL("Moves around in the field. Navigates menus and moves cursors. [Also: Left]"),
+  "get_proc"    => proc { next $PokemonSystem.controls[Input::LEFT] },
+  "set_proc"    => proc { |value, _screen| $PokemonSystem.controls[Input::LEFT] = value },
+  "use_proc"    => proc { |screen| screen.visuals.change_key_or_button }
+})
+
+MenuHandlers.add(:options_menu, :control_down, {
+  "page"        => :controls,
+  "name"        => _INTL("Down"),
+  "order"       => 30,
+  "type"        => :control,
+  "parameters"  => Input::DOWN,
+  "description" => _INTL("Moves around in the field. Navigates menus and moves cursors. [Also: Down]"),
+  "get_proc"    => proc { next $PokemonSystem.controls[Input::DOWN] },
+  "set_proc"    => proc { |value, _screen| $PokemonSystem.controls[Input::DOWN] = value },
+  "use_proc"    => proc { |screen| screen.visuals.change_key_or_button }
+})
+
+MenuHandlers.add(:options_menu, :control_right, {
+  "page"        => :controls,
+  "name"        => _INTL("Right"),
+  "order"       => 40,
+  "type"        => :control,
+  "parameters"  => Input::RIGHT,
+  "description" => _INTL("Moves around in the field. Navigates menus and moves cursors. [Also: Right]"),
+  "get_proc"    => proc { next $PokemonSystem.controls[Input::RIGHT] },
+  "set_proc"    => proc { |value, _screen| $PokemonSystem.controls[Input::RIGHT] = value },
+  "use_proc"    => proc { |screen| screen.visuals.change_key_or_button }
+})
+
+MenuHandlers.add(:options_menu, :control_use, {
+  "page"        => :controls,
+  "name"        => _INTL("Use"),
+  "order"       => 50,
+  "type"        => :control,
+  "parameters"  => Input::USE,
+  "description" => _INTL("Interacts with a thing or person. Makes a choice. [Also: Return, Space]"),
+  "get_proc"    => proc { next $PokemonSystem.controls[Input::USE] },
+  "set_proc"    => proc { |value, _screen| $PokemonSystem.controls[Input::USE] = value },
+  "use_proc"    => proc { |screen| screen.visuals.change_key_or_button }
+})
+
+MenuHandlers.add(:options_menu, :control_back, {
+  "page"        => :controls,
+  "name"        => _INTL("Back"),
+  "order"       => 60,
+  "type"        => :control,
+  "parameters"  => Input::BACK,
+  "description" => _INTL("Exits menus and cancels choices. Changes field movement speed if held. [Also: Esc]"),
+  "get_proc"    => proc { next $PokemonSystem.controls[Input::BACK] },
+  "set_proc"    => proc { |value, _screen| $PokemonSystem.controls[Input::BACK] = value },
+  "use_proc"    => proc { |screen| screen.visuals.change_key_or_button }
+})
+
+MenuHandlers.add(:options_menu, :control_action, {
+  "page"        => :controls,
+  "name"        => _INTL("Action"),
+  "order"       => 70,
+  "type"        => :control,
+  "parameters"  => Input::ACTION,
+  "description" => _INTL("Opens the Pause Menu in the field. Extra actions in some menus. [Also: Backspace]"),
+  "get_proc"    => proc { next $PokemonSystem.controls[Input::ACTION] },
+  "set_proc"    => proc { |value, _screen| $PokemonSystem.controls[Input::ACTION] = value },
+  "use_proc"    => proc { |screen| screen.visuals.change_key_or_button }
+})
+
+MenuHandlers.add(:options_menu, :control_jump_up, {
+  "page"        => :controls,
+  "name"        => _INTL("Quick Up"),
+  "order"       => 80,
+  "type"        => :control,
+  "parameters"  => Input::QUICK_UP,
+  "description" => _INTL("Opens the Ready Menu in the field. Quickly navigates left or up in some menus."),
+  "get_proc"    => proc { next $PokemonSystem.controls[Input::QUICK_UP] },
+  "set_proc"    => proc { |value, _screen| $PokemonSystem.controls[Input::QUICK_UP] = value },
+  "use_proc"    => proc { |screen| screen.visuals.change_key_or_button }
+})
+
+MenuHandlers.add(:options_menu, :control_jump_down, {
+  "page"        => :controls,
+  "name"        => _INTL("Quick Down"),
+  "order"       => 90,
+  "type"        => :control,
+  "parameters"  => Input::QUICK_DOWN,
+  "description" => _INTL("Opens the Ready Menu in the field. Quickly navigates right or down in some menus."),
+  "get_proc"    => proc { next $PokemonSystem.controls[Input::QUICK_DOWN] },
+  "set_proc"    => proc { |value, _screen| $PokemonSystem.controls[Input::QUICK_DOWN] = value },
+  "use_proc"    => proc { |screen| screen.visuals.change_key_or_button }
+})
+
+MenuHandlers.add(:options_menu, :reset_controls, {
+  "page"        => :controls,
+  "name"        => _INTL("Reset Controls"),
+  "order"       => 900,
+  "type"        => :use,
+  "description" => _INTL("Reset all key bindings to their default values."),
+  "use_proc"    => proc { |screen|
+    $PokemonSystem.reset_controls
+    screen.sprites[:options_list].get_values
+    screen.refresh
+    Input.update
+  }
 })

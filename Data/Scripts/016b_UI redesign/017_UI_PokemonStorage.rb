@@ -1368,10 +1368,10 @@ class UI::PokemonStorageVisuals < UI::BaseVisuals
       return update_interaction(Input::BACK)
     elsif Input.trigger?(Input::ACTION)
       return update_interaction(Input::ACTION)
-    elsif Input.repeat?(Input::JUMPUP)
-      return update_interaction(Input::JUMPUP)
-    elsif Input.repeat?(Input::JUMPDOWN)
-      return update_interaction(Input::JUMPDOWN)
+    elsif Input.repeat?(Input::QUICK_UP)
+      return update_interaction(Input::QUICK_UP)
+    elsif Input.repeat?(Input::QUICK_DOWN)
+      return update_interaction(Input::QUICK_DOWN)
     end
     return nil
   end
@@ -1501,10 +1501,10 @@ class UI::PokemonStorageVisuals < UI::BaseVisuals
       end
       return :clear_sub_mode if (@sub_mode || :none) != :none
       return :exit_screen
-    when Input::JUMPUP
+    when Input::QUICK_UP
       pbPlayCursorSE
       go_to_previous_box
-    when Input::JUMPDOWN
+    when Input::QUICK_DOWN
       pbPlayCursorSE
       go_to_next_box
     end

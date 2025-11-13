@@ -325,6 +325,10 @@ module UI
     attr_reader :mode, :sub_mode
 
     BACKGROUND_FILENAME = "bg"
+    # Input icons in order as they appear in Graphics/UI/input_icons.png.
+    INPUT_ICONS_ORDER = [Input::UP, Input::LEFT, Input::DOWN, Input::RIGHT,
+                         Input::USE, Input::BACK, Input::ACTION,
+                         Input::QUICK_UP, Input::QUICK_DOWN]
 
     include SpriteContainerMixin
 
@@ -726,7 +730,7 @@ module UI
     end
 
     def draw_input_icon(input_x, input_y, input, text = nil, text_spacing = 6, theme: :default, overlay: :overlay)
-      input_index = [Input::USE, Input::BACK, Input::ACTION].index(input) || 0
+      input_index = INPUT_ICONS.index(input) || 0
       draw_image(@bitmaps[:input_icons], input_x, input_y,
                 input_index * @bitmaps[:input_icons].height, 0,
                 @bitmaps[:input_icons].height, @bitmaps[:input_icons].height,
