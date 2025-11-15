@@ -254,7 +254,8 @@ class Battle::Scene::PokemonDataBox < Sprite
     name_width = self.bitmap.text_size(@battler.name).width
     name_x = 18
     name_x -= (name_width - 128) if name_width > 128
-    pbDrawTextPositions(self.bitmap, [[@battler.name, @draw_offset_x + name_x, 12, :left, *NAME_COLOR]])
+    pbDrawShadowText(self.bitmap, @draw_offset_x + name_x, 12, name_width, 32,
+                     @battler.name, *NAME_COLOR)
   end
 
   def draw_gender
@@ -266,7 +267,8 @@ class Battle::Scene::PokemonDataBox < Sprite
     gender_x = 136
     gender_x += (name_width - 116) if name_width > 116
     gender_x = 148 if gender_x > 148
-    pbDrawTextPositions(self.bitmap, [[gender_text, @draw_offset_x + gender_x, 12, :left, *gender_color]])
+    pbDrawShadowText(self.bitmap, @draw_offset_x + gender_x, 12, 32, 32,
+                     gender_text, *gender_color)
   end
 
   def draw_level

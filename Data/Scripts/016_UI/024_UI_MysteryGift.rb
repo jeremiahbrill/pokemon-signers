@@ -388,9 +388,7 @@ def pbReceiveMysteryGift(id)
          $player.has_pokedex && $player.pokedex.species_in_unlocked_dex?(gift[2].species)
         pbMessage(_INTL("{1}'s data was added to the Pokédex.", gift[2].name))
         $player.pokedex.register_last_seen(gift[2])
-        pbFadeOutIn do
-          pbShowPokedexEntry(gift[2].species)
-        end
+        pbShowPokedexEntry(gift[2].species)
       end
       return true
     end

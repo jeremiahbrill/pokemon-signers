@@ -83,49 +83,48 @@ class UI::BagVisualsList < Window_DrawableCommand
   end
 
   def drawItem(index, _count, rect)
-    textpos = []
     rect = Rect.new(rect.x + 16, rect.y + 16, rect.width - 16, rect.height)
     if index == self.itemCount - 1
-      textpos.push([_INTL("CLOSE BAG"), rect.x, rect.y + 2, :left, self.baseColor, self.shadowColor])
-    else
-      this_item_id = @items[index][0]
-      item_data = GameData::Item.get(this_item_id)
-      baseColor   = self.baseColor
-      shadowColor = self.shadowColor
-      if @sorting && index == self.index
-        baseColor   = @switching_base_color || self.baseColor
-        shadowColor = @switching_shadow_color || self.shadowColor
-      end
-      # Draw item name
-      textpos.push(
-        [item_data.display_name, rect.x, rect.y + 2, :left, baseColor, shadowColor]
-      )
-      # Draw register icon
-      showing_register_icon = false
-      if item_data.is_important?
-        if @bag.registered?(this_item_id)
-          pbDrawImagePositions(
-            self.contents,
-            [[bag_folder + _INTL("icon_register"), rect.x + rect.width - 72, rect.y + 8, 0, 0, -1, 24]]
-          )
-          showing_register_icon = true
-        elsif pbCanRegisterItem?(this_item_id)
-          pbDrawImagePositions(
-            self.contents,
-            [[bag_folder + _INTL("icon_register"), rect.x + rect.width - 72, rect.y + 8, 0, 24, -1, 24]]
-          )
-          showing_register_icon = true
-        end
-      end
-      # Draw quantity
-      if item_data.show_quantity? && !showing_register_icon
-        qty = @items[index][1]
-        qtytext = _ISPRINTF("× {1:d}", qty)
-        xQty    = rect.x + rect.width - self.contents.text_size(qtytext).width - 16
-        textpos.push([qtytext, xQty, rect.y + 2, :left, baseColor, shadowColor])
+      pbDrawShadowText(self.contents, rect.x, rect.y + 2, rect.width, rect.height,
+                       _INTL("CLOSE BAG"), self.baseColor, self.shadowColor)
+      return
+    end
+    this_item_id = @items[index][0]
+    item_data = GameData::Item.get(this_item_id)
+    this_base_color   = self.baseColor
+    this_shadow_color = self.shadowColor
+    if @sorting && index == self.index
+      this_base_color   = @switching_base_color || self.baseColor
+      this_shadow_color = @switching_shadow_color || self.shadowColor
+    end
+    # Draw item name
+    pbDrawShadowText(self.contents, rect.x, rect.y + 2, rect.width, rect.height,
+                     item_data.display_name, this_base_color, this_shadow_color)
+    # Draw register icon
+    showing_register_icon = false
+    if item_data.is_important?
+      if @bag.registered?(this_item_id)
+        pbDrawImagePositions(
+          self.contents,
+          [[bag_folder + _INTL("icon_register"), rect.x + rect.width - 72, rect.y + 8, 0, 0, -1, 24]]
+        )
+        showing_register_icon = true
+      elsif pbCanRegisterItem?(this_item_id)
+        pbDrawImagePositions(
+          self.contents,
+          [[bag_folder + _INTL("icon_register"), rect.x + rect.width - 72, rect.y + 8, 0, 24, -1, 24]]
+        )
+        showing_register_icon = true
       end
     end
-    pbDrawTextPositions(self.contents, textpos)
+    # Draw quantity
+    if item_data.show_quantity? && !showing_register_icon
+      qty = @items[index][1]
+      qtytext = _ISPRINTF("× {1:d}", qty)
+      xQty    = rect.x + rect.width - self.contents.text_size(qtytext).width - 16
+      pbDrawShadowText(self.contents, xQty, rect.y + 2, rect.width, rect.height,
+                      qtytext, this_base_color, this_shadow_color)
+    end
   end
 
   def drawCursor(index, rect)

@@ -484,15 +484,14 @@ class UI::Save < UI::BaseScreen
       @visuals.set_index(slot_index, true)
       # Announce the save success
       show_message(_INTL("{1} saved the game.", $player.name)) {
-        # TODO: Stop SE.
+        pbSEStop
         pbMEPlay("GUI save game")
-        # TODO: Wait for ME to finish playing, then auto-close the message.
+        wait(1)
       }
       @result = true
     else
       pbSEPlay("GUI save choice")
       show_message(_INTL("Save failed."))
-      # TODO: Auto-close this message.
       @result = false
     end
   end

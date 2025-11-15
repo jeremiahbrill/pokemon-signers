@@ -115,9 +115,7 @@ class PokemonEggHatch_Scene
        $player.has_pokedex && $player.pokedex.species_in_unlocked_dex?(@pokemon.species)
       pbMessage(_INTL("{1}'s data was added to the Pokédex.", @pokemon.name)) { update }
       $player.pokedex.register_last_seen(@pokemon)
-      pbFadeOutIn do
-        pbShowPokedexEntry(@pokemon.species)
-      end
+      pbShowPokedexEntry(@pokemon.species)
     end
     # Nickname the Pokémon
     if $PokemonSystem.givenicknames == 0 &&
@@ -235,9 +233,7 @@ def pbHatch(pokemon)
        $player.has_pokedex && $player.pokedex.species_in_unlocked_dex?(pokemon.species)
       pbMessage(_INTL("{1}'s data was added to the Pokédex.", speciesname))
       $player.pokedex.register_last_seen(pokemon)
-      pbFadeOutIn do
-        pbShowPokedexEntry(pokemon.species)
-      end
+      pbShowPokedexEntry(pokemon.species)
     end
     # Nickname the Pokémon
     if $PokemonSystem.givenicknames == 0 &&

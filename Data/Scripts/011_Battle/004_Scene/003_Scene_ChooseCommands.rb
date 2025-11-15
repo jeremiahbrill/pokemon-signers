@@ -416,8 +416,6 @@ class Battle::Scene
   #-----------------------------------------------------------------------------
 
   def pbShowPokedex(species)
-    pbFadeOutIn do
-      pbShowPokedexEntry(species)
-    end
+    pbShowPokedexEntry(species)
   end
 end

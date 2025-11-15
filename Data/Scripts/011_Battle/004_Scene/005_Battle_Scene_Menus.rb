@@ -69,8 +69,6 @@ class Battle::Scene::CommandMenu < Battle::Scene::MenuBase
     @bitmaps[:party_balls] = AnimatedBitmap.new(graphics_folder + "icon_command_party")
   end
 
-  # TODO: Up arrow pointing at the player's battler whose command it is. For
-  #       when there are 2+ battlers on that side.
   def initialize_sprites
     initialize_overlay
   end

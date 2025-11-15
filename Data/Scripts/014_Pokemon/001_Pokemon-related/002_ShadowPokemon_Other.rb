@@ -14,19 +14,19 @@
 #===============================================================================
 # Purify a Shadow Pokémon.
 #===============================================================================
-def pbPurify(pkmn, scene)
+def pbPurify(pkmn, screen)
   return if !pkmn.shadowPokemon? || pkmn.heart_gauge != 0
   $stats.shadow_pokemon_purified += 1
   pkmn.shadow = false
   pkmn.hyper_mode = false
   pkmn.giveRibbon(:NATIONAL)
-  scene.pbDisplay(_INTL("{1} opened the door to its heart!", pkmn.name))
+  screen.show_message(_INTL("{1} opened the door to its heart!", pkmn.name))
   old_moves = []
   pkmn.moves.each { |m| old_moves.push(m.id) }
   pkmn.update_shadow_moves
   pkmn.moves.each_with_index do |m, i|
     next if m.id == old_moves[i]
-    scene.pbDisplay(_INTL("{1} regained the move {2}!", pkmn.name, m.name))
+    screen.show_message(_INTL("{1} regained the move {2}!", pkmn.name, m.name))
   end
   pkmn.record_first_moves
   if pkmn.saved_ev
@@ -39,18 +39,18 @@ def pbPurify(pkmn, scene)
     newlevel = pkmn.growth_rate.level_from_exp(newexp)
     curlevel = pkmn.level
     if newexp != pkmn.exp
-      scene.pbDisplay(_INTL("{1} regained {2} Exp. Points!", pkmn.name, newexp - pkmn.exp))
+      screen.show_message(_INTL("{1} regained {2} Exp. Points!", pkmn.name, newexp - pkmn.exp))
     end
     if newlevel == curlevel
       pkmn.exp = newexp
       pkmn.calc_stats
     else
-      pbChangeLevel(pkmn, newlevel, scene)   # for convenience
+      pbChangeLevel(pkmn, newlevel, screen)   # for convenience
       pkmn.exp = newexp
     end
   end
   if $PokemonSystem.givenicknames == 0 &&
-     scene.pbConfirm(_INTL("Would you like to give a nickname to {1}?", pkmn.speciesName))
+     screen.show_confirm_message(_INTL("Would you like to give a nickname to {1}?", pkmn.speciesName))
     newname = pbEnterPokemonName(_INTL("{1}'s nickname?", pkmn.speciesName),
                                  0, Pokemon::MAX_NAME_SIZE, "", pkmn)
     pkmn.name = newname
@@ -111,14 +111,18 @@ class RelicStoneScreen
   def pbDisplay(x)
     @scene.pbDisplay(x)
   end
+  alias show_message pbDisplay
 
   def pbConfirm(x)
     @scene.pbConfirm(x)
   end
+  alias show_confirm_message pbConfirm
 
   def pbUpdate; end
+  alias update pbUpdate
 
   def pbRefresh; end
+  alias refresh pbRefresh
 
   def pbStartScreen(pokemon)
     @scene.pbStartScene(pokemon)
@@ -223,9 +227,9 @@ end
 #===============================================================================
 # Shadow item effects.
 #===============================================================================
-def pbRaiseHappinessAndReduceHeart(pkmn, scene, multiplier, show_fail_message = true)
+def pbRaiseHappinessAndReduceHeart(pkmn, screen, multiplier, show_fail_message = true)
   if !pkmn.shadowPokemon? || (pkmn.happiness == 255 && pkmn.heart_gauge == 0)
-    scene.pbDisplay(_INTL("It won't have any effect.")) if show_fail_message
+    screen.pbDisplay(_INTL("It won't have any effect.")) if show_fail_message
     return false
   end
   old_gauge = pkmn.heart_gauge
@@ -233,53 +237,53 @@ def pbRaiseHappinessAndReduceHeart(pkmn, scene, multiplier, show_fail_message = 
   pkmn.changeHappiness("vitamin")
   pkmn.change_heart_gauge("scent", multiplier)
   if pkmn.heart_gauge == old_gauge
-    scene.pbDisplay(_INTL("{1} turned friendly.", pkmn.name))
+    screen.pbDisplay(_INTL("{1} turned friendly.", pkmn.name))
   elsif pkmn.happiness == old_happiness
-    scene.pbDisplay(_INTL("{1} adores you!\nThe door to its heart opened a little.", pkmn.name))
+    screen.pbDisplay(_INTL("{1} adores you!\nThe door to its heart opened a little.", pkmn.name))
     pkmn.check_ready_to_purify
   else
-    scene.pbDisplay(_INTL("{1} turned friendly.\nThe door to its heart opened a little.", pkmn.name))
+    screen.pbDisplay(_INTL("{1} turned friendly.\nThe door to its heart opened a little.", pkmn.name))
     pkmn.check_ready_to_purify
   end
   return true
 end
 
-ItemHandlers::UseOnPokemon.add(:JOYSCENT, proc { |item, qty, pkmn, scene|
+ItemHandlers::UseOnPokemon.add(:JOYSCENT, proc { |item, qty, pkmn, screen|
   ret = false
   if pkmn.hyper_mode
-    scene.pbDisplay(_INTL("{1} came to its senses from the {2}.", pkmn.name, GameData::Item.get(item).name))
+    screen.show_message(_INTL("{1} came to its senses from the {2}.", pkmn.name, GameData::Item.get(item).name))
     pkmn.hyper_mode = false
     ret = true
   end
-  next pbRaiseHappinessAndReduceHeart(pkmn, scene, 1, !ret) || ret
+  next pbRaiseHappinessAndReduceHeart(pkmn, screen, 1, !ret) || ret
 })
 
-ItemHandlers::UseOnPokemon.add(:EXCITESCENT, proc { |item, qty, pkmn, scene|
+ItemHandlers::UseOnPokemon.add(:EXCITESCENT, proc { |item, qty, pkmn, screen|
   ret = false
   if pkmn.hyper_mode
-    scene.pbDisplay(_INTL("{1} came to its senses from the {2}.", pkmn.name, GameData::Item.get(item).name))
+    screen.show_message(_INTL("{1} came to its senses from the {2}.", pkmn.name, GameData::Item.get(item).name))
     pkmn.hyper_mode = false
     ret = true
   end
-  next pbRaiseHappinessAndReduceHeart(pkmn, scene, 2, !ret) || ret
+  next pbRaiseHappinessAndReduceHeart(pkmn, screen, 2, !ret) || ret
 })
 
-ItemHandlers::UseOnPokemon.add(:VIVIDSCENT, proc { |item, qty, pkmn, scene|
+ItemHandlers::UseOnPokemon.add(:VIVIDSCENT, proc { |item, qty, pkmn, screen|
   ret = false
   if pkmn.hyper_mode
-    scene.pbDisplay(_INTL("{1} came to its senses from the {2}.", pkmn.name, GameData::Item.get(item).name))
+    screen.show_message(_INTL("{1} came to its senses from the {2}.", pkmn.name, GameData::Item.get(item).name))
     pkmn.hyper_mode = false
     ret = true
   end
-  next pbRaiseHappinessAndReduceHeart(pkmn, scene, 3, !ret) || ret
+  next pbRaiseHappinessAndReduceHeart(pkmn, screen, 3, !ret) || ret
 })
 
-ItemHandlers::UseOnPokemon.add(:TIMEFLUTE, proc { |item, qty, pkmn, scene|
+ItemHandlers::UseOnPokemon.add(:TIMEFLUTE, proc { |item, qty, pkmn, screen|
   if !pkmn.shadowPokemon? || pkmn.heart_gauge == 0 || pkmn.isSpecies?(:LUGIA)
-    scene.pbDisplay(_INTL("It won't have any effect."))
+    screen.show_message(_INTL("It won't have any effect."))
     next false
   end
-  pbPurify(pkmn, scene)
+  pbPurify(pkmn, screen)
   next true
 })
 

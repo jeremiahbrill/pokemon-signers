@@ -114,26 +114,26 @@ class UI::MartVisualsList < Window_DrawableCommand
   end
 
   def drawItem(index, count, rect)
-    textpos = []
     rect = drawCursor(index, rect)
-    ypos = rect.y
     this_item = @stock[index]
-    if this_item
-      # Draw item name
-      item_name = GameData::Item.get(this_item).display_name
-      textpos.push([item_name, rect.x, ypos + 2, :left, self.baseColor, self.shadowColor])
-      # Draw item price
-      price = @stock.buy_price_string(this_item)
-      price_width = self.contents.text_size(price).width
-      price_x = rect.x + rect.width - price_width - 2 - 16
-      expensive = expensive?(this_item)
-      price_base_color = (expensive) ? @expensive_base_color || self.baseColor : self.baseColor
-      price_shadow_color = (expensive) ? @expensive_shadow_color || self.shadowColor : self.shadowColor
-      textpos.push([price, price_x, ypos + 2, :left, price_base_color, price_shadow_color])
-    else
-      textpos.push([_INTL("CANCEL"), rect.x, ypos + 2, :left, self.baseColor, self.shadowColor])
+    if !this_item
+      pbDrawShadowText(self.contents, rect.x, rect.y + 2, rect.width, rect.height,
+                       _INTL("CANCEL"), self.baseColor, self.shadowColor)
+      return
     end
-    pbDrawTextPositions(self.contents, textpos)
+    # Draw item name
+    item_name = GameData::Item.get(this_item).display_name
+    pbDrawShadowText(self.contents, rect.x, rect.y + 2, rect.width, rect.height,
+                     item_name, self.baseColor, self.shadowColor)
+    # Draw item price
+    price = @stock.buy_price_string(this_item)
+    price_width = self.contents.text_size(price).width
+    price_x = rect.x + rect.width - price_width - 2 - 16
+    expensive = expensive?(this_item)
+    price_base_color = (expensive) ? @expensive_base_color || self.baseColor : self.baseColor
+    price_shadow_color = (expensive) ? @expensive_shadow_color || self.shadowColor : self.shadowColor
+    pbDrawShadowText(self.contents, price_x, rect.y + 2, rect.width, rect.height,
+                     price, price_base_color, price_shadow_color)
   end
 end
 

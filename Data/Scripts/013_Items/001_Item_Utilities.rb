@@ -99,9 +99,9 @@ module ItemHandlers
   end
 
   # Returns whether item was used.
-  def triggerUseOnPokemon(item, qty, pkmn, scene)
+  def triggerUseOnPokemon(item, qty, pkmn, screen)
     return false if !UseOnPokemon[item]
-    return UseOnPokemon.trigger(item, qty, pkmn, scene)
+    return UseOnPokemon.trigger(item, qty, pkmn, screen)
   end
 
   # Returns the maximum number of the item that can be used on the Pokémon at once.
@@ -111,9 +111,9 @@ module ItemHandlers
     return [UseOnPokemonMaximum.trigger(item, pkmn), 1].max
   end
 
-  def triggerCanUseInBattle(item, pkmn, battler, move, firstAction, battle, scene, showMessages = true)
+  def triggerCanUseInBattle(item, pkmn, battler, move, firstAction, battle, screen, showMessages = true)
     return true if !CanUseInBattle[item]   # Can use the item by default
-    return CanUseInBattle.trigger(item, pkmn, battler, move, firstAction, battle, scene, showMessages)
+    return CanUseInBattle.trigger(item, pkmn, battler, move, firstAction, battle, screen, showMessages)
   end
 
   def triggerUseInBattle(item, battler, battle)
@@ -121,22 +121,22 @@ module ItemHandlers
   end
 
   # Returns whether item was used.
-  def triggerBattleUseOnBattler(item, battler, scene)
+  def triggerBattleUseOnBattler(item, battler, screen)
     return false if !BattleUseOnBattler[item]
-    return BattleUseOnBattler.trigger(item, battler, scene)
+    return BattleUseOnBattler.trigger(item, battler, screen)
   end
 
   # Returns whether item was used.
-  def triggerBattleUseOnPokemon(item, pkmn, battler, choices, scene)
+  def triggerBattleUseOnPokemon(item, pkmn, battler, choices, screen)
     return false if !BattleUseOnPokemon[item]
-    return BattleUseOnPokemon.trigger(item, pkmn, battler, choices, scene)
+    return BattleUseOnPokemon.trigger(item, pkmn, battler, choices, screen)
   end
 end
 
 #===============================================================================
 #
 #===============================================================================
-def pbTopRightWindow(text, scene = nil)
+def pbTopRightWindow(text, screen = nil)
   window = Window_AdvancedTextPokemon.new(text)
   window.width = 198
   window.x     = Graphics.width - window.width
@@ -147,7 +147,7 @@ def pbTopRightWindow(text, scene = nil)
     Graphics.update
     Input.update
     window.update
-    scene&.pbUpdate
+    screen&.pbUpdate
     break if Input.trigger?(Input::USE)
   end
   window.dispose
@@ -208,11 +208,11 @@ def pbUseItem(bag, item, bag_screen = nil)
       end
     end
     pbFadeOutIn do
-      screen = UI::Party.new($player.party, mode: :use_item)
+      party_screen = UI::Party.new($player.party, mode: :use_item)
       if item_data.is_evolution_stone?
-        screen.set_able_annotation_proc(proc { |pkmn| next pkmn.check_evolution_on_use_item(item) })
+        party_screen.set_able_annotation_proc(proc { |pkmn| next pkmn.check_evolution_on_use_item(item) })
       end
-      screen.choose_pokemon do |pkmn, party_index|
+      party_screen.choose_pokemon do |pkmn, party_index|
         next true if party_index < 0
         next false if !pbCanPokemonHaveItemUsedOnIt?(pkmn, item)
         qty = 1
@@ -220,17 +220,17 @@ def pbUseItem(bag, item, bag_screen = nil)
         max_at_once = [max_at_once, bag.quantity(item)].min
         if max_at_once > 1
           pbPlayDecisionSE
-          qty = screen.choose_number(
+          qty = party_screen.choose_number(
             _INTL("How many {1} do you want to use?", GameData::Item.get(item).portion_name_plural), max_at_once
           )
-          screen.set_help_text("")
+          party_screen.set_help_text("")
         end
         next false if qty <= 0
-        ret = ItemHandlers.triggerUseOnPokemon(item, qty, pkmn, screen)
+        ret = ItemHandlers.triggerUseOnPokemon(item, qty, pkmn, party_screen)
         if ret && item_data.consumed_after_use?
           bag.remove(item, qty)
           if !bag.has?(item)
-            screen.show_message(_INTL("You used your last {1}.", item_data.portion_name))
+            party_screen.show_message(_INTL("You used your last {1}.", item_data.portion_name))
             next true
           end
         end
@@ -446,11 +446,11 @@ end
 #===============================================================================
 # Change a Pokémon's level.
 #===============================================================================
-def pbChangeLevel(pkmn, new_level, scene)
+def pbChangeLevel(pkmn, new_level, screen)
   new_level = new_level.clamp(1, GameData::GrowthRate.max_level)
   if pkmn.level == new_level
-    if scene.is_a?(UI::Party)
-      scene.show_message(_INTL("{1}'s level remained unchanged.", pkmn.name))
+    if screen
+      screen.show_message(_INTL("{1}'s level remained unchanged.", pkmn.name))
     else
       pbMessage(_INTL("{1}'s level remained unchanged.", pkmn.name))
     end
@@ -466,10 +466,10 @@ def pbChangeLevel(pkmn, new_level, scene)
   pkmn.level = new_level
   pkmn.calc_stats
   pkmn.hp = 1 if new_level > old_level && pkmn.species_data.base_stats[:HP] == 1
-  scene.pbRefresh
+  screen&.refresh
   if old_level > new_level
-    if scene.is_a?(UI::Party)
-      scene.show_message(_INTL("{1} dropped to Lv. {2}!", pkmn.name, pkmn.level))
+    if screen
+      screen.show_message(_INTL("{1} dropped to Lv. {2}!", pkmn.name, pkmn.level))
     else
       pbMessage(_INTL("{1} dropped to Lv. {2}!", pkmn.name, pkmn.level))
     end
@@ -480,13 +480,13 @@ def pbChangeLevel(pkmn, new_level, scene)
     special_defense_diff = pkmn.spdef - old_special_defense
     speed_diff           = pkmn.speed - old_speed
     pbTopRightWindow(_INTL("Max. HP<r>{1}\nAttack<r>{2}\nDefense<r>{3}\nSp. Atk<r>{4}\nSp. Def<r>{5}\nSpeed<r>{6}",
-                           total_hp_diff, attack_diff, defense_diff, special_attack_diff, special_defense_diff, speed_diff), scene)
+                           total_hp_diff, attack_diff, defense_diff, special_attack_diff, special_defense_diff, speed_diff), screen)
     pbTopRightWindow(_INTL("Max. HP<r>{1}\nAttack<r>{2}\nDefense<r>{3}\nSp. Atk<r>{4}\nSp. Def<r>{5}\nSpeed<r>{6}",
-                           pkmn.totalhp, pkmn.attack, pkmn.defense, pkmn.spatk, pkmn.spdef, pkmn.speed), scene)
+                           pkmn.totalhp, pkmn.attack, pkmn.defense, pkmn.spatk, pkmn.spdef, pkmn.speed), screen)
   else
     pkmn.changeHappiness("vitamin")
-    if scene.is_a?(UI::Party)
-      scene.show_message(_INTL("{1} grew to Lv. {2}!", pkmn.name, pkmn.level))
+    if screen
+      screen.show_message(_INTL("{1} grew to Lv. {2}!", pkmn.name, pkmn.level))
     else
       pbMessage(_INTL("{1} grew to Lv. {2}!", pkmn.name, pkmn.level))
     end
@@ -497,24 +497,24 @@ def pbChangeLevel(pkmn, new_level, scene)
     special_defense_diff = pkmn.spdef - old_special_defense
     speed_diff           = pkmn.speed - old_speed
     pbTopRightWindow(_INTL("Max. HP<r>+{1}\nAttack<r>+{2}\nDefense<r>+{3}\nSp. Atk<r>+{4}\nSp. Def<r>+{5}\nSpeed<r>+{6}",
-                           total_hp_diff, attack_diff, defense_diff, special_attack_diff, special_defense_diff, speed_diff), scene)
+                           total_hp_diff, attack_diff, defense_diff, special_attack_diff, special_defense_diff, speed_diff), screen)
     pbTopRightWindow(_INTL("Max. HP<r>{1}\nAttack<r>{2}\nDefense<r>{3}\nSp. Atk<r>{4}\nSp. Def<r>{5}\nSpeed<r>{6}",
-                           pkmn.totalhp, pkmn.attack, pkmn.defense, pkmn.spatk, pkmn.spdef, pkmn.speed), scene)
+                           pkmn.totalhp, pkmn.attack, pkmn.defense, pkmn.spatk, pkmn.spdef, pkmn.speed), screen)
     # Learn new moves upon level up
     movelist = pkmn.getMoveList
     movelist.each do |i|
       next if i[0] <= old_level || i[0] > pkmn.level
-      pbLearnMove(pkmn, i[1], true) { scene.pbUpdate }
+      pbLearnMove(pkmn, i[1], true) { screen&.update }
     end
     # Check for evolution
     new_species = pkmn.check_evolution_on_level_up
     if new_species
       pbFadeOutInWithMusic do
-        evo = PokemonEvolutionScene.new
-        evo.pbStartScreen(pkmn, new_species)
-        evo.pbEvolution
-        evo.pbEndScreen
-        scene.refresh if scene.is_a?(UI::Party)
+        evo_screen = PokemonEvolutionScene.new
+        evo_screen.pbStartScreen(pkmn, new_species)
+        evo_screen.pbEvolution
+        evo_screen.pbEndScreen
+        screen&.refresh
       end
     end
   end
@@ -523,11 +523,11 @@ end
 #===============================================================================
 # Change a Pokémon's Experience amount.
 #===============================================================================
-def pbChangeExp(pkmn, new_exp, scene)
+def pbChangeExp(pkmn, new_exp, screen)
   new_exp = new_exp.clamp(0, pkmn.growth_rate.maximum_exp)
   if pkmn.exp == new_exp
-    if scene.is_a?(UI::Party)
-      scene.show_message(_INTL("{1}'s Exp. Points remained unchanged.", pkmn.name))
+    if screen
+      screen.show_message(_INTL("{1}'s Exp. Points remained unchanged.", pkmn.name))
     else
       pbMessage(_INTL("{1}'s Exp. Points remained unchanged.", pkmn.name))
     end
@@ -542,18 +542,18 @@ def pbChangeExp(pkmn, new_exp, scene)
   old_speed           = pkmn.speed
   if pkmn.exp > new_exp   # Loses Exp
     difference = pkmn.exp - new_exp
-    if scene.is_a?(UI::Party)
-      scene.show_message(_INTL("{1} lost {2} Exp. Points!", pkmn.name, difference))
+    if screen
+      screen.show_message(_INTL("{1} lost {2} Exp. Points!", pkmn.name, difference))
     else
       pbMessage(_INTL("{1} lost {2} Exp. Points!", pkmn.name, difference))
     end
     pkmn.exp = new_exp
     pkmn.calc_stats
-    scene.pbRefresh
+    screen&.refresh
     return if pkmn.level == old_level
     # Level changed
-    if scene.is_a?(UI::Party)
-      scene.show_message(_INTL("{1} dropped to Lv. {2}!", pkmn.name, pkmn.level))
+    if screen
+      screen.show_message(_INTL("{1} dropped to Lv. {2}!", pkmn.name, pkmn.level))
     else
       pbMessage(_INTL("{1} dropped to Lv. {2}!", pkmn.name, pkmn.level))
     end
@@ -564,24 +564,24 @@ def pbChangeExp(pkmn, new_exp, scene)
     special_defense_diff = pkmn.spdef - old_special_defense
     speed_diff           = pkmn.speed - old_speed
     pbTopRightWindow(_INTL("Max. HP<r>{1}\nAttack<r>{2}\nDefense<r>{3}\nSp. Atk<r>{4}\nSp. Def<r>{5}\nSpeed<r>{6}",
-                           total_hp_diff, attack_diff, defense_diff, special_attack_diff, special_defense_diff, speed_diff), scene)
+                           total_hp_diff, attack_diff, defense_diff, special_attack_diff, special_defense_diff, speed_diff), screen)
     pbTopRightWindow(_INTL("Max. HP<r>{1}\nAttack<r>{2}\nDefense<r>{3}\nSp. Atk<r>{4}\nSp. Def<r>{5}\nSpeed<r>{6}",
-                           pkmn.totalhp, pkmn.attack, pkmn.defense, pkmn.spatk, pkmn.spdef, pkmn.speed), scene)
+                           pkmn.totalhp, pkmn.attack, pkmn.defense, pkmn.spatk, pkmn.spdef, pkmn.speed), screen)
   else   # Gains Exp
     difference = new_exp - pkmn.exp
-    if scene.is_a?(UI::Party)
-      scene.show_message(_INTL("{1} gained {2} Exp. Points!", pkmn.name, difference))
+    if screen
+      screen.show_message(_INTL("{1} gained {2} Exp. Points!", pkmn.name, difference))
     else
       pbMessage(_INTL("{1} gained {2} Exp. Points!", pkmn.name, difference))
     end
     pkmn.exp = new_exp
     pkmn.changeHappiness("vitamin")
     pkmn.calc_stats
-    scene.pbRefresh
+    screen&.refresh
     return if pkmn.level == old_level
     # Level changed
-    if scene.is_a?(UI::Party)
-      scene.show_message(_INTL("{1} grew to Lv. {2}!", pkmn.name, pkmn.level))
+    if screen
+      screen.show_message(_INTL("{1} grew to Lv. {2}!", pkmn.name, pkmn.level))
     else
       pbMessage(_INTL("{1} grew to Lv. {2}!", pkmn.name, pkmn.level))
     end
@@ -592,41 +592,42 @@ def pbChangeExp(pkmn, new_exp, scene)
     special_defense_diff = pkmn.spdef - old_special_defense
     speed_diff           = pkmn.speed - old_speed
     pbTopRightWindow(_INTL("Max. HP<r>+{1}\nAttack<r>+{2}\nDefense<r>+{3}\nSp. Atk<r>+{4}\nSp. Def<r>+{5}\nSpeed<r>+{6}",
-                           total_hp_diff, attack_diff, defense_diff, special_attack_diff, special_defense_diff, speed_diff), scene)
+                           total_hp_diff, attack_diff, defense_diff, special_attack_diff, special_defense_diff, speed_diff), screen)
     pbTopRightWindow(_INTL("Max. HP<r>{1}\nAttack<r>{2}\nDefense<r>{3}\nSp. Atk<r>{4}\nSp. Def<r>{5}\nSpeed<r>{6}",
-                           pkmn.totalhp, pkmn.attack, pkmn.defense, pkmn.spatk, pkmn.spdef, pkmn.speed), scene)
+                           pkmn.totalhp, pkmn.attack, pkmn.defense, pkmn.spatk, pkmn.spdef, pkmn.speed), screen)
     # Learn new moves upon level up
     movelist = pkmn.getMoveList
     movelist.each do |i|
       next if i[0] <= old_level || i[0] > pkmn.level
-      pbLearnMove(pkmn, i[1], true) { scene.pbUpdate }
+      pbLearnMove(pkmn, i[1], true) { screen&.update }
     end
     # Check for evolution
     new_species = pkmn.check_evolution_on_level_up
     if new_species
       pbFadeOutInWithMusic do
-        evo = PokemonEvolutionScene.new
-        evo.pbStartScreen(pkmn, new_species)
-        evo.pbEvolution
-        evo.pbEndScreen
-        scene.refresh if scene.is_a?(UI::Party)
+        evo_screen = PokemonEvolutionScene.new
+        evo_screen.pbStartScreen(pkmn, new_species)
+        evo_screen.pbEvolution
+        evo_screen.pbEndScreen
+        screen&.refresh
       end
     end
   end
 end
 
-def pbGainExpFromExpCandy(pkmn, base_amt, qty, scene)
+def pbGainExpFromExpCandy(pkmn, base_amt, qty, screen)
   if pkmn.level >= GameData::GrowthRate.max_level || pkmn.shadowPokemon?
-    scene.pbDisplay(_INTL("It won't have any effect."))
+    screen.show_message(_INTL("It won't have any effect."))
     return false
   end
   pbSEPlay("Pkmn level up")
-  scene.set_help_text("") if scene.is_a?(UI::Party)
+  screen.set_help_text("") if screen.is_a?(UI::Party)
   if qty > 1
     (qty - 1).times { pkmn.changeHappiness("vitamin") }
   end
-  pbChangeExp(pkmn, pkmn.exp + (base_amt * qty), scene)
-  scene.pbHardRefresh
+  pbChangeExp(pkmn, pkmn.exp + (base_amt * qty), screen)
+  screen.refresh_party
+  screen.refresh
   return true
 end
 
@@ -641,25 +642,25 @@ def pbItemRestoreHP(pkmn, restoreHP)
   return hpGain
 end
 
-def pbHPItem(pkmn, restoreHP, scene)
+def pbHPItem(pkmn, restoreHP, screen)
   if !pkmn.able? || pkmn.hp == pkmn.totalhp
-    scene.pbDisplay(_INTL("It won't have any effect."))
+    screen.show_message(_INTL("It won't have any effect."))
     return false
   end
   pbSEPlay("Use item in party")
   hpGain = pbItemRestoreHP(pkmn, restoreHP)
-  scene.pbRefresh
-  scene.pbDisplay(_INTL("{1}'s HP was restored by {2} points.", pkmn.name, hpGain))
+  screen.refresh
+  screen.show_message(_INTL("{1}'s HP was restored by {2} points.", pkmn.name, hpGain))
   return true
 end
 
-def pbBattleHPItem(pkmn, battler, restoreHP, scene)
+def pbBattleHPItem(pkmn, battler, restoreHP, screen)
   if battler
     if battler.pbRecoverHP(restoreHP) > 0
-      scene.pbDisplay(_INTL("{1}'s HP was restored.", battler.pbThis))
+      screen.pbDisplay(_INTL("{1}'s HP was restored.", battler.pbThis))
     end
   elsif pbItemRestoreHP(pkmn, restoreHP) > 0
-    scene.pbDisplay(_INTL("{1}'s HP was restored.", pkmn.name))
+    screen.pbDisplay(_INTL("{1}'s HP was restored.", pkmn.name))
   end
   return true
 end
@@ -725,7 +726,7 @@ def pbMaxUsesOfEVRaisingItem(stat, amt_per_use, pkmn, no_ev_cap = false)
   return [(amt_can_gain.to_f / amt_per_use).ceil, 1].max
 end
 
-def pbUseEVRaisingItem(stat, amt_per_use, qty, pkmn, happiness_type, scene, no_ev_cap = false)
+def pbUseEVRaisingItem(stat, amt_per_use, qty, pkmn, happiness_type, screen, no_ev_cap = false)
   ret = true
   qty.times do |i|
     if pbRaiseEffortValues(pkmn, stat, amt_per_use, no_ev_cap) > 0
@@ -736,12 +737,12 @@ def pbUseEVRaisingItem(stat, amt_per_use, qty, pkmn, happiness_type, scene, no_e
     end
   end
   if !ret
-    scene.pbDisplay(_INTL("It won't have any effect."))
+    screen.show_message(_INTL("It won't have any effect."))
     return false
   end
   pbSEPlay("Use item in party")
-  scene.pbRefresh
-  scene.pbDisplay(_INTL("{1}'s {2} increased.", pkmn.name, GameData::Stat.get(stat).name))
+  screen.refresh
+  screen.show_message(_INTL("{1}'s {2} increased.", pkmn.name, GameData::Stat.get(stat).name))
   return true
 end
 
@@ -766,11 +767,11 @@ def pbMaxUsesOfEVLoweringBerry(stat, pkmn)
   return [ret, uses].max
 end
 
-def pbRaiseHappinessAndLowerEV(pkmn, scene, stat, qty, messages)
+def pbRaiseHappinessAndLowerEV(pkmn, screen, stat, qty, messages)
   h = pkmn.happiness < 255
   e = pkmn.ev[stat] > 0
   if !h && !e
-    scene.pbDisplay(_INTL("It won't have any effect."))
+    screen.show_message(_INTL("It won't have any effect."))
     return false
   end
   if h
@@ -781,44 +782,44 @@ def pbRaiseHappinessAndLowerEV(pkmn, scene, stat, qty, messages)
     pkmn.ev[stat] = 0 if pkmn.ev[stat] < 0
     pkmn.calc_stats
   end
-  scene.pbRefresh
-  scene.pbDisplay(messages[2 - (h ? 0 : 2) - (e ? 0 : 1)])
+  screen.refresh
+  screen.show_message(messages[2 - (h ? 0 : 2) - (e ? 0 : 1)])
   return true
 end
 
 #===============================================================================
 # Change nature.
 #===============================================================================
-def pbNatureChangingMint(new_nature, item, pkmn, scene)
+def pbNatureChangingMint(new_nature, item, pkmn, screen)
   if pkmn.nature_for_stats == new_nature
-    scene.pbDisplay(_INTL("It won't have any effect."))
+    screen.show_message(_INTL("It won't have any effect."))
     return false
   end
-  if !scene.pbConfirm(_INTL("It might affect {1}'s stats. Are you sure you want to use it?", pkmn.name))
+  if !screen.show_confirm_message(_INTL("It might affect {1}'s stats. Are you sure you want to use it?", pkmn.name))
     return false
   end
   pkmn.nature_for_stats = new_nature
   pkmn.calc_stats
-  scene.pbRefresh
-  scene.pbDisplay(_INTL("{1}'s stats may have changed due to the effects of the {2}!",
-                        pkmn.name, GameData::Item.get(item).name))
+  screen.refresh
+  screen.show_message(_INTL("{1}'s stats may have changed due to the effects of the {2}!",
+                            pkmn.name, GameData::Item.get(item).name))
   return true
 end
 
 #===============================================================================
 # Battle items.
 #===============================================================================
-def pbBattleItemCanCureStatus?(status, pkmn, scene, showMessages)
+def pbBattleItemCanCureStatus?(status, pkmn, screen, showMessages)
   if !pkmn.able? || pkmn.status != status
-    scene.pbDisplay(_INTL("It won't have any effect.")) if showMessages
+    screen.pbDisplay(_INTL("It won't have any effect.")) if showMessages
     return false
   end
   return true
 end
 
-def pbBattleItemCanRaiseStat?(stat, battler, scene, showMessages)
+def pbBattleItemCanRaiseStat?(stat, battler, screen, showMessages)
   if !battler || !battler.pbCanRaiseStatStage?(stat, battler)
-    scene.pbDisplay(_INTL("It won't have any effect.")) if showMessages
+    screen.pbDisplay(_INTL("It won't have any effect.")) if showMessages
     return false
   end
   return true

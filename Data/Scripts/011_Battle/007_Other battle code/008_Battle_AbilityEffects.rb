@@ -1,6 +1,3 @@
-# TODO: Check queries of whether the move being used is physical/special, and
-#       decide whether a check for Psyshock should also apply (i.e. it modifies
-#       the target's defence).
 #===============================================================================
 #
 #===============================================================================
@@ -1677,7 +1674,8 @@ Battle::AbilityEffects::DamageCalcFromTarget.copy(:FILTER, :SOLIDROCK)
 
 Battle::AbilityEffects::DamageCalcFromTarget.add(:FLOWERGIFT,
   proc { |ability, user, target, move, mults, power, type|
-    if move.specialMove? && [:Sun, :HarshSun].include?(target.effectiveWeather)
+    if move.specialMove? && move.function_code != "UseTargetDefenseInsteadOfTargetSpDef" &&  # Psyshock
+       [:Sun, :HarshSun].include?(target.effectiveWeather)
       mults[:defense_multiplier] *= 1.5
     end
   }
@@ -1692,16 +1690,18 @@ Battle::AbilityEffects::DamageCalcFromTarget.add(:FLUFFY,
 
 Battle::AbilityEffects::DamageCalcFromTarget.add(:FURCOAT,
   proc { |ability, user, target, move, mults, power, type|
-    mults[:defense_multiplier] *= 2 if move.physicalMove? ||
-                                       move.function_code == "UseTargetDefenseInsteadOfTargetSpDef"   # Psyshock
+    if move.physicalMove? || move.function_code == "UseTargetDefenseInsteadOfTargetSpDef"   # Psyshock
+      mults[:defense_multiplier] *= 2
+    end
   }
 )
 
 Battle::AbilityEffects::DamageCalcFromTarget.add(:GRASSPELT,
   proc { |ability, user, target, move, mults, power, type|
-    mults[:defense_multiplier] *= 1.5 if (move.physicalMove? ||
-                                         move.function_code == "UseTargetDefenseInsteadOfTargetSpDef") &&   # Psyshock
-                                         user.battle.field.terrain == :Grassy
+    if (move.physicalMove? || move.function_code == "UseTargetDefenseInsteadOfTargetSpDef") &&   # Psyshock
+       user.battle.field.terrain == :Grassy
+      mults[:defense_multiplier] *= 1.5
+    end
   }
 )
 
@@ -1780,7 +1780,8 @@ Battle::AbilityEffects::DamageCalcFromTargetNonIgnorable.add(:SHADOWSHIELD,
 
 Battle::AbilityEffects::DamageCalcFromTargetAlly.add(:FLOWERGIFT,
   proc { |ability, user, target, move, mults, power, type|
-    if move.specialMove? && [:Sun, :HarshSun].include?(target.effectiveWeather)
+    if move.specialMove? && move.function_code != "UseTargetDefenseInsteadOfTargetSpDef" &&   # Psyshock
+       [:Sun, :HarshSun].include?(target.effectiveWeather)
       mults[:defense_multiplier] *= 1.5
     end
   }
@@ -2421,7 +2422,8 @@ Battle::AbilityEffects::AfterMoveUseFromTarget.add(:PICKPOCKET,
     next if target.wild?
     next if switched_battlers.include?(user.index)   # User was switched out
     next if !move.pbContactMove?(user)
-    next if user.effects[PBEffects::Substitute] > 0 || target.damageState.substitute
+    next if target.damageState.calcDamage == 0 || target.damageState.substitute
+    next if user.effects[PBEffects::Substitute] > 0
     next if target.item || !user.item
     next if user.unlosableItem?(user.item) || target.unlosableItem?(user.item)
     battle.pbShowAbilitySplash(target)
@@ -2985,6 +2987,7 @@ Battle::AbilityEffects::OnSwitchIn.add(:FOREWARN,
     battle.allOtherSideBattlers(battler.index).each do |b|
       b.eachMove do |m|
         power = m.power
+        # TODO: Are there any new function codes that need to be added here?
         power = 160 if ["OHKO", "OHKOIce", "OHKOHitsUndergroundTarget"].include?(m.function_code)
         power = 150 if ["PowerHigherWithUserHP"].include?(m.function_code)    # Eruption
         # Counter, Mirror Coat, Metal Burst

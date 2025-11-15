@@ -1085,9 +1085,9 @@ class UI::PokedexEntry < UI::BaseScreen
 end
 
 #===============================================================================
-# TODO: Maybe allow a Pokemon object to be passed in, and if so, temporarily
-#       change the last viewed info for its species to match the passed Pokémon?
-#       Would be done for :new_entry cases.
+# TODO: Maybe allow a Pokemon object to be passed in, and if so, change the last
+#       viewed info for its species to match the passed Pokémon? Would be done
+#       if unlocked == true.
 #===============================================================================
 def pbShowPokedexEntry(species, unlocked = true, no_fade = false)
   # Determine the Pokédex number

@@ -371,13 +371,6 @@ module UI
     end
 
     def initialize_message_box
-      # TODO: It looks like :message_box isn't used anywhere.
-      # @sprites[:message_box] = Window_AdvancedTextPokemon.new("")
-      # @sprites[:message_box].viewport       = @viewport
-      # @sprites[:message_box].z              = 2000
-      # @sprites[:message_box].visible        = false
-      # @sprites[:message_box].letterbyletter = true
-      # pbBottomLeftLines(@sprites[:message_box], 2)
       @sprites[:speech_box] = Window_AdvancedTextPokemon.new("")
       @sprites[:speech_box].viewport       = @viewport
       @sprites[:speech_box].z              = 2001
@@ -737,6 +730,16 @@ module UI
 
     #---------------------------------------------------------------------------
 
+    def wait(duration)
+      timer_start = System.uptime
+      loop do
+        Graphics.update
+        Input.update
+        update_visuals
+        break if System.uptime - timer_start >= duration
+      end
+    end
+
     def update_input
       if Input.trigger?(Input::BACK)
         return :quit
@@ -881,6 +884,10 @@ module UI
     end
 
     alias pbUpdate update
+
+    def wait(duration)
+      @visuals.wait(duration)
+    end
 
     #-----------------------------------------------------------------------------
 

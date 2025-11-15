@@ -431,23 +431,31 @@ class Battle::Scene
     anims = find_move_animation_for_move(move_id, version, user_index)
     return anims if anims
     # Get information to decide which default animation to try
-    # TODO: This is going to crash if the animation is for Struggle which isn't
-    #       a defined move.
-    move_data = GameData::Move.get(move_id)
-    target_data = GameData::Target.get(move_data.target)
-    move_type = move_data.type
-    default_idx = move_data.category
-    default_idx += 3 if target_data.num_targets > 1 ||
-                        (target_data.num_targets > 0 && move_data.status?)
+    if move_id == :STRUGGLE && !GameData::Move.exists?(move_id)
+      target_data = GameData::Target.get(@battle.struggle.target)
+      move_type = @battle.struggle.type
+      default_idx = @battle.struggle.category
+      status = @battle.struggle.statusMove?
+    else
+      move_data = GameData::Move.get(move_id)
+      target_data = GameData::Target.get(move_data.target)
+      move_type = move_data.type
+      default_idx = move_data.category
+      status = move_data.status?
+    end
     # Check for a default animation
-    wanted_move = ANIMATION_DEFAULTS_FOR_TYPE_CATEGORY[move_type][default_idx]
-    anims = find_move_animation_for_move(wanted_move, 0, user_index)
-    return anims if anims
-    if default_idx >= 3
-      wanted_move = ANIMATION_DEFAULTS_FOR_TYPE_CATEGORY[move_type][default_idx - 3]
+    if move_type
+      default_idx += 3 if target_data.num_targets > 1 ||
+                          (target_data.num_targets > 0 && status)
+      wanted_move = ANIMATION_DEFAULTS_FOR_TYPE_CATEGORY[move_type][default_idx]
       anims = find_move_animation_for_move(wanted_move, 0, user_index)
       return anims if anims
-      return nil if ANIMATION_DEFAULTS.include?(wanted_move)   # No need to check for these animations twice
+      if default_idx >= 3
+        wanted_move = ANIMATION_DEFAULTS_FOR_TYPE_CATEGORY[move_type][default_idx - 3]
+        anims = find_move_animation_for_move(wanted_move, 0, user_index)
+        return anims if anims
+        return nil if ANIMATION_DEFAULTS.include?(wanted_move)   # No need to check for these animations twice
+      end
     end
     # Use Tackle or Defense Curl's animation
     if target_data.num_targets == 0 && target_data.id != :None

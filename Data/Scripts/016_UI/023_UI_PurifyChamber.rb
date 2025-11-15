@@ -548,14 +548,22 @@ class PurifyChamberScreen
   def pbDisplay(msg)
     @scene.pbDisplay(msg)
   end
+  alias show_message pbDisplay
 
   def pbConfirm(msg)
     @scene.pbConfirm(msg)
   end
+  alias show_confirm_message pbConfirm
 
   def pbRefresh
     @scene.pbRefresh
   end
+  alias refresh pbRefresh
+
+  def pbUpdate
+    @scene.pbUpdate
+  end
+  alias update pbUpdate
 
   def pbCheckPurify
     purifiables = []

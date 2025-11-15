@@ -1,6 +1,3 @@
-# TODO: Rewrite all the ItemHandlers to stop using pbDisplay and whatnot, and
-#       ensure they do whatever is appropriate when being called with a screen
-#       of UI::Party.
 #===============================================================================
 #
 #===============================================================================
@@ -1150,12 +1147,6 @@ class UI::Party < UI::BaseScreen
 
   def refresh_party
     @visuals.refresh_party
-  end
-
-  # TODO: Get rid of this method once ItemHandlers have been rewritten.
-  def pbHardRefresh
-    refresh_party
-    refresh
   end
 
   #-----------------------------------------------------------------------------

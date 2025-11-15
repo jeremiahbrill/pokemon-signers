@@ -1,5 +1,5 @@
 #===============================================================================
-# NOTE: Some Settings in here will be moved elsewhere eventually. They're all
+# TODO: All Settings in here will be moved elsewhere eventually. They're all
 #       just gathered here while the new UI is being written.
 #===============================================================================
 module Settings
@@ -73,6 +73,4 @@ module Settings
   #       sure which). Gen 9 feature.
   # TODO: Allow forgetting/remembering moves from the summary screen. Gen 9
   #       feature.
-  # TODO: Replace Run with Call in battle; don't have this depend on the Shadow
-  #       type existing?
 end
