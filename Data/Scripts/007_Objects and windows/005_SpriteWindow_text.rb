@@ -268,6 +268,8 @@ class Window_AdvancedTextPokemon < SpriteWindow_Base
        oldshadowb != @shadowColor.blue || oldshadowa != @shadowColor.alpha)
       setText(self.text)
     end
+    @pausesprite&.dispose
+    @pausesprite = nil
   end
 
   def setTextToFit(text, maxwidth = -1)
@@ -412,7 +414,12 @@ class Window_AdvancedTextPokemon < SpriteWindow_Base
 
   def allocPause
     return if @pausesprite
-    @pausesprite = AnimatedSprite.create("Graphics/UI/pause_arrow", 4, 3)
+    arrow_filename = "Graphics/Windowskins/pause_arrow"
+    if @windowskin_name
+      try_arrow_filename = "Graphics/Windowskins/#{File.basename(@windowskin_name, ".*")}_arrow"
+      arrow_filename = try_arrow_filename if pbResolveBitmap(try_arrow_filename)
+    end
+    @pausesprite = AnimatedSprite.create(arrow_filename, 4, 3)
     @pausesprite.z       = 100000
     @pausesprite.visible = false
   end
