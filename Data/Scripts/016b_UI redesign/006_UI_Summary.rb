@@ -225,6 +225,8 @@ class UI::PokemonSummaryVisuals < UI::BaseVisuals
 
   def initialize_bitmaps
     super
+    @bitmaps[:hp_bar]      = AnimatedBitmap.new(graphics_folder + _INTL("hp_bar"))
+    @bitmaps[:exp_bar]     = AnimatedBitmap.new(graphics_folder + _INTL("exp_bar"))
     @bitmaps[:types]       = AnimatedBitmap.new(UI_FOLDER + _INTL("types"))
     @bitmaps[:markings]    = AnimatedBitmap.new(graphics_folder + "markings")
     @bitmaps[:numbers]     = AnimatedBitmap.new(graphics_folder + "numbers")
@@ -568,6 +570,9 @@ class UI::PokemonSummaryVisuals < UI::BaseVisuals
   end
 
   def draw_hp_bar
+    # Draw HP bar background
+    draw_image(@bitmaps[:hp_bar], 14, 348)
+    # Draw HP bar fill
     return if @pokemon.fainted?
     bar_x = 48
     bar_y = 352
@@ -710,7 +715,9 @@ class UI::PokemonSummaryVisuals < UI::BaseVisuals
     draw_text(_INTL("To Next Lv."), 238, 342, theme: :white)
     end_exp = @pokemon.growth_rate.minimum_exp_for_level(@pokemon.level + 1)
     draw_text((end_exp - @pokemon.exp).to_s_formatted, 490, 342, align: :right, theme: :black)
-    # Draw Exp bar
+    # Draw Exp bar background
+    draw_image(@bitmaps[:exp_bar], 318, 368)
+    # Draw Exp bar fill
     if @pokemon.level < GameData::GrowthRate.max_level
       exp_width = @pokemon.exp_fraction * 128
       exp_width = ((exp_width / 2).round) * 2

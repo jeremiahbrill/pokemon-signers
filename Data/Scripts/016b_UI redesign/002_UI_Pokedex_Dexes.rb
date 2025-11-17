@@ -51,9 +51,8 @@ end
 #
 #===============================================================================
 class UI::PokedexDexesVisuals < UI::BaseVisuals
-  GRAPHICS_FOLDER     = "Pokedex/"   # Subfolder in Graphics/UI
-  BACKGROUND_FILENAME = "bg_menu"
-  TEXT_COLOR_THEMES   = {   # Themes not in DEFAULT_TEXT_COLOR_THEMES
+  GRAPHICS_FOLDER   = "Pokedex/"   # Subfolder in Graphics/UI
+  TEXT_COLOR_THEMES = {   # Themes not in DEFAULT_TEXT_COLOR_THEMES
     :header => [Color.new(248, 248, 248), Color.new(192, 32, 40)]
   }
 
@@ -77,9 +76,7 @@ class UI::PokedexDexesVisuals < UI::BaseVisuals
   #-----------------------------------------------------------------------------
 
   def background_filename
-    ret = gendered_filename(self.class::BACKGROUND_FILENAME + "_" + @pocket.to_s)
-    return ret if pbResolveBitmap(graphics_folder + ret)
-    return super
+    return gendered_filename(_INTL("bg_pokedex_menu"))
   end
 
   def dex_number

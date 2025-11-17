@@ -84,7 +84,7 @@ class UI::PokedexEntryVisuals < UI::BaseVisuals
     @bitmaps[:page_arrows]   = AnimatedBitmap.new(graphics_folder + "entry_page_arrows")
     @bitmaps[:page_icons]    = AnimatedBitmap.new(graphics_folder + _INTL("entry_page_icons"))
     @bitmaps[:owned]         = AnimatedBitmap.new(graphics_folder + "icon_own")
-    @bitmaps[:types]         = AnimatedBitmap.new(graphics_folder + _INTL("icon_types"))
+    @bitmaps[:types]         = AnimatedBitmap.new(graphics_folder + _INTL("types"))
     @bitmaps[:area_navigate] = AnimatedBitmap.new(graphics_folder + "overlay_area_navigate")
     @bitmaps[:area_region]   = AnimatedBitmap.new(graphics_folder + "overlay_area_region")
     @bitmaps[:area_unknown]  = AnimatedBitmap.new(graphics_folder + "overlay_area_unknown")

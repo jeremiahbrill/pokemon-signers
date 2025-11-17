@@ -42,15 +42,15 @@ module Input
   # Keys are SDL scancodes (https://wiki.libsdl.org/SDL3/SDL_Scancode) minus the
   # "SDL_SCANCODE_" beginning part.
   DEFAULT_INPUT_MAPPINGS = {
-    self::UP         => [[:UP], [:LSTICK_UP, :RSTICK_UP]],
-    self::DOWN       => [[:DOWN], [:LSTICK_DOWN, :RSTICK_DOWN]],
-    self::LEFT       => [[:LEFT], [:LSTICK_LEFT, :RSTICK_LEFT]],
-    self::RIGHT      => [[:RIGHT], [:LSTICK_RIGHT, :RSTICK_RIGHT]],
+    self::UP         => [[:UP],             [:LSTICK_UP, :RSTICK_UP]],
+    self::DOWN       => [[:DOWN],           [:LSTICK_DOWN, :RSTICK_DOWN]],
+    self::LEFT       => [[:LEFT],           [:LSTICK_LEFT, :RSTICK_LEFT]],
+    self::RIGHT      => [[:RIGHT],          [:LSTICK_RIGHT, :RSTICK_RIGHT]],
     self::USE        => [[:SPACE, :RETURN], []],
-    self::BACK       => [[:ESCAPE], []],
-    self::ACTION     => [[:BACKSPACE], []],
-    self::QUICK_UP   => [[:PAGEUP], []],
-    self::QUICK_DOWN => [[:PAGEDOWN], []]
+    self::BACK       => [[:ESCAPE],         []],
+    self::ACTION     => [[:BACKSPACE],      []],
+    self::QUICK_UP   => [[:PAGEUP],         []],
+    self::QUICK_DOWN => [[:PAGEDOWN],       []]
   }
   # This lists all remappable inputs (written as Input::SOMETHING throughout the
   # code) with their remappable keys and gamepad buttons.
@@ -64,11 +64,11 @@ module Input
     self::DOWN       => [nil, :DPAD_DOWN],
     self::LEFT       => [nil, :DPAD_LEFT],
     self::RIGHT      => [nil, :DPAD_RIGHT],
-    self::USE        => [:C, :A],
-    self::BACK       => [:X, :B],
-    self::ACTION     => [:Z, :X],
-    self::QUICK_UP   => [:A, :LEFTSHOULDER],
-    self::QUICK_DOWN => [:S, :RIGHTSHOULDER],
+    self::USE        => [:C,  :A],
+    self::BACK       => [:X,  :B],
+    self::ACTION     => [:Z,  :X],
+    self::QUICK_UP   => [:A,  :LEFTSHOULDER],
+    self::QUICK_DOWN => [:S,  :RIGHTSHOULDER],
   }
 
   # All keyboard keys that can be mapped to an input by the player.
@@ -214,8 +214,6 @@ module Input
     return (keys) ? multi_releaseex?(*keys) : __orig_release?(input)
   end
 
-
-
   def self.multi_pressex?(*key)
     return true if key[0].any? { |k| pressex?(k) }
     return true if key[1].any? { |k| AXIS_HASH.key?(k) ? axis_pressex?(k) : Controller.pressex?(k) }
@@ -238,6 +236,81 @@ module Input
     return true if key[0].any? { |k| releaseex?(k) }
     return true if key[1].any? { |k| AXIS_HASH.key?(k) ? axis_releaseex?(k) : Controller.releaseex?(k) }
     return false
+  end
+
+  #-----------------------------------------------------------------------------
+
+  # Custom approach for axis since there is no direct way to get this info,
+  # unlike gamepad and keyboard.
+
+  # When false, disable axis support. Remember to remove axis keys from
+  # DEFAULT_INPUT_MAPPINGS.
+  ENABLE_GAMEPAD_AXIS = true
+
+  # Used hash for higher performance when checking keys.
+  AXIS_HASH = ENABLE_GAMEPAD_AXIS ? [
+    :LSTICK_LEFT, :LSTICK_RIGHT, :LSTICK_UP, :LSTICK_DOWN,
+    :RSTICK_LEFT, :RSTICK_RIGHT, :RSTICK_UP, :RSTICK_DOWN,
+    :LEFTTRIGGER, :RIGHTTRIGGER
+  ].to_h { |value| [value, value] } : {}
+
+  AXIS_THRESHOLD            = 0.5
+  AXIS_REPEAT_INITIAL_DELAY = 0.5
+  AXIS_REPEAT_DELAY         = 0.1
+
+  @@axis_states              = {}
+  @@axis_states_old          = {}
+  @@axis_states_trigger      = {}
+  @@axis_states_repeat       = {}
+  @@axis_states_release      = {}
+  @@axis_states_trigger_time = {}
+  @@axis_states_repeat_time  = {}
+
+  def self.refresh_axis_array
+    return if !ENABLE_GAMEPAD_AXIS
+    for k in AXIS_HASH.keys
+      @@axis_states_trigger_time[k] ||= 0
+      @@axis_states_repeat_time[k] ||= 0
+      @@axis_states_old[k] = @@axis_states[k]
+      @@axis_states[k] = axis_state(k) > AXIS_THRESHOLD
+      @@axis_states_trigger[k] =  @@axis_states[k] && !@@axis_states_old[k]
+      @@axis_states_release[k] = !@@axis_states[k] &&  @@axis_states_old[k]
+      @@axis_states_trigger_time[k] = System.uptime if @@axis_states_trigger[k]
+      @@axis_states_repeat[k] = @@axis_states_trigger[k] ||
+                                (@@axis_states[k] &&
+                                 System.uptime >= @@axis_states_trigger_time[k] + AXIS_REPEAT_INITIAL_DELAY &&
+                                 System.uptime >= @@axis_states_repeat_time[k] + AXIS_REPEAT_DELAY)
+      @@axis_states_repeat_time[k] = System.uptime if @@axis_states_repeat[k]
+    end
+  end
+
+  def self.axis_state(key)
+    return case key
+      when :LSTICK_LEFT  then -Controller.axes_left[0]
+      when :LSTICK_RIGHT then  Controller.axes_left[0]
+      when :LSTICK_UP    then -Controller.axes_left[1]
+      when :LSTICK_DOWN  then  Controller.axes_left[1]
+      when :RSTICK_LEFT  then -Controller.axes_right[0]
+      when :RSTICK_RIGHT then  Controller.axes_right[0]
+      when :RSTICK_UP    then -Controller.axes_right[1]
+      when :RSTICK_DOWN  then  Controller.axes_right[1]
+      when :LEFTTRIGGER  then  Controller.axes_trigger[0]
+      when :RIGHTTRIGGER then  Controller.axes_trigger[1]
+      else 0
+    end
+  end
+
+  def self.axis_pressex?(index)
+    return @@axis_states[index]
+  end
+  def self.axis_triggerex?(index)
+    return @@axis_states_trigger[index]
+  end
+  def self.axis_repeatex?(index)
+    return @@axis_states_repeat[index]
+  end
+  def self.axis_releaseex?(index)
+    return @@axis_states_release[index]
   end
 
   #-----------------------------------------------------------------------------
@@ -300,92 +373,16 @@ module Input
 
   #-----------------------------------------------------------------------------
 
-  # Custom approach for axis since there is no direct way to get this info,
-  # unlike gamepad and keyboard.
-
-  # When false, disable axis support. Remember to remove axis keys from
-  # DEFAULT_INPUT_MAPPINGS.
-  ENABLE_GAMEPAD_AXIS = true
-
-  # Used hash for higher performance when checking keys.
-  AXIS_HASH = ENABLE_GAMEPAD_AXIS ? [
-    :LSTICK_LEFT, :LSTICK_RIGHT, :LSTICK_UP, :LSTICK_DOWN,
-    :RSTICK_LEFT, :RSTICK_RIGHT, :RSTICK_UP, :RSTICK_DOWN,
-    :LEFTTRIGGER, :RIGHTTRIGGER
-  ].to_h { |value| [value, value] } : {}
-
-  AXIS_THRESHOLD = 0.5
-  AXIS_REPEAT_INITIAL_DELAY = 0.5
-  AXIS_REPEAT_DELAY = 0.1
-
-  @@axis_states          = {}
-  @@axis_states_old      = {}
-  @@axis_states_trigger  = {}
-  @@axis_states_repeat   = {}
-  @@axis_states_release  = {}
-  @@axis_states_trigger_time = {}
-  @@axis_states_repeat_time = {}
-  
-  def self.refresh_axis_array
-    return if !ENABLE_GAMEPAD_AXIS
-    for k in AXIS_HASH.keys
-      @@axis_states_trigger_time[k] ||= 0
-      @@axis_states_repeat_time[k] ||= 0
-      @@axis_states_old[k] = @@axis_states[k]
-      @@axis_states[k] = axis_state(k) > AXIS_THRESHOLD
-      @@axis_states_trigger[k] =  @@axis_states[k] && !@@axis_states_old[k]
-      @@axis_states_release[k] = !@@axis_states[k] &&  @@axis_states_old[k]
-      @@axis_states_trigger_time[k] = System.uptime if @@axis_states_trigger[k]
-      @@axis_states_repeat[k] = @@axis_states_trigger[k] || (
-        @@axis_states[k] && (
-          System.uptime >= @@axis_states_trigger_time[k] + AXIS_REPEAT_INITIAL_DELAY
-        ) && System.uptime >= @@axis_states_repeat_time[k] + AXIS_REPEAT_DELAY
-      )
-      @@axis_states_repeat_time[k] = System.uptime if @@axis_states_repeat[k]
-    end
-  end
-  
-  def self.axis_state(key)
-    return case key
-      when :LSTICK_LEFT  then -Controller.axes_left[0]    
-      when :LSTICK_RIGHT then  Controller.axes_left[0] 
-      when :LSTICK_UP    then -Controller.axes_left[1]
-      when :LSTICK_DOWN  then  Controller.axes_left[1]
-      when :RSTICK_LEFT  then -Controller.axes_right[0]
-      when :RSTICK_RIGHT then  Controller.axes_right[0]
-      when :RSTICK_UP    then -Controller.axes_right[1]
-      when :RSTICK_DOWN  then  Controller.axes_right[1]
-      when :LEFTTRIGGER  then  Controller.axes_trigger[0]
-      when :RIGHTTRIGGER then  Controller.axes_trigger[1]
-      else 0
-    end
-  end
-
-  def self.axis_pressex?(index)
-    return @@axis_states[index] 
-  end
-  def self.axis_triggerex?(index)
-    return @@axis_states_trigger[index] 
-  end
-  def self.axis_repeatex?(index)
-    return @@axis_states_repeat[index] 
-  end
-  def self.axis_releaseex?(index)
-    return @@axis_states_release[index] 
-  end
-
-  #-----------------------------------------------------------------------------
-
-  if !defined? __screenshot_update
+  if !defined? __essentials_update
     class << Input
-      alias __screenshot_update update
+      alias __essentials_update update
     end
   end
 
   def self.update
-    __screenshot_update
-    pbScreenCapture if trigger?(Input::F8)
+    __essentials_update
     refresh_axis_array
+    pbScreenCapture if trigger?(Input::F8)
   end
 end
 

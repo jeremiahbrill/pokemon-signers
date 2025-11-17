@@ -182,7 +182,7 @@ def pbBattleAnimationCore(anim, viewport, location, num_flashes = 2)
   # Play main animation
   Graphics.freeze
   viewport.color = Color.black   # Ensure screen is black
-  Graphics.transition(25, "Graphics/Transitions/" + anim)
+  Graphics.transition(25, anim)
   # Slight pause after animation before starting up the battle scene
   pbWait(0.1)
 end

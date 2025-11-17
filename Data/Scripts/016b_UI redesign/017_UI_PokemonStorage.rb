@@ -106,7 +106,7 @@ class UI::PokemonStorageVisualsSidePane < UI::SpriteContainer
 
   def draw_level
     return if @pokemon.egg?
-    draw_image(graphics_folder + _INTL("overlay_lv"), 8, 48)
+    draw_image(graphics_folder + _INTL("level"), 8, 48)
     draw_number_from_image(@bitmaps[:numbers], @pokemon.level, 30, 48)
   end
 

@@ -371,9 +371,9 @@ class UI::PokedexVisuals < UI::BaseVisuals
   def initialize_bitmaps
     super
     @bitmaps[:slider]         = AnimatedBitmap.new(graphics_folder + "icon_slider")
-    @bitmaps[:types]          = AnimatedBitmap.new(graphics_folder + _INTL("icon_types"))
+    @bitmaps[:types]          = AnimatedBitmap.new(graphics_folder + _INTL("types"))
     @bitmaps[:height_weight]  = AnimatedBitmap.new(graphics_folder + _INTL("icon_height_weight"))
-    @bitmaps[:shapes]         = AnimatedBitmap.new(graphics_folder + "icon_shapes")
+    @bitmaps[:shapes]         = AnimatedBitmap.new(graphics_folder + "shapes")
     @bitmaps[:size_sliders]   = AnimatedBitmap.new(graphics_folder + _INTL("icon_size_sliders"))
     @bitmaps[:search_buttons] = AnimatedBitmap.new(graphics_folder + "icon_search_buttons")
   end
@@ -1094,6 +1094,7 @@ class UI::PokedexVisuals < UI::BaseVisuals
       end
     elsif Input.trigger?(Input::BACK)
       pbPlayCloseMenuSE
+      @filters = @old_filters
       return true
     elsif Input.trigger?(Input::ACTION)
       @search_index = 8   # Jump to "Start" button

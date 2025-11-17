@@ -238,7 +238,9 @@ class Scene_Map
 
   def main
     createSpritesets
-    Graphics.transition
+    # NOTE: I don't know why a duration of 4 is needed here to make the fade
+    #       (slightly over) 0.4 seconds.
+    Graphics.transition(4, "")
     loop do
       Graphics.update
       Input.update
@@ -252,7 +254,9 @@ class Scene_Map
       $game_temp.last_uptime_refreshed_play_time = nil
       $game_temp.title_screen_calling = false
       pbBGMFade(1.0)
-      Graphics.transition
+      # NOTE: I don't know why a duration of 4 is needed here to make the fade
+      #       (slightly over) 0.4 seconds.
+      Graphics.transition(4, "")
       Graphics.freeze
     end
   end

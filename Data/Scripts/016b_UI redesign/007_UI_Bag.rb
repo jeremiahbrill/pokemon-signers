@@ -294,6 +294,7 @@ class UI::BagVisuals < UI::BaseVisuals
     # Set the new pocket
     set_pocket(new_pocket)
     @sprites[:item_list].index = 0
+    refresh_slider
   end
 
   def set_pocket(new_pocket)

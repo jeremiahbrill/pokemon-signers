@@ -72,9 +72,9 @@ class Battle::Scene::PokemonDataBox < Sprite
   end
 
   def initializeBitmaps
-    @numbersBitmap = AnimatedBitmap.new("Graphics/UI/Battle/icon_numbers")
-    @hpBarBitmap   = AnimatedBitmap.new("Graphics/UI/Battle/overlay_hp")
-    @expBarBitmap  = AnimatedBitmap.new("Graphics/UI/Battle/overlay_exp")
+    @numbersBitmap = AnimatedBitmap.new("Graphics/UI/Battle/numbers")
+    @hpBarBitmap   = AnimatedBitmap.new("Graphics/UI/Battle/hp_bar_fill")
+    @expBarBitmap  = AnimatedBitmap.new("Graphics/UI/Battle/exp_bar_fill")
     initializeDataBoxBitmap
     initializeSelfBitmap
   end
@@ -273,7 +273,7 @@ class Battle::Scene::PokemonDataBox < Sprite
 
   def draw_level
     # "Lv" graphic
-    pbDrawImagePositions(self.bitmap, [[_INTL("Graphics/UI/Battle/overlay_lv"), @draw_offset_x + 162, 16]])
+    pbDrawImagePositions(self.bitmap, [["Graphics/UI/Battle/" + _INTL("level"), @draw_offset_x + 162, 16]])
     # Level number
     pbDrawNumber(@battler.level, self.bitmap, @draw_offset_x + 184, 16)
   end
@@ -286,7 +286,7 @@ class Battle::Scene::PokemonDataBox < Sprite
       s = GameData::Status.get(@battler.status).icon_position
     end
     return if s < 0
-    pbDrawImagePositions(self.bitmap, [[_INTL("Graphics/UI/Battle/icon_statuses"), @draw_offset_x + 46, 36,
+    pbDrawImagePositions(self.bitmap, [["Graphics/UI/Battle/" + _INTL("statuses"), @draw_offset_x + 46, 36,
                                         0, s * STATUS_ICON_HEIGHT, -1, STATUS_ICON_HEIGHT]])
   end
 

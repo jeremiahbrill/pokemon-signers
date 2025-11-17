@@ -54,9 +54,9 @@ class UI::PartyVisualsPanel < UI::SpriteContainer
     # HP bar sprite
     @sprites[:hp_bar] = ChangelingSprite.new(104, 50, @viewport)
     @sprites[:hp_bar].z = 1
-    @sprites[:hp_bar].add_bitmap(:able, graphics_folder + _INTL("overlay_hp_back"))
-    @sprites[:hp_bar].add_bitmap(:fainted, graphics_folder + _INTL("overlay_hp_back_faint"))
-    @sprites[:hp_bar].add_bitmap(:switch, graphics_folder + _INTL("overlay_hp_back_switch"))
+    @sprites[:hp_bar].add_bitmap(:able, graphics_folder + _INTL("hp_bar"))
+    @sprites[:hp_bar].add_bitmap(:fainted, graphics_folder + _INTL("hp_bar_faint"))
+    @sprites[:hp_bar].add_bitmap(:switch, graphics_folder + _INTL("hp_bar_switch"))
     record_values(:hp_bar)
     # Ball sprite
     @sprites[:ball] = ChangelingSprite.new(10, 0, @viewport)
@@ -199,7 +199,7 @@ class UI::PartyVisualsPanel < UI::SpriteContainer
 
   def draw_level
     return if @pokemon.egg?
-    draw_image(graphics_folder + _INTL("overlay_lv"), 16, 70)
+    draw_image(graphics_folder + _INTL("level"), 16, 70)
     draw_number_from_image(@bitmaps[:numbers], @pokemon.level, 38, 70)
   end
 
@@ -279,11 +279,11 @@ class UI::PartyVisualsButton < UI::SpriteContainer
   def initialize_sprites
     @sprites[:button] = ChangelingSprite.new(0, 0, @viewport)
     if @narrow
-      @sprites[:button].add_bitmap(:desel, graphics_folder + "icon_cancel_narrow")
-      @sprites[:button].add_bitmap(:sel, graphics_folder + "icon_cancel_narrow_sel")
+      @sprites[:button].add_bitmap(:desel, graphics_folder + "cancel_button_narrow")
+      @sprites[:button].add_bitmap(:sel, graphics_folder + "cancel_button_narrow_sel")
     else
-      @sprites[:button].add_bitmap(:desel, graphics_folder + "icon_cancel")
-      @sprites[:button].add_bitmap(:sel, graphics_folder + "icon_cancel_sel")
+      @sprites[:button].add_bitmap(:desel, graphics_folder + "cancel_button")
+      @sprites[:button].add_bitmap(:sel, graphics_folder + "cancel_button_sel")
     end
     @sprites[:button].change_bitmap(:desel)
     record_values(:button)
