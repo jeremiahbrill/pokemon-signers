@@ -12,6 +12,7 @@ module Battle::AbilityEffects
   StatusImmunityNonIgnorable       = AbilityHandlerHash.new
   StatusImmunityFromAlly           = AbilityHandlerHash.new
   OnStatusInflicted                = AbilityHandlerHash.new   # Synchronize
+  OnDealingStatus                  = AbilityHandlerHash.new   # Poison Puppeteer
   StatusCure                       = AbilityHandlerHash.new
   # Battler's stat stages
   StatLossImmunity                 = AbilityHandlerHash.new
@@ -108,6 +109,10 @@ module Battle::AbilityEffects
 
   def self.triggerOnStatusInflicted(ability, battler, user, status)
     OnStatusInflicted.trigger(ability, battler, user, status)
+  end
+
+  def self.triggerOnDealingStatus(ability, user, target, status)
+    OnDealingStatus.trigger(ability, user, target, status)
   end
 
   def self.triggerStatusCure(ability, battler)
@@ -614,6 +619,25 @@ Battle::AbilityEffects::OnStatusInflicted.add(:SYNCHRONIZE,
         battler.battle.pbHideAbilitySplash(battler)
       end
     end
+  }
+)
+
+#===============================================================================
+# OnDealingStatus handlers
+#===============================================================================
+
+Battle::AbilityEffects::OnDealingStatus.add(:POISONPUPPETEER,
+  proc { |ability, user, target, status|
+    next if status != :POISON
+    next if !target.pbCanConfuse?(user)
+    next if !user.isSpecies?(:PECHARUNT)
+    user.battle.pbShowAbilitySplash(user)
+    msg = nil
+    if !Battle::Scene::USE_ABILITY_SPLASH
+      msg = _INTL("{1} became confused due to {2}'s {3}!", target.pbThis, user.pbThis(true), user.abilityName)
+    end
+    target.pbConfuse(msg)
+    user.battle.pbHideAbilitySplash(user)
   }
 )
 
