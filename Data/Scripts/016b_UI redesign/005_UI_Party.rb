@@ -900,6 +900,9 @@ class UI::Party < UI::BaseScreen
       used_item = nil
       used = false
       pbFadeOutInWithUpdate(screen.sprites) do
+        old_last_pocket       = $bag.last_viewed_pocket
+        old_pocket_selections = $bag.last_pocket_selections.clone
+        $bag.reset_last_selections
         bag_screen = UI::Bag.new($bag, mode: :choose_item)
         bag_screen.set_filter_proc(proc { |itm|
           item_data = GameData::Item.get(itm)
@@ -917,6 +920,8 @@ class UI::Party < UI::BaseScreen
           screen.refresh
           used = true
         end
+        $bag.last_viewed_pocket     = old_last_pocket
+        $bag.last_pocket_selections = old_pocket_selections
       end
       if used_item && !used
         pbUseItemOnPokemon(used_item, pkmn, screen)
@@ -929,9 +934,13 @@ class UI::Party < UI::BaseScreen
       pkmn = screen.pokemon
       given_item = nil
       pbFadeOutInWithUpdate(screen.sprites) do
+        old_last_pocket       = $bag.last_viewed_pocket
+        old_pocket_selections = $bag.last_pocket_selections.clone
         bag_screen = UI::Bag.new($bag, mode: :choose_item)
         bag_screen.set_filter_proc(proc { |itm| GameData::Item.get(itm).can_hold? })
         given_item = bag_screen.choose_item
+        $bag.last_viewed_pocket     = old_last_pocket
+        $bag.last_pocket_selections = old_pocket_selections
       end
       if given_item
         pbGiveItemToPokemon(given_item, pkmn, screen, screen.index)

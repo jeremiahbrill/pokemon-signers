@@ -73,9 +73,14 @@ EventHandlers.add(:on_player_step_taken, :repel_counter,
       new_item = $PokemonGlobal.repel_item
     when :choose_another
       pbFadeOutIn do
+        old_last_pocket       = $bag.last_viewed_pocket
+        old_pocket_selections = $bag.last_pocket_selections.clone
+        $bag.reset_last_selections
         bag_screen = UI::Bag.new($bag, mode: :choose_item)
         bag_screen.set_filter_proc(proc { |item| repels.include?(item) })
         new_item = bag_screen.choose_item
+        $bag.last_viewed_pocket     = old_last_pocket
+        $bag.last_pocket_selections = old_pocket_selections
       end
     end
     pbUseItem($bag, new_item) if new_item

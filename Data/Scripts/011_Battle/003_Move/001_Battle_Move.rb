@@ -101,28 +101,29 @@ class Battle::Move
 
   def pbPriority(user); return @priority; end
 
-  def usableWhenAsleep?;    return false; end
-  def unusableInGravity?;   return false; end
-  def healingMove?;         return false; end
-  def recoilMove?;          return false; end
-  def flinchingMove?;       return false; end
-  def callsAnotherMove?;    return false; end
+  def usableWhenAsleep?;            return false; end
+  def unusableInGravity?;           return false; end
+  def healingMove?;                 return false; end
+  def recoilMove?;                  return false; end
+  def flinchingMove?;               return false; end
+  def callsAnotherMove?;            return false; end
   # Whether the move can/will hit more than once in the same turn (including
   # Beat Up which may instead hit just once). Not the same as pbNumHits>1.
-  def multiHitMove?;        return false; end
-  def chargingTurnMove?;    return false; end
-  def successCheckPerHit?;  return false; end
-  def hitsFlyingTargets?;   return false; end
-  def hitsDiggingTargets?;  return false; end
-  def hitsDivingTargets?;   return false; end
-  def ignoresReflect?;      return false; end   # For Brick Break
-  def targetsPosition?;     return false; end   # For Future Sight/Doom Desire
-  def cannotRedirect?;      return false; end   # For Snipe Shot
-  def worksWithNoTargets?;  return false; end   # For Explosion
-  def damageReducedByBurn?; return true;  end   # For Facade
-  def triggersHyperMode?;   return false; end
-  def canSnatch?;           return false; end
-  def canMagicCoat?;        return false; end
+  def multiHitMove?;                return false; end
+  def chargingTurnMove?;            return false; end
+  def successCheckPerHit?;          return false; end
+  def hitsFlyingTargets?;           return false; end
+  def hitsDiggingTargets?;          return false; end
+  def hitsDivingTargets?;           return false; end
+  def ignoresReflect?;              return false; end   # For Brick Break
+  def targetsPosition?;             return false; end   # For Future Sight/Doom Desire
+  def cannotRedirect?;              return false; end   # For Snipe Shot
+  def worksWithNoTargets?;          return false; end   # For Explosion
+  def damageReducedByBurn?;         return true;  end   # For Facade
+  def triggersHyperMode?;           return false; end
+  def canSnatch?;                   return false; end
+  def canMagicCoat?;                return false; end
+  def additionalEffectAffectsUser?; return false; end   # Shield Dust doesn't stop it if true
 
   def contactMove?;       return @flags.any? { |f| f[/^Contact$/i] };             end
   def canProtectAgainst?; return @flags.any? { |f| f[/^CanProtect$/i] };          end

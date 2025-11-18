@@ -382,9 +382,14 @@ def pbBerryPlant
       when 0   # Fertilize
         mulch = nil
         pbFadeOutIn do
+          old_last_pocket       = $bag.last_viewed_pocket
+          old_pocket_selections = $bag.last_pocket_selections.clone
+          $bag.reset_last_selections
           bag_screen = UI::Bag.new($bag, mode: :choose_item)
           bag_screen.set_filter_proc(proc { |item| GameData::Item.get(item).is_mulch? })
           mulch = bag_screen.choose_item
+          $bag.last_viewed_pocket     = old_last_pocket
+          $bag.last_pocket_selections = old_pocket_selections
         end
         return if !mulch
         mulch_data = GameData::Item.get(mulch)
@@ -409,9 +414,14 @@ def pbBerryPlant
   end
   if !ask_to_plant || pbConfirmMessage(_INTL("Want to plant a Berry?"))
     pbFadeOutIn do
+      old_last_pocket       = $bag.last_viewed_pocket
+      old_pocket_selections = $bag.last_pocket_selections.clone
+      $bag.reset_last_selections
       bag_screen = UI::Bag.new($bag, mode: :choose_item)
       bag_screen.set_filter_proc(proc { |item| GameData::Item.get(item).is_berry? })
       berry = bag_screen.choose_item
+      $bag.last_viewed_pocket     = old_last_pocket
+      $bag.last_pocket_selections = old_pocket_selections
     end
     if berry
       $stats.berries_planted += 1

@@ -10,8 +10,8 @@ class UI::BagVisualsList < Window_DrawableCommand
     @bag = bag
     @sorting = false
     super(x, y, width, height, viewport)
-    @selarrow  = AnimatedBitmap.new(bag_folder + "cursor")
-    @swap_arrow = AnimatedBitmap.new(bag_folder + "cursor_swap")
+    @selarrow       = AnimatedBitmap.new(bag_folder + "cursor")
+    @swap_arrow     = AnimatedBitmap.new(bag_folder + "cursor_swap")
     @swapping_arrow = AnimatedBitmap.new(bag_folder + "cursor_swapping")
     self.windowskin = nil
   end
@@ -227,7 +227,7 @@ class UI::BagVisuals < UI::BaseVisuals
     @sprites[:item_list].switching_base_color   = get_text_color_theme(:switching)[0]
     @sprites[:item_list].switching_shadow_color = get_text_color_theme(:switching)[1]
     @sprites[:item_list].items                  = @bag.pockets[@pocket]
-    @sprites[:item_list].index                  = @bag.last_viewed_index(@pocket) if @mode != :choose_item
+    @sprites[:item_list].index                  = @bag.last_viewed_index(@pocket)
     @sprites[:item_list].active                 = false
   end
 
@@ -280,7 +280,7 @@ class UI::BagVisuals < UI::BaseVisuals
     end
     # Ensure current pocket is one that isn't empty
     new_pocket_index = 0
-    if @mode == :choose_item_in_battle && !@filtered_list[@bag.last_viewed_pocket].empty?
+    if [:choose_item, :choose_item_in_battle].include?(@mode) && !@filtered_list[@bag.last_viewed_pocket].empty?
       new_pocket_index = all_pockets.index(@bag.last_viewed_pocket)
     end
     all_pockets.length.times do |i|
@@ -293,13 +293,14 @@ class UI::BagVisuals < UI::BaseVisuals
     new_pocket = all_pockets[new_pocket_index]
     # Set the new pocket
     set_pocket(new_pocket)
-    @sprites[:item_list].index = 0
+    @sprites[:item_list].index = @bag.last_viewed_index(@pocket)
+    @sprites[:item_list].index = 0 if @sprites[:item_list].index >= @sprites[:item_list].itemCount
     refresh_slider
   end
 
   def set_pocket(new_pocket)
     @pocket = new_pocket
-    @bag.last_viewed_pocket = @pocket if @mode != :choose_item
+    @bag.last_viewed_pocket = @pocket
     @sprites[:item_list].disable_sorting = !pocket_sortable?
     if @filtered_list
       @sprites[:item_list].items = @filtered_list[@pocket]
@@ -307,6 +308,7 @@ class UI::BagVisuals < UI::BaseVisuals
       @sprites[:item_list].items = @bag.pockets[@pocket]
     end
     @sprites[:item_list].index = @bag.last_viewed_index(@pocket)
+    @sprites[:item_list].index = 0 if @sprites[:item_list].index >= @sprites[:item_list].itemCount
     refresh
   end
 
@@ -470,7 +472,8 @@ class UI::BagVisuals < UI::BaseVisuals
     draw_image(@bitmaps[:pocket_icons], icon_x + (pocket_number * (icon_size[0] - icon_overlap)), icon_y,
                icon_pos * icon_size[0], 0, *icon_size, overlay: :pocket_icons)
     # Draw left/right arrows if there are multiple pockets that can be looked at
-    if @mode != :choose_item || !@filtered_list || @filtered_list.count { |pckt, contents| !contents.empty? } > 1
+    if ![:choose_item, :choose_item_in_battle].include?(@mode) ||
+       !@filtered_list || @filtered_list.count { |pckt, contents| !contents.empty? } > 1
       draw_image(@bitmaps[:pocket_icons], icon_x - (icon_size[0] - icon_overlap), icon_y,
                  0, icon_size[1] * 3, *icon_size, overlay: :pocket_icons)
       draw_image(@bitmaps[:pocket_icons], icon_x + (all_pockets.length * (icon_size[0] - icon_overlap)), icon_y,
@@ -599,7 +602,7 @@ class UI::BagVisuals < UI::BaseVisuals
       this_pocket.insert(index, this_pocket.delete_at(old_index))
       @sprites[:item_list].items = this_pocket
     end
-    @bag.set_last_viewed_index(@pocket, index) if @mode != :choose_item
+    @bag.set_last_viewed_index(@pocket, index)
     refresh_slider
     refresh_selected_item
     refresh_input_indicators
@@ -1065,9 +1068,14 @@ end
 def pbChooseApricorn(game_variable = 0)
   ret = nil
   pbFadeOutIn do
+    old_last_pocket       = $bag.last_viewed_pocket
+    old_pocket_selections = $bag.last_pocket_selections.clone
+    $bag.reset_last_selections
     bag_screen = UI::Bag.new($bag, mode: :choose_item)
     bag_screen.set_filter_proc(proc { |item| GameData::Item.get(item).is_apricorn? })
     ret = bag_screen.choose_item
+    $bag.last_viewed_pocket     = old_last_pocket
+    $bag.last_pocket_selections = old_pocket_selections
   end
   $game_variables[game_variable] = ret || :NONE if game_variable > 0
   return ret
@@ -1076,9 +1084,14 @@ end
 def pbChooseFossil(game_variable = 0)
   ret = nil
   pbFadeOutIn do
+    old_last_pocket       = $bag.last_viewed_pocket
+    old_pocket_selections = $bag.last_pocket_selections.clone
+    $bag.reset_last_selections
     bag_screen = UI::Bag.new($bag, mode: :choose_item)
     bag_screen.set_filter_proc(proc { |item| GameData::Item.get(item).is_fossil? })
     ret = bag_screen.choose_item
+    $bag.last_viewed_pocket     = old_last_pocket
+    $bag.last_pocket_selections = old_pocket_selections
   end
   $game_variables[game_variable] = ret || :NONE if game_variable > 0
   return ret

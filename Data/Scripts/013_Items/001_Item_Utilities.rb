@@ -273,6 +273,8 @@ def pbUseItemOnPokemon(item, pkmn, screen)
       screen.show_message(_INTL("You booted up the {1}.", item_data.portion_name) + "\1")
       if screen.show_confirm_message(_INTL("Do you want to teach {1} to {2}?", move_name, pkmn.name))
         if pbLearnMove(pkmn, move, false, true) { screen.update }
+          $stats.moves_taught_by_item += 1
+          pkmn.add_first_move(move) if item_data.is_TR?
           $bag.remove(item) if item_data.consumed_after_use?
           return true
         end

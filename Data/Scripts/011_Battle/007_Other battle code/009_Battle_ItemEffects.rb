@@ -924,9 +924,7 @@ Battle::ItemEffects::DamageCalcFromUser.add(:ICEGEM,
 
 Battle::ItemEffects::DamageCalcFromUser.add(:LIFEORB,
   proc { |item, user, target, move, mults, power, type|
-    if !move.is_a?(Battle::Move::Confusion)
-      mults[:final_damage_multiplier] *= 1.3
-    end
+    mults[:final_damage_multiplier] *= 1.3
   }
 )
 

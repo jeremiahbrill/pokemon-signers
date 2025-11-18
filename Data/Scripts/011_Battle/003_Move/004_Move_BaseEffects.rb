@@ -85,7 +85,8 @@ end
 class Battle::Move::StatUpMove < Battle::Move
   attr_reader :statUp
 
-  def canSnatch?; return true; end
+  def canSnatch?;                   return true; end
+  def additionalEffectAffectsUser?; return true; end
 
   def pbMoveFailed?(user, targets)
     return false if damagingMove?
@@ -110,7 +111,8 @@ end
 class Battle::Move::MultiStatUpMove < Battle::Move
   attr_reader :statUp
 
-  def canSnatch?; return true; end
+  def canSnatch?;                   return true; end
+  def additionalEffectAffectsUser?; return true; end
 
   def pbMoveFailed?(user, targets)
     return false if damagingMove?

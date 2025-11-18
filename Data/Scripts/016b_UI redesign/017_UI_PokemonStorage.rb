@@ -1988,9 +1988,13 @@ class UI::PokemonStorage < UI::BaseScreen
       # Give an item
       new_item = nil
       screen.visuals.fade_out
+      old_last_pocket       = $bag.last_viewed_pocket
+      old_pocket_selections = $bag.last_pocket_selections.clone
       bag_screen = UI::Bag.new($bag, mode: :choose_item)
       bag_screen.set_filter_proc(proc { |itm| GameData::Item.get(itm).can_hold? })
       new_item = bag_screen.choose_item
+      $bag.last_viewed_pocket     = old_last_pocket
+      $bag.last_pocket_selections = old_pocket_selections
       screen.deselect_pokemon if !new_item
       if new_item
         item_name = GameData::Item.get(new_item).name

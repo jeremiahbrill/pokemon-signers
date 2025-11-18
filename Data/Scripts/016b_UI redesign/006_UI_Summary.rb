@@ -1547,9 +1547,13 @@ class UI::PokemonSummary < UI::BaseScreen
     :effect => proc { |screen|
       item = nil
       pbFadeOutInWithUpdate(screen.sprites) do
+        old_last_pocket       = $bag.last_viewed_pocket
+        old_pocket_selections = $bag.last_pocket_selections.clone
         bag_screen = UI::Bag.new($bag, mode: :choose_item)
         bag_screen.set_filter_proc(proc { |itm| GameData::Item.get(itm).can_hold? })
         item = bag_screen.choose_item
+        $bag.last_viewed_pocket     = old_last_pocket
+        $bag.last_pocket_selections = old_pocket_selections
       end
       screen.refresh if pbGiveItemToPokemon(item, screen.pokemon, screen, screen.party_index)
     }

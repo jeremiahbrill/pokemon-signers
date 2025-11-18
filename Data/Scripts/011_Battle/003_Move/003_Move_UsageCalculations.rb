@@ -290,7 +290,42 @@ class Battle::Move
   end
 
   def pbCalcDamageMultipliers(user, target, numTargets, type, baseDmg, multipliers)
-    # Global abilities
+    if !self.is_a?(Battle::Move::Confusion)
+      pbCalcDamageMultipliersGlobalAbilities(user, target, numTargets, type, baseDmg, multipliers)
+      pbCalcDamageMultipliersAbilities(user, target, numTargets, type, baseDmg, multipliers)
+      pbCalcDamageMultipliersHeldItems(user, target, numTargets, type, baseDmg, multipliers)
+      pbCalcDamageMultipliersGymBadges(user, target, numTargets, type, baseDmg, multipliers)
+      pbCalcDamageMultipliersLingeringEffects(user, target, numTargets, type, baseDmg, multipliers)
+      pbCalcDamageMultipliersStatusConditions(user, target, numTargets, type, baseDmg, multipliers)
+    end
+    pbCalcDamageMultipliersMoveEffects(user, target, numTargets, type, baseDmg, multipliers)
+    # Random variance
+    random = 85 + @battle.pbRandom(16)
+    multipliers[:final_damage_multiplier] *= random / 100.0
+    # Multi-targeting attacks
+    multipliers[:final_damage_multiplier] *= 0.75 if numTargets > 1
+    # Critical hits
+    if target.damageState.critical
+      if Settings::NEW_CRITICAL_HIT_RATE_MECHANICS
+        multipliers[:final_damage_multiplier] *= 1.5
+      else
+        multipliers[:final_damage_multiplier] *= 2
+      end
+    end
+    # STAB
+    if type && user.pbHasType?(type)
+      if user.hasActiveAbility?(:ADAPTABILITY)
+        multipliers[:final_damage_multiplier] *= 2
+      else
+        multipliers[:final_damage_multiplier] *= 1.5
+      end
+    end
+    # Type effectiveness
+    multipliers[:final_damage_multiplier] *= target.damageState.typeMod
+  end
+
+  # Global ability effects that alter damage.
+  def pbCalcDamageMultipliersGlobalAbilities(user, target, numTargets, type, baseDmg, multipliers)
     all_abilities = @battle.pbAllActiveAbilities
     if (all_abilities.include?(:DARKAURA) && type == :DARK) ||
        (all_abilities.include?(:FAIRYAURA) && type == :FAIRY)
@@ -320,7 +355,10 @@ class Battle::Move
         multipliers[:defense_multiplier] *= 3 / 4.0 if specialMove?
       end
     end
-    # Ability effects that alter damage
+  end
+
+  # Ability effects that alter damage.
+  def pbCalcDamageMultipliersAbilities(user, target, numTargets, type, baseDmg, multipliers)
     if user.abilityActive?
       Battle::AbilityEffects.triggerDamageCalcFromUser(
         user.ability, user, target, self, multipliers, baseDmg, type
@@ -351,7 +389,10 @@ class Battle::Move
         b.ability, user, target, self, multipliers, baseDmg, type
       )
     end
-    # Item effects that alter damage
+  end
+
+  # Item effects that alter damage.
+  def pbCalcDamageMultipliersHeldItems(user, target, numTargets, type, baseDmg, multipliers)
     if user.itemActive?
       Battle::ItemEffects.triggerDamageCalcFromUser(
         user.item, user, target, self, multipliers, baseDmg, type
@@ -362,6 +403,30 @@ class Battle::Move
         target.item, user, target, self, multipliers, baseDmg, type
       )
     end
+  end
+
+  # Stat multipliers conferred by Gym Badges.
+  def pbCalcDamageMultipliersGymBadges(user, target, numTargets, type, baseDmg, multipliers)
+    return if !@battle.internalBattle
+    if user.pbOwnedByPlayer?
+      if physicalMove? && @battle.pbPlayer.badge_count >= Settings::NUM_BADGES_BOOST_ATTACK
+        multipliers[:attack_multiplier] *= 1.1
+      elsif specialMove? && @battle.pbPlayer.badge_count >= Settings::NUM_BADGES_BOOST_SPATK
+        multipliers[:attack_multiplier] *= 1.1
+      end
+    end
+    if target.pbOwnedByPlayer?
+      if physicalMove? && @battle.pbPlayer.badge_count >= Settings::NUM_BADGES_BOOST_DEFENSE
+        multipliers[:defense_multiplier] *= 1.1
+      elsif specialMove? && @battle.pbPlayer.badge_count >= Settings::NUM_BADGES_BOOST_SPDEF
+        multipliers[:defense_multiplier] *= 1.1
+      end
+    end
+  end
+
+  # Various effects that were started on the user/target/field/side, including
+  # weather and terrain, that alter damage.
+  def pbCalcDamageMultipliersLingeringEffects(user, target, numTargets, type, baseDmg, multipliers)
     # Parental Bond's second attack
     if user.effects[PBEffects::ParentalBond] == 1
       multipliers[:power_multiplier] /= (Settings::MECHANICS_GENERATION >= 7) ? 4 : 2
@@ -370,11 +435,14 @@ class Battle::Move
     if user.effects[PBEffects::MeFirst]
       multipliers[:power_multiplier] *= 1.5
     end
-    if user.effects[PBEffects::HelpingHand] && !self.is_a?(Battle::Move::Confusion)
+    if user.effects[PBEffects::HelpingHand]
       multipliers[:power_multiplier] *= 1.5
     end
     if user.effects[PBEffects::Charge] > 0 && type == :ELECTRIC
       multipliers[:power_multiplier] *= 2
+    end
+    if target.effects[PBEffects::Vulnerable]
+      multipliers[:final_damage_multiplier] *= 2
     end
     # Mud Sport
     if type == :ELECTRIC
@@ -406,25 +474,6 @@ class Battle::Move
     when :Misty
       multipliers[:power_multiplier] /= 2 if type == :DRAGON && target.affectedByTerrain?
     end
-    # Badge multipliers
-    if @battle.internalBattle
-      if user.pbOwnedByPlayer?
-        if physicalMove? && @battle.pbPlayer.badge_count >= Settings::NUM_BADGES_BOOST_ATTACK
-          multipliers[:attack_multiplier] *= 1.1
-        elsif specialMove? && @battle.pbPlayer.badge_count >= Settings::NUM_BADGES_BOOST_SPATK
-          multipliers[:attack_multiplier] *= 1.1
-        end
-      end
-      if target.pbOwnedByPlayer?
-        if physicalMove? && @battle.pbPlayer.badge_count >= Settings::NUM_BADGES_BOOST_DEFENSE
-          multipliers[:defense_multiplier] *= 1.1
-        elsif specialMove? && @battle.pbPlayer.badge_count >= Settings::NUM_BADGES_BOOST_SPDEF
-          multipliers[:defense_multiplier] *= 1.1
-        end
-      end
-    end
-    # Multi-targeting attacks
-    multipliers[:final_damage_multiplier] *= 0.75 if numTargets > 1
     # Weather
     case target.effectiveWeather
     when :Sun, :HarshSun
@@ -452,40 +501,9 @@ class Battle::Move
     when :ShadowSky
       multipliers[:final_damage_multiplier] *= 1.5 if type == :SHADOW
     end
-    if target.effects[PBEffects::Vulnerable]
-      multipliers[:final_damage_multiplier] *= 2
-    end
-    # Critical hits
-    if target.damageState.critical
-      if Settings::NEW_CRITICAL_HIT_RATE_MECHANICS
-        multipliers[:final_damage_multiplier] *= 1.5
-      else
-        multipliers[:final_damage_multiplier] *= 2
-      end
-    end
-    # Random variance
-    if !self.is_a?(Battle::Move::Confusion)
-      random = 85 + @battle.pbRandom(16)
-      multipliers[:final_damage_multiplier] *= random / 100.0
-    end
-    # STAB
-    if type && user.pbHasType?(type)
-      if user.hasActiveAbility?(:ADAPTABILITY)
-        multipliers[:final_damage_multiplier] *= 2
-      else
-        multipliers[:final_damage_multiplier] *= 1.5
-      end
-    end
-    # Type effectiveness
-    multipliers[:final_damage_multiplier] *= target.damageState.typeMod
-    # Burn
-    if user.status == :BURN && physicalMove? && damageReducedByBurn? &&
-       !user.hasActiveAbility?(:GUTS)
-      multipliers[:final_damage_multiplier] /= 2
-    end
     # Aurora Veil, Reflect, Light Screen
     if !ignoresReflect? && !target.damageState.critical &&
-       !user.hasActiveAbility?(:INFILTRATOR)
+      !user.hasActiveAbility?(:INFILTRATOR)
       if target.pbOwnSide.effects[PBEffects::AuroraVeil] > 0
         if @battle.pbSideBattlerCount(target) > 1
           multipliers[:final_damage_multiplier] *= 2 / 3.0
@@ -506,6 +524,19 @@ class Battle::Move
         end
       end
     end
+  end
+
+  # Status conditions that alter damage.
+  def pbCalcDamageMultipliersStatusConditions(user, target, numTargets, type, baseDmg, multipliers)
+    # Burn
+    if user.status == :BURN && physicalMove? && damageReducedByBurn? &&
+       !user.hasActiveAbility?(:GUTS)
+      multipliers[:final_damage_multiplier] /= 2
+    end
+  end
+
+  # Move-specific properties and effects that alter damage.
+  def pbCalcDamageMultipliersMoveEffects(user, target, numTargets, type, baseDmg, multipliers)
     # Minimize
     if target.effects[PBEffects::Minimize] && tramplesMinimize?
       multipliers[:final_damage_multiplier] *= 2
@@ -521,7 +552,8 @@ class Battle::Move
   #-----------------------------------------------------------------------------
 
   def pbAdditionalEffectChance(user, target, effectChance = 0)
-    return 0 if target.hasActiveAbility?(:SHIELDDUST) && !target.beingMoldBroken?
+    return 0 if target.hasActiveAbility?(:SHIELDDUST) && !target.beingMoldBroken? &&
+                !additionalEffectAffectsUser?
     ret = (effectChance > 0) ? effectChance : @addlEffect
     return ret if ret > 100
     if (Settings::MECHANICS_GENERATION >= 6 || @function_code != "EffectDependsOnEnvironment") &&
