@@ -3335,6 +3335,7 @@ Battle::AbilityEffects::OnSwitchIn.add(:SUPERSWEETSYRUP,
     next if battler.abilityUsedOnce?
     battler.markAbilityUsedOnce
     battle.pbShowAbilitySplash(battler)
+    battle.pbDisplay(_INTL("A supersweet aroma is wafting from the syrup covering {1}!", battler.pbThis))
     battle.allOtherSideBattlers(battler.index).each do |b|
       next if !b.near?(battler)
       b.pbLowerEvasionStatStageSupersweetSyrup(battler)
@@ -3359,7 +3360,7 @@ Battle::AbilityEffects::OnSwitchIn.add(:TERAFORMZERO,
     next if battler.abilityUsedOnce?
     battler.markAbilityUsedOnce
     next if (battle.field.weather == :None || battle.field.weather == battle.field.defaultWeather) &&
-            (battle.field.terrain == :None || battle.field.terrain == battle.field.defaultTerrain) 
+            (battle.field.terrain == :None || battle.field.terrain == battle.field.defaultTerrain)
     battle.pbShowAbilitySplash(battler)
     # End weather
     if battle.field.weather != :None && battle.field.weather != battle.field.defaultWeather
