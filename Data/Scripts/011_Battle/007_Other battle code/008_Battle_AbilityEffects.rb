@@ -629,8 +629,8 @@ Battle::AbilityEffects::OnStatusInflicted.add(:SYNCHRONIZE,
 Battle::AbilityEffects::OnDealingStatus.add(:POISONPUPPETEER,
   proc { |ability, user, target, status|
     next if status != :POISON
-    next if !target.pbCanConfuse?(user)
     next if !user.isSpecies?(:PECHARUNT)
+    next if !target.pbCanConfuse?(user, false)
     user.battle.pbShowAbilitySplash(user)
     msg = nil
     if !Battle::Scene::USE_ABILITY_SPLASH
