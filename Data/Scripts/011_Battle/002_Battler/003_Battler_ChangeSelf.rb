@@ -232,6 +232,9 @@ class Battle::Battler
     end
   end
 
+  def pbCheckFormOnTerrainChange(ability_changed = false)
+  end
+
   # Checks the Pokémon's form and updates it if necessary. Used for when a
   # Pokémon enters battle (endOfRound=false) and at the end of each round
   # (endOfRound=true).

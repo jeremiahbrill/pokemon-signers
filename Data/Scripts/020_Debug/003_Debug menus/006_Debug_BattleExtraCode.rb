@@ -11,6 +11,7 @@ module Battle::DebugVariables
     PBEffects::Bide           => {name: "Bide number of rounds remaining",                 default: 0},
     PBEffects::BideDamage     => {name: "Bide damage accumulated",                         default: 0, max: 999},
     PBEffects::BideTarget     => {name: "Bide last battler to hurt self",                  default: -1},   # Battler index
+    PBEffects::BoosterEnergy  => {name: "Booster Energy's effect applies",                 default: false},
     PBEffects::BurningBulwark => {name: "Burning Bulwark applies this round",              default: false},
     PBEffects::BurnUp         => {name: "Burn Up has removed self's Fire type",            default: false},
     PBEffects::Charge         => {name: "Charge number of rounds remaining",               default: 0},
@@ -92,6 +93,7 @@ module Battle::DebugVariables
 #    PBEffects::PriorityItem - not suitable for setting via debug
     PBEffects::Protect        => {name: "Protect applies this round",                      default: false},
     PBEffects::ProtectRate    => {name: "Protect success chance 1/x",                      default: 1, max: 999},
+#    PBEffects::ProtosynthesisStat - TODO: code doesn't support choosing a stat
 #    PBEffects::Quash - not suitable for setting via debug
 #    PBEffects::Rage - only applies to use of specific move, not suitable for setting via debug
     PBEffects::Rollout        => {name: "Rollout rounds remaining (lower=stronger)",       default: 0},

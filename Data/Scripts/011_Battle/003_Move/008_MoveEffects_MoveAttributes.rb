@@ -1268,19 +1268,11 @@ class Battle::Move::CategoryDependsOnHigherDamagePoisonTarget < Battle::Move::Po
   def pbOnStartUse(user, targets)
     target = targets[0]
     return if !target
-    max_stage = Battle::Battler::STAT_STAGE_MAXIMUM
-    stageMul = Battle::Battler::STAT_STAGE_MULTIPLIERS
-    stageDiv = Battle::Battler::STAT_STAGE_DIVISORS
-    # Calculate user's effective attacking values
-    attack_stage         = user.stages[:ATTACK] + max_stage
-    real_attack          = (user.attack.to_f * stageMul[attack_stage] / stageDiv[attack_stage]).floor
-    special_attack_stage = user.stages[:SPECIAL_ATTACK] + max_stage
-    real_special_attack  = (user.spatk.to_f * stageMul[special_attack_stage] / stageDiv[special_attack_stage]).floor
-    # Calculate target's effective defending values
-    defense_stage         = target.stages[:DEFENSE] + max_stage
-    real_defense          = (target.defense.to_f * stageMul[defense_stage] / stageDiv[defense_stage]).floor
-    special_defense_stage = target.stages[:SPECIAL_DEFENSE] + max_stage
-    real_special_defense  = (target.spdef.to_f * stageMul[special_defense_stage] / stageDiv[special_defense_stage]).floor
+    # Calculate effective attacking/defending values
+    real_attack          = user.stat_with_stages(:ATTACK)
+    real_special_attack  = user.stat_with_stages(:SPECIAL_ATTACK)
+    real_defense         = target.stat_with_stages(:DEFENSE)
+    real_special_defense = target.stat_with_stages(:SPECIAL_DEFENSE)
     # Perform simple damage calculation
     physical_damage = real_attack.to_f / real_defense
     special_damage = real_special_attack.to_f / real_special_defense
@@ -1313,17 +1305,8 @@ class Battle::Move::CategoryDependsOnHigherDamageIgnoreTargetAbility < Battle::M
   def specialMove?(thisType = nil);  return (@calcCategory == 1); end
 
   def pbOnStartUse(user, targets)
-    # Calculate user's effective attacking value
-    max_stage = Battle::Battler::STAT_STAGE_MAXIMUM
-    stageMul = Battle::Battler::STAT_STAGE_MULTIPLIERS
-    stageDiv = Battle::Battler::STAT_STAGE_DIVISORS
-    atk        = user.attack
-    atkStage   = user.stages[:ATTACK] + max_stage
-    realAtk    = (atk.to_f * stageMul[atkStage] / stageDiv[atkStage]).floor
-    spAtk      = user.spatk
-    spAtkStage = user.stages[:SPECIAL_ATTACK] + max_stage
-    realSpAtk  = (spAtk.to_f * stageMul[spAtkStage] / stageDiv[spAtkStage]).floor
-    # Determine move's category
+    real_attack         = user.stat_with_stages(:ATTACK)
+    real_special_attack = user.stat_with_stages(:SPECIAL_ATTACK)
     @calcCategory = (realAtk > realSpAtk) ? 0 : 1
   end
 end
@@ -1449,8 +1432,8 @@ end
 
 #===============================================================================
 # This move's type is the same as the user's second type, only if the user is
-# Tauros. It also ends the opposing side's Light Screen, Reflect and 
-# Aurora Break. (Raging Bull) 
+# Tauros. It also ends the opposing side's Light Screen, Reflect and
+# Aurora Break. (Raging Bull)
 #===============================================================================
 class Battle::Move::TypeDependsOnUserTaurosFormRemoveScreens < Battle::Move::RemoveScreens
   def pbBaseType(user)

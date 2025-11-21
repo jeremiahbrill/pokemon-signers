@@ -39,7 +39,8 @@ module Battle::ItemEffects
   # Weather and terrin
   WeatherExtender                 = ItemHandlerHash.new
   TerrainExtender                 = ItemHandlerHash.new   # Terrain Extender
-  TerrainStatBoost                = ItemHandlerHash.new
+  OnWeatherChange                 = ItemHandlerHash.new
+  OnTerrainChange                 = ItemHandlerHash.new
   # End Of Round
   EndOfRoundHealing               = ItemHandlerHash.new
   EndOfRoundEffect                = ItemHandlerHash.new
@@ -188,8 +189,12 @@ module Battle::ItemEffects
     return trigger(TerrainExtender, item, terrain, duration, battler, battle, ret: duration)
   end
 
-  def self.triggerTerrainStatBoost(item, battler, battle)
-    return trigger(TerrainStatBoost, item, battler, battle)
+  def self.triggerOnWeatherChange(item, battler, battle, old_weather)
+    return trigger(OnWeatherChange, item, battler, battle, old_weather)
+  end
+
+  def self.triggerOnTerrainChange(item, battler, battle, old_terrain)
+    return trigger(OnTerrainChange, item, battler, battle, old_terrain)
   end
 
   #-----------------------------------------------------------------------------
@@ -1823,11 +1828,65 @@ Battle::ItemEffects::TerrainExtender.add(:TERRAINEXTENDER,
 )
 
 #===============================================================================
-# TerrainStatBoost handlers
+# OnWeatherChange handlers
 #===============================================================================
 
-Battle::ItemEffects::TerrainStatBoost.add(:ELECTRICSEED,
-  proc { |item, battler, battle|
+Battle::ItemEffects::OnWeatherChange.add(:BOOSTERENERGY,
+  proc { |item, battler, battle, old_weather|
+    next false if battler.effects[PBEffects::Transform]
+    next false if battler.effects[PBEffects::ProtosynthesisStat]
+    next false if battler.effects[PBEffects::BoosterEnergy]
+    next false if !battler.hasActiveAbility?(:PROTOSYNTHESIS)
+    next false if ![:Sun, :HarshSun].include?(battle.field.pbWeather)
+    best = nil
+    [:ATTACK, :DEFENSE, :SPECIAL_ATTACK, :SPECIAL_DEFENSE, :SPEED].each do |stat|
+      value = battler.stat_with_stages(stat)
+      best = [stat, value] if !value || value > stat[1]
+    end
+    battler.effects[PBEffects::ProtosynthesisStat] = best[0]
+    battler.effects[PBEffects::BoosterEnergy] = true
+    battle.pbCommonAnimation("UseItem", battler)
+    battle.pbShowAbilitySplash(battler)
+    battle.pbDisplay(_INTL("{1} used its {2} to activate {3}!",
+                           battler.pbThis, GameData::Item.get(item).name, battler.abilityName))
+    battle.pbDisplay(_INTL("{1}'s {2} was heightened!", battler.pbThis, GameData::Stat.get(best[0]).name))
+    battle.pbHideAbilitySplash(battler)
+    battler.pbConsumeItem
+    next true
+  }
+)
+
+#===============================================================================
+# OnTerrainChange handlers
+#===============================================================================
+
+Battle::ItemEffects::OnTerrainChange.add(:BOOSTERENERGY,
+  proc { |item, battler, battle, old_terrain|
+    next false if battler.effects[PBEffects::Transform]
+    next false if battler.effects[PBEffects::ProtosynthesisStat]
+    next false if battler.effects[PBEffects::BoosterEnergy]
+    next false if !battler.hasActiveAbility?(:QUARKDRIVE)
+    next false if battle.field.terrain != :Electric
+    best = nil
+    [:ATTACK, :DEFENSE, :SPECIAL_ATTACK, :SPECIAL_DEFENSE, :SPEED].each do |stat|
+      value = battler.stat_with_stages(stat)
+      best = [stat, value] if !value || value > stat[1]
+    end
+    battler.effects[PBEffects::ProtosynthesisStat] = best[0]
+    battler.effects[PBEffects::BoosterEnergy] = true
+    battle.pbCommonAnimation("UseItem", battler)
+    battle.pbShowAbilitySplash(battler)
+    battle.pbDisplay(_INTL("{1} used its {2} to activate {3}!",
+                           battler.pbThis, GameData::Item.get(item).name, battler.abilityName))
+    battle.pbDisplay(_INTL("{1}'s {2} was heightened!", battler.pbThis, GameData::Stat.get(best[0]).name))
+    battle.pbHideAbilitySplash(battler)
+    battler.pbConsumeItem
+    next true
+  }
+)
+
+Battle::ItemEffects::OnTerrainChange.add(:ELECTRICSEED,
+  proc { |item, battler, battle, old_terrain|
     next false if battle.field.terrain != :Electric
     next false if !battler.pbCanRaiseStatStage?(:DEFENSE, battler)
     itemName = GameData::Item.get(item).name
@@ -1836,8 +1895,8 @@ Battle::ItemEffects::TerrainStatBoost.add(:ELECTRICSEED,
   }
 )
 
-Battle::ItemEffects::TerrainStatBoost.add(:GRASSYSEED,
-  proc { |item, battler, battle|
+Battle::ItemEffects::OnTerrainChange.add(:GRASSYSEED,
+  proc { |item, battler, battle, old_terrain|
     next false if battle.field.terrain != :Grassy
     next false if !battler.pbCanRaiseStatStage?(:DEFENSE, battler)
     itemName = GameData::Item.get(item).name
@@ -1846,8 +1905,8 @@ Battle::ItemEffects::TerrainStatBoost.add(:GRASSYSEED,
   }
 )
 
-Battle::ItemEffects::TerrainStatBoost.add(:MISTYSEED,
-  proc { |item, battler, battle|
+Battle::ItemEffects::OnTerrainChange.add(:MISTYSEED,
+  proc { |item, battler, battle, old_terrain|
     next false if battle.field.terrain != :Misty
     next false if !battler.pbCanRaiseStatStage?(:SPECIAL_DEFENSE, battler)
     itemName = GameData::Item.get(item).name
@@ -1856,8 +1915,8 @@ Battle::ItemEffects::TerrainStatBoost.add(:MISTYSEED,
   }
 )
 
-Battle::ItemEffects::TerrainStatBoost.add(:PSYCHICSEED,
-  proc { |item, battler, battle|
+Battle::ItemEffects::OnTerrainChange.add(:PSYCHICSEED,
+  proc { |item, battler, battle, old_terrain|
     next false if battle.field.terrain != :Psychic
     next false if !battler.pbCanRaiseStatStage?(:SPECIAL_DEFENSE, battler)
     itemName = GameData::Item.get(item).name
@@ -1949,7 +2008,15 @@ Battle::ItemEffects::CertainSwitching.add(:SHEDSHELL,
 Battle::ItemEffects::OnSwitchIn.add(:AIRBALLOON,
   proc { |item, battler, battle|
     battle.pbDisplay(_INTL("{1} floats in the air with its {2}!",
-       battler.pbThis, battler.itemName))
+                           battler.pbThis, battler.itemName))
+  }
+)
+
+Battle::ItemEffects::OnSwitchIn.add(:BOOSTERENERGY,
+  proc { |item, battler, battle|
+    next if battler.effects[PBEffects::ProtosynthesisStat]
+    Battle::ItemEffects.triggerOnWeatherChange(item, battler, battle, battle.field.weather)
+    Battle::ItemEffects.triggerOnTerrainChange(item, battler, battle, battle.field.terrain)
   }
 )
 

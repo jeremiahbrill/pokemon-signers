@@ -61,6 +61,7 @@ module Battle::AbilityEffects
   OnSwitchOut                      = AbilityHandlerHash.new
   ChangeOnBattlerFainting          = AbilityHandlerHash.new
   OnBattlerFainting                = AbilityHandlerHash.new   # Soul-Heart
+  OnWeatherChange                  = AbilityHandlerHash.new
   OnTerrainChange                  = AbilityHandlerHash.new   # Mimicry
   OnIntimidated                    = AbilityHandlerHash.new   # Rattled (Gen 8)
   # Running from battle
@@ -287,8 +288,12 @@ module Battle::AbilityEffects
     OnBattlerFainting.trigger(ability, battler, fainted, battle)
   end
 
-  def self.triggerOnTerrainChange(ability, battler, battle, ability_changed)
-    OnTerrainChange.trigger(ability, battler, battle, ability_changed)
+  def self.triggerOnWeatherChange(ability, battler, battle, old_weather, ability_changed)
+    OnWeatherChange.trigger(ability, battler, battle, old_weather, ability_changed)
+  end
+
+  def self.triggerOnTerrainChange(ability, battler, battle, old_terrain, ability_changed)
+    OnTerrainChange.trigger(ability, battler, battle, old_terrain, ability_changed)
   end
 
   def self.triggerOnIntimidated(ability, battler, battle)
@@ -311,6 +316,15 @@ Battle::AbilityEffects::SpeedCalc.add(:CHLOROPHYLL,
     next mult * 2 if [:Sun, :HarshSun].include?(battler.effectiveWeather)
   }
 )
+
+Battle::AbilityEffects::SpeedCalc.add(:PROTOSYNTHESIS,
+  proc { |ability, battler, mult|
+    next mult * 1.5 if !battler.effects[PBEffects::Transform] &&
+                       battler.effects[PBEffects::ProtosynthesisStat] == :SPEED
+  }
+)
+
+Battle::AbilityEffects::SpeedCalc.copy(:PROTOSYNTHESIS, :QUARKDRIVE)
 
 Battle::AbilityEffects::SpeedCalc.add(:QUICKFEET,
   proc { |ability, battler, mult|
@@ -1493,6 +1507,26 @@ Battle::AbilityEffects::DamageCalcFromUser.add(:OVERGROW,
   }
 )
 
+Battle::AbilityEffects::DamageCalcFromUser.add(:PROTOSYNTHESIS,
+  proc { |ability, user, target, move, mults, power, type|
+    next if user.effects[PBEffects::Transform]
+    next if !user.effects[PBEffects::ProtosynthesisStat]
+    stat = user.effects[PBEffects::ProtosynthesisStat]
+    case stat
+    when :ATTACK
+      if move.physicalMove? || move.function_code == "UseTargetDefenseInsteadOfTargetSpDef"   # Psyshock
+        mults[:attack_multiplier] *= 1.3
+      end
+    when :SPECIAL_ATTACK
+      if move.specialMove? && move.function_code != "UseTargetDefenseInsteadOfTargetSpDef"   # Psyshock
+        mults[:attack_multiplier] *= 1.3
+      end
+    end
+  }
+)
+
+Battle::AbilityEffects::DamageCalcFromUser.copy(:PROTOSYNTHESIS, :QUARKDRIVE)
+
 Battle::AbilityEffects::DamageCalcFromUser.add(:PUNKROCK,
   proc { |ability, user, target, move, mults, power, type|
     mults[:attack_multiplier] *= 1.3 if move.soundMove?
@@ -1797,6 +1831,26 @@ Battle::AbilityEffects::DamageCalcFromTargetNonIgnorable.add(:PRISMARMOR,
     end
   }
 )
+
+Battle::AbilityEffects::DamageCalcFromTargetNonIgnorable.add(:PROTOSYNTHESIS,
+  proc { |ability, user, target, move, mults, power, type|
+    next if target.effects[PBEffects::Transform]
+    next if !target.effects[PBEffects::ProtosynthesisStat]
+    stat = target.effects[PBEffects::ProtosynthesisStat]
+    case stat
+    when :DEFENSE
+      if move.physicalMove? || move.function_code == "UseTargetDefenseInsteadOfTargetSpDef"   # Psyshock
+        mults[:defense_multiplier] *= 1.3
+      end
+    when :SPECIAL_DEFENSE
+      if move.specialMove? && move.function_code != "UseTargetDefenseInsteadOfTargetSpDef"   # Psyshock
+        mults[:defense_multiplier] *= 1.3
+      end
+    end
+  }
+)
+
+Battle::AbilityEffects::DamageCalcFromTargetNonIgnorable.copy(:PROTOSYNTHESIS, :QUARKDRIVE)
 
 Battle::AbilityEffects::DamageCalcFromTargetNonIgnorable.add(:SHADOWSHIELD,
   proc { |ability, user, target, move, mults, power, type|
@@ -3305,12 +3359,26 @@ Battle::AbilityEffects::OnSwitchIn.add(:PRIMORDIALSEA,
   }
 )
 
+Battle::AbilityEffects::OnSwitchIn.add(:PROTOSYNTHESIS,
+  proc { |ability, battler, battle, switch_in|
+    next if battler.effects[PBEffects::ProtosynthesisStat]
+    Battle::AbilityEffects.triggerOnWeatherChange(ability, battler, battle, battle.field.weather, false)
+  }
+)
+
 Battle::AbilityEffects::OnSwitchIn.add(:PSYCHICSURGE,
   proc { |ability, battler, battle, switch_in|
     next if battle.field.terrain == :Psychic
     battle.pbShowAbilitySplash(battler)
     battle.pbStartTerrain(battler, :Psychic)
     # NOTE: The ability splash is hidden again in def pbStartTerrain.
+  }
+)
+
+Battle::AbilityEffects::OnSwitchIn.add(:QUARKDRIVE,
+  proc { |ability, battler, battle, switch_in|
+    next if battler.effects[PBEffects::ProtosynthesisStat]
+    Battle::AbilityEffects.triggerOnTerrainChange(ability, battler, battle, battle.field.terrain, false)
   }
 )
 
@@ -3408,47 +3476,12 @@ Battle::AbilityEffects::OnSwitchIn.add(:TERAFORMZERO,
     next if (battle.field.weather == :None || battle.field.weather == battle.field.defaultWeather) &&
             (battle.field.terrain == :None || battle.field.terrain == battle.field.defaultTerrain)
     battle.pbShowAbilitySplash(battler)
-    # End weather
-    if battle.field.weather != :None && battle.field.weather != battle.field.defaultWeather
-      case battle.field.weather
-      when :Sun         then battle.pbDisplay(_INTL("The sunlight faded."))
-      when :Rain        then battle.pbDisplay(_INTL("The rain stopped."))
-      when :Sandstorm   then battle.pbDisplay(_INTL("The sandstorm subsided."))
-      when :Hail        then battle.pbDisplay(_INTL("The hail stopped."))
-      when :Snowstorm   then battle.pbDisplay(_INTL("The snow stopped."))
-      when :HarshSun    then battle.pbDisplay(_INTL("The harsh sunlight faded!"))
-      when :HeavyRain   then battle.pbDisplay(_INTL("The heavy rain has lifted!"))
-      when :StrongWinds then battle.pbDisplay(_INTL("The mysterious air current has dissipated!"))
-      when :ShadowSky   then battle.pbDisplay(_INTL("The shadow sky faded."))
-      end
-      battle.field.weather = :None
-      # Check for form changes caused by the weather changing
-      battle.allBattlers.each { |b| b.pbCheckFormOnWeatherChange }
-    end
-    # End terrain
-    if battle.field.terrain != :None && battle.field.terrain != battle.field.defaultTerrain
-      case battle.field.terrain
-      when :Electric
-        battle.pbDisplay(_INTL("The electricity disappeared from the battlefield."))
-      when :Grassy
-        battle.pbDisplay(_INTL("The grass disappeared from the battlefield."))
-      when :Misty
-        battle.pbDisplay(_INTL("The mist disappeared from the battlefield."))
-      when :Psychic
-        battle.pbDisplay(_INTL("The weirdness disappeared from the battlefield."))
-      end
-      battle.field.terrain = :None
-      battle.allBattlers.each { |battler| battler.pbAbilityOnTerrainChange }
-    end
+    battle.pbEndWeather if ![:None, battle.field.defaultWeather].include?(battle.field.weather)
+    battle.pbEndTerrain if ![:None, battle.field.defaultTerrain].include?(battle.field.terrain)
     battle.pbHideAbilitySplash(battler)
-    # Start up the default weather
-    pbStartWeather(nil, battle.field.defaultWeather) if battle.field.defaultWeather != :None
-    # Start up the default terrain
-    if battle.field.defaultTerrain != :None
-      battle.pbStartTerrain(nil, battle.field.defaultTerrain, false)
-      battle.allBattlers.each { |battler| battler.pbAbilityOnTerrainChange }
-      battle.allBattlers.each { |battler| battler.pbItemTerrainStatBoostCheck }
-    end
+    # Start up the default weather/terrain
+    battle.pbStartWeather(nil, battle.field.defaultWeather, false) if battle.field.defaultWeather != :None
+    battle.pbStartTerrain(nil, battle.field.defaultTerrain, false) if battle.field.defaultTerrain != :None
   }
 )
 
@@ -3577,11 +3610,36 @@ Battle::AbilityEffects::OnBattlerFainting.add(:SOULHEART,
 )
 
 #===============================================================================
+# OnWeatherChange handlers
+#===============================================================================
+
+Battle::AbilityEffects::OnWeatherChange.add(:PROTOSYNTHESIS,
+  proc { |ability, battler, battle, old_weather, ability_changed|
+    next if battler.effects[PBEffects::BoosterEnergy]
+    if [:Sun, :HarshSun].include?(battle.field.pbWeather) && !battler.effects[PBEffects::Transform]
+      best = nil
+      [:ATTACK, :DEFENSE, :SPECIAL_ATTACK, :SPECIAL_DEFENSE, :SPEED].each do |stat|
+        value = battler.stat_with_stages(stat)
+        best = [stat, value] if !value || value > stat[1]
+      end
+      battler.effects[PBEffects::ProtosynthesisStat] = best[0]
+      battle.pbShowAbilitySplash(battler)
+      battle.pbDisplay(_INTL("The harsh sunlight activated {1}'s {2}!", battler.pbThis(true), battler.abilityName))
+      battle.pbDisplay(_INTL("{1}'s {2} was heightened!", battler.pbThis, GameData::Stat.get(best[0]).name))
+      battle.pbHideAbilitySplash(battler)
+    elsif battler.effects[PBEffects::ProtosynthesisStat]
+      battler.effects[PBEffects::ProtosynthesisStat] = nil
+      battle.pbDisplay(_INTL("The effects of {1} have worn off...", battler.abilityName))
+    end
+  }
+)
+
+#===============================================================================
 # OnTerrainChange handlers
 #===============================================================================
 
 Battle::AbilityEffects::OnTerrainChange.add(:MIMICRY,
-  proc { |ability, battler, battle, ability_changed|
+  proc { |ability, battler, battle, old_terrain, ability_changed|
     # Revert to original typing
     if battle.field.terrain == :None
       battle.pbShowAbilitySplash(battler)
@@ -3609,6 +3667,27 @@ Battle::AbilityEffects::OnTerrainChange.add(:MIMICRY,
     battler.pbChangeTypes(new_type)
     battle.pbDisplay(_INTL("{1}'s type changed to {2}!", battler.pbThis, new_type_name))
     battle.pbHideAbilitySplash(battler)
+  }
+)
+
+Battle::AbilityEffects::OnTerrainChange.add(:QUARKDRIVE,
+  proc { |ability, battler, battle, old_terrain, ability_changed|
+    next if battler.effects[PBEffects::BoosterEnergy]
+    if battle.field.terrain == :Electric && !battler.effects[PBEffects::Transform]
+      best = nil
+      [:ATTACK, :DEFENSE, :SPECIAL_ATTACK, :SPECIAL_DEFENSE, :SPEED].each do |stat|
+        value = battler.stat_with_stages(stat)
+        best = [stat, value] if !value || value > stat[1]
+      end
+      battler.effects[PBEffects::ProtosynthesisStat] = best[0]
+      battle.pbShowAbilitySplash(battler)
+      battle.pbDisplay(_INTL("The Electric Terrain activated {1}'s {2}!", battler.pbThis(true), battler.abilityName))
+      battle.pbDisplay(_INTL("{1}'s {2} was heightened!", battler.pbThis, GameData::Stat.get(best[0]).name))
+      battle.pbHideAbilitySplash(battler)
+    elsif battler.effects[PBEffects::ProtosynthesisStat]
+      battler.effects[PBEffects::ProtosynthesisStat] = nil
+      battle.pbDisplay(_INTL("The effects of {1} have worn off...", battler.abilityName))
+    end
   }
 )
 

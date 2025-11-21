@@ -12,20 +12,10 @@ class Battle
     # Count down weather duration
     @field.weatherDuration -= 1 if @field.weatherDuration > 0
     # Weather wears off
-    if @field.weatherDuration == 0
-      case @field.weather
-      when :Sun       then pbDisplay(_INTL("The sunlight faded."))
-      when :Rain      then pbDisplay(_INTL("The rain stopped."))
-      when :Sandstorm then pbDisplay(_INTL("The sandstorm subsided."))
-      when :Hail      then pbDisplay(_INTL("The hail stopped."))
-      when :Snowstorm then pbDisplay(_INTL("The snow stopped."))
-      when :ShadowSky then pbDisplay(_INTL("The shadow sky faded."))
-      end
-      @field.weather = :None
-      # Check for form changes caused by the weather changing
-      allBattlers.each { |battler| battler.pbCheckFormOnWeatherChange }
+    if @field.weather != :None && @field.weatherDuration == 0
+      pbEndWeather
       # Start up the default weather
-      pbStartWeather(nil, @field.defaultWeather) if @field.defaultWeather != :None
+      pbStartWeather(nil, @field.defaultWeather, false) if @field.defaultWeather != :None
       return if @field.weather == :None
     end
     # Weather continues
@@ -415,7 +405,8 @@ class Battle
     # Embargo
     pbEORCountDownBattlerEffect(priority, PBEffects::Embargo) do |battler|
       pbDisplay(_INTL("{1} can use items again!", battler.pbThis))
-      battler.pbItemTerrainStatBoostCheck
+      battler.pbItemOnWeatherChange(@field.weather)
+      battler.pbItemOnTerrainChange(@field.terrain)
     end
     # Yawn
     pbEORCountDownBattlerEffect(priority, PBEffects::Yawn) do |battler|
@@ -498,7 +489,10 @@ class Battle
     return if @field.effects[effect] > 0
     pbDisplay(msg)
     if effect == PBEffects::MagicRoom
-      pbPriority(true).each { |battler| battler.pbItemTerrainStatBoostCheck }
+      pbPriority(true).each do |battler|
+        battler.pbItemOnWeatherChange(@field.weather)
+        battler.pbItemOnTerrainChange(@field.terrain)
+      end
     end
   end
 
@@ -532,24 +526,9 @@ class Battle
     @field.terrainDuration -= 1 if @field.terrainDuration > 0
     # Terrain wears off
     if @field.terrain != :None && @field.terrainDuration == 0
-      case @field.terrain
-      when :Electric
-        pbDisplay(_INTL("The electric current disappeared from the battlefield!"))
-      when :Grassy
-        pbDisplay(_INTL("The grass disappeared from the battlefield!"))
-      when :Misty
-        pbDisplay(_INTL("The mist disappeared from the battlefield!"))
-      when :Psychic
-        pbDisplay(_INTL("The weirdness disappeared from the battlefield!"))
-      end
-      @field.terrain = :None
-      allBattlers.each { |battler| battler.pbAbilityOnTerrainChange }
+      pbEndTerrain
       # Start up the default terrain
-      if @field.defaultTerrain != :None
-        pbStartTerrain(nil, @field.defaultTerrain, false)
-        allBattlers.each { |battler| battler.pbAbilityOnTerrainChange }
-        allBattlers.each { |battler| battler.pbItemTerrainStatBoostCheck }
-      end
+      pbStartTerrain(nil, @field.defaultTerrain, false) if @field.defaultTerrain != :None
       return if @field.terrain == :None
     end
     # Terrain continues

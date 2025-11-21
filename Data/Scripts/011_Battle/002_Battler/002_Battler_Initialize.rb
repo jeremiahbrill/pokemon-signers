@@ -158,6 +158,7 @@ class Battle::Battler
       b.effects[PBEffects::Attract] = -1 if b.effects[PBEffects::Attract] == @index
     end
     @effects[PBEffects::BanefulBunker]       = false
+    @effects[PBEffects::BoosterEnergy]       = false
     @effects[PBEffects::BurningBulwark]      = false
     @effects[PBEffects::BeakBlast]           = false
     @effects[PBEffects::Bide]                = 0
@@ -249,6 +250,7 @@ class Battle::Battler
     @effects[PBEffects::PriorityItem]        = false
     @effects[PBEffects::Protect]             = false
     @effects[PBEffects::ProtectRate]         = 1
+    @effects[PBEffects::ProtosynthesisStat]  = nil
     @effects[PBEffects::Quash]               = 0
     @effects[PBEffects::Rage]                = false
     @effects[PBEffects::RagePowder]          = false

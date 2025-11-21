@@ -253,10 +253,24 @@ class Battle::Battler
   # Calculated properties.
   #-----------------------------------------------------------------------------
 
+  def stat_with_stages(stat)
+    stat_value = 0
+    case stat
+    when :ATTACK          then stat_value = self.attack
+    when :DEFENSE         then stat_value = self.defense
+    when :SPECIAL_ATTACK  then stat_value = self.spatk
+    when :SPECIAL_DEFENSE then stat_value = self.spdef
+    when :SPEED           then stat_value = self.speed
+    else
+      raise _INTL("Can't get the stat with stages for {1}.", stat)
+    end
+    stage = @stages[stat] + STAT_STAGE_MAXIMUM
+    return (stat_value.to_f * STAT_STAGE_MULTIPLIERS[stage] / STAT_STAGE_DIVISORS[stage]).floor
+  end
+
   def pbSpeed
     return 1 if fainted?
-    stage = @stages[:SPEED] + STAT_STAGE_MAXIMUM
-    speed = @speed * STAT_STAGE_MULTIPLIERS[stage] / STAT_STAGE_DIVISORS[stage]
+    speed = stat_with_stages(:SPEED)
     speedMult = 1.0
     # Ability effects that alter calculated Speed
     if abilityActive?
