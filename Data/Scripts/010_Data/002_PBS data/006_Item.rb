@@ -221,6 +221,7 @@ module GameData
     def unlosable?(species, ability)
       return false if species == :ARCEUS && ability != :MULTITYPE
       return false if species == :SILVALLY && ability != :RKSSYSTEM
+      return true if @id == :BOOSTERENERGY && GameData::Species.get(species).has_flag?("Paradox")
       combos = {
         :ARCEUS    => [:FISTPLATE,   :FIGHTINIUMZ,
                        :SKYPLATE,    :FLYINIUMZ,

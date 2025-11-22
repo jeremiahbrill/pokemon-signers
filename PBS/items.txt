@@ -4565,6 +4565,14 @@ BPPrice = 5
 Flags = Fling_10
 Description = A ribbon-shaped sweet. When a Milcery holds this, it spins around happily.
 #-------------------------------
+[LEADERSCREST]
+Name = Leader's Crest
+NamePlural = Leader's Crests
+Pocket = HeldItems
+Price = 3000
+Flags = Fling_30
+Description = A shard of what appears to be an old blade of some sort. It is held only by certain Bisharp.
+#-------------------------------
 [VENUSAURITE]
 Name = Venusaurite
 NamePlural = Venusaurites
