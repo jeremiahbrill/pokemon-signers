@@ -64,7 +64,7 @@ end
 
 #===============================================================================
 # Hits 3 times. Power is multiplied by the hit number. An accuracy check is
-# performed for each hit. (Triple Kick)
+# performed for each hit. (Triple Axel, Triple Kick)
 #===============================================================================
 class Battle::Move::HitThreeTimesPowersUpWithEachHit < Battle::Move
   def multiHitMove?;            return true; end
@@ -79,8 +79,8 @@ class Battle::Move::HitThreeTimesPowersUpWithEachHit < Battle::Move
     @accCheckPerHit = !user.hasActiveAbility?(:SKILLLINK) && !user.hasActiveItem?(:LOADEDDICE)
   end
 
-  def pbBaseDamage(baseDmg, user, target)
-    @calcBaseDmg += baseDmg
+  def pbBasePower(base_power, user, target)
+    @calcBaseDmg += base_power
     return @calcBaseDmg
   end
 end
@@ -99,7 +99,7 @@ end
 # Hits 10 times in a row. An accuracy check is performed for each hit.
 # (Population Bomb)
 #===============================================================================
-class Battle::Move::HitThreeTimesAlwaysCriticalHit < Battle::Move
+class Battle::Move::HitTenTimes < Battle::Move
   def multiHitMove?; return true; end
 
   def pbNumHits(user, targets)
@@ -146,7 +146,7 @@ class Battle::Move::HitTwoToFiveTimesOrThreeForAshGreninja < Battle::Move::HitTw
     return super
   end
 
-  def pbBaseDamage(baseDmg, user, target)
+  def pbBasePower(base_power, user, target)
     return 20 if user.isSpecies?(:GRENINJA) && user.form == 2
     return super
   end
@@ -194,7 +194,7 @@ class Battle::Move::HitOncePerUserTeamMember < Battle::Move
     return @beatUpList.length
   end
 
-  def pbBaseDamage(baseDmg, user, target)
+  def pbBasePower(base_power, user, target)
     i = @beatUpList.shift   # First element in array, and removes it from array
     atk = @battle.pbParty(user.index)[i].baseStats[:ATTACK]
     return 5 + (atk / 10)
@@ -241,9 +241,9 @@ class Battle::Move::TwoTurnAttackOneTurnInSun < Battle::Move::TwoTurnMove
     @battle.pbDisplay(_INTL("{1} took in sunlight!", user.pbThis))
   end
 
-  def pbBaseDamageMultiplier(damageMult, user, target)
-    damageMult /= 2 if ![:None, :Sun, :HarshSun].include?(user.effectiveWeather)
-    return damageMult
+  def pbBasePowerMultiplier(power_mult, user, target)
+    power_mult /= 2 if ![:None, :Sun, :HarshSun].include?(user.effectiveWeather)
+    return power_mult
   end
 end
 
@@ -604,12 +604,12 @@ end
 class Battle::Move::MultiTurnAttackPowersUpEachTurn < Battle::Move
   def pbNumHits(user, targets); return 1; end
 
-  def pbBaseDamage(baseDmg, user, target)
+  def pbBasePower(base_power, user, target)
     shift = (5 - user.effects[PBEffects::Rollout])   # 0-4, where 0 is most powerful
     shift = 0 if user.effects[PBEffects::Rollout] == 0   # For first turn
     shift += 1 if user.effects[PBEffects::DefenseCurl]
-    baseDmg *= 2**shift
-    return baseDmg
+    base_power *= 2**shift
+    return base_power
   end
 
   def pbEffectAfterAllHits(user, target)

@@ -105,7 +105,7 @@ Battle::AI::Handlers::MoveEffectScore.add("RestoreUserConsumedItem",
 #===============================================================================
 Battle::AI::Handlers::MoveBasePower.add("RemoveTargetItem",
   proc { |power, move, user, target, ai, battle|
-    next move.move.pbBaseDamage(power, user.battler, target.battler)
+    next move.move.pbBasePower(power, user.battler, target.battler)
   }
 )
 Battle::AI::Handlers::MoveEffectAgainstTargetScore.add("RemoveTargetItem",
@@ -337,7 +337,7 @@ Battle::AI::Handlers::MoveFailureCheck.add("ThrowUserItemAtTarget",
 )
 Battle::AI::Handlers::MoveBasePower.add("ThrowUserItemAtTarget",
   proc { |power, move, user, target, ai, battle|
-    next move.move.pbBaseDamage(power, user.battler, target.battler)
+    next move.move.pbBasePower(power, user.battler, target.battler)
   }
 )
 Battle::AI::Handlers::MoveEffectAgainstTargetScore.add("ThrowUserItemAtTarget",

@@ -70,6 +70,10 @@ module Settings
   # Whether Soul Dew powers up Psychic and Dragon-type moves by 20% (true) or
   # raises the holder's Special Attack and Special Defense by 50% (false).
   SOUL_DEW_POWERS_UP_TYPES              = (MECHANICS_GENERATION >= 7)
+  # Whether Greninja's Battle Bond ability makes it change into Ash-Greninja
+  # (false) or raises its Atk/SpAtk/Spd (true) when it knocks out a target.
+  # Either way, it only happens once per battle.
+  GRENINJA_BATTLE_BOND_RAISES_STATS     = (MECHANICS_GENERATION >= 9)
 
   #-----------------------------------------------------------------------------
   # Affection

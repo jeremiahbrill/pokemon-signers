@@ -416,7 +416,7 @@ Battle::AI::Handlers::GeneralMoveAgainstTargetScore.add(:trigger_user_ability_up
       # NOTE: The only ability with an OnDealingHit effect also requires the
       #       move to make contact. The only abilities with an OnEndOfUsingMove
       #       effect revolve around damaging moves.
-      if (Battle::AbilityEffects::OnDealingHit[user.ability] && move.move.contactMove?) ||
+      if (Battle::AbilityEffects::OnDealingHit[user.ability] && move.move.pbContactMove?(user.battler)) ||
          Battle::AbilityEffects::OnEndOfUsingMove[user.ability]
         old_score = score
         score += 8

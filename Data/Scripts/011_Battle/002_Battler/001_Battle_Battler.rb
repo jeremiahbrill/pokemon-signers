@@ -384,6 +384,7 @@ class Battle::Battler
 
   # Applies to both losing self's ability (i.e. being replaced by another) and
   # having self's ability be negated.
+  # TODO: Any changes needed here?
   def unstoppableAbility?(abil = nil)
     abil = @ability_id if !abil
     abil = GameData::Ability.try_get(abil)
@@ -435,6 +436,7 @@ class Battle::Battler
   end
 
   # Applies to gaining the ability.
+  # TODO: Any changes needed here?
   def ungainableAbility?(abil = nil)
     abil = @ability_id if !abil
     abil = GameData::Ability.try_get(abil)
@@ -481,6 +483,7 @@ class Battle::Battler
       # Abilities that can't be negated
       :NEUTRALIZINGGAS
     ]
+    ability_blacklist.delete(:GULPMISSILE) if Settings::MECHANICS_GENERATION >= 9
     return ability_blacklist.include?(abil.id)
   end
 

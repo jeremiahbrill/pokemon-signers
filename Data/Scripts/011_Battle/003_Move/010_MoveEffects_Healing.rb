@@ -533,9 +533,9 @@ end
 # (Misty Explosion)
 #===============================================================================
 class Battle::Move::UserFaintsPowersUpInMistyTerrainExplosive < Battle::Move::UserFaintsExplosive
-  def pbBaseDamage(baseDmg, user, target)
-    baseDmg = baseDmg * 3 / 2 if @battle.field.terrain == :Misty
-    return baseDmg
+  def pbBasePower(base_power, user, target)
+    base_power = base_power * 3 / 2 if @battle.field.terrain == :Misty
+    return base_power
   end
 end
 

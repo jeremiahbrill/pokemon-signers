@@ -898,6 +898,14 @@ Battle::ItemEffects::DamageCalcFromUser.add(:EXPERTBELT,
   }
 )
 
+Battle::ItemEffects::DamageCalcFromUser.add(:FAIRYFEATHER,
+  proc { |item, user, target, move, mults, power, type|
+    mults[:power_multiplier] *= 1.2 if type == :FAIRY
+  }
+)
+
+Battle::ItemEffects::DamageCalcFromUser.copy(:FAIRYFEATHER, :PIXIEPLATE)
+
 Battle::ItemEffects::DamageCalcFromUser.add(:FAIRYGEM,
   proc { |item, user, target, move, mults, power, type|
     user.pbMoveTypePoweringUpGem(:FAIRY, move, type, mults)
@@ -1044,14 +1052,6 @@ Battle::ItemEffects::DamageCalcFromUser.add(:NORMALGEM,
     user.pbMoveTypePoweringUpGem(:NORMAL, move, type, mults)
   }
 )
-
-Battle::ItemEffects::DamageCalcFromUser.add(:FAIRYFEATHER,
-  proc { |item, user, target, move, mults, power, type|
-    mults[:power_multiplier] *= 1.2 if type == :FAIRY
-  }
-)
-
-Battle::ItemEffects::DamageCalcFromUser.copy(:FAIRYFEATHER, :PIXIEPLATE)
 
 Battle::ItemEffects::DamageCalcFromUser.add(:POISONBARB,
   proc { |item, user, target, move, mults, power, type|
@@ -1743,9 +1743,9 @@ Battle::ItemEffects::OnEndOfUsingMove.add(:LEPPABERRY,
     battler.moves[choice].pp = pkmnMove.pp
     moveName = pkmnMove.name
     if forced
-      battle.pbDisplay(_INTL("{1} restored its {2}'s PP.", battler.pbThis, moveName))
+      battle.pbDisplay(_INTL("{1} restored PP to its move {2}.", battler.pbThis, moveName))
     else
-      battle.pbDisplay(_INTL("{1}'s {2} restored its {3}'s PP!", battler.pbThis, itemName, moveName))
+      battle.pbDisplay(_INTL("{1} restored PP to its move {2} using its {3}!", battler.pbThis, moveName, itemName))
     end
     next true
   }

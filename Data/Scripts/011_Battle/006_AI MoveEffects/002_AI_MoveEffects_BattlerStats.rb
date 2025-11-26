@@ -787,7 +787,7 @@ Battle::AI::Handlers::MoveEffectAgainstTargetScore.copy("LowerTargetDefense1",
                                                         "LowerTargetDefense1PowersUpInGravity")
 Battle::AI::Handlers::MoveBasePower.add("LowerTargetDefense1PowersUpInGravity",
   proc { |power, move, user, target, ai, battle|
-    next move.move.pbBaseDamage(power, user.battler, target.battler)
+    next move.move.pbBasePower(power, user.battler, target.battler)
   }
 )
 
@@ -887,7 +887,7 @@ Battle::AI::Handlers::MoveEffectAgainstTargetScore.copy("LowerTargetSpeed1",
                                                         "LowerTargetSpeed1WeakerInGrassyTerrain")
 Battle::AI::Handlers::MoveBasePower.add("LowerTargetSpeed1WeakerInGrassyTerrain",
   proc { |power, move, user, target, ai, battle|
-    next move.move.pbBaseDamage(power, user.battler, target.battler)
+    next move.move.pbBasePower(power, user.battler, target.battler)
   }
 )
 

@@ -117,6 +117,7 @@ class Battle::Battler
        !@battle.pbAllFainted?(user.idxOpposingSide)
       # Greninja - Battle Bond
       if user.isSpecies?(:GRENINJA) && user.form == 1 &&
+         !Settings::GRENINJA_BATTLE_BOND_RAISES_STATS &&
          user.ability == :BATTLEBOND && !user.abilityUsedOnce? &&
          targets.any? { |target| target.damageState.fainted }
         user.markAbilityUsedOnce

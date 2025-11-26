@@ -358,7 +358,7 @@ class Battle::AI::AIMove
     if @ai.trainer.medium_skill? && target.effects[PBEffects::Minimize] && @move.tramplesMinimize?
       multipliers[:final_damage_multiplier] *= 2
     end
-    # NOTE: No need to check pbBaseDamageMultiplier, as it's already accounted
+    # NOTE: No need to check pbBasePowerMultiplier, as it's already accounted
     #       for in an AI's MoveBasePower handler or can't be checked now anyway.
     # NOTE: No need to check pbModifyDamage, as it's already accounted for in an
     #       AI's MoveBasePower handler.

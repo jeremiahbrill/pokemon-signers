@@ -2418,6 +2418,27 @@ Battle::AbilityEffects::OnDealingHit.add(:TOXICCHAIN,
 # OnEndOfUsingMove handlers
 #===============================================================================
 
+Battle::AbilityEffects::OnEndOfUsingMove.add(:BATTLEBOND,
+  proc { |ability, user, targets, move, battle|
+    next if !Settings::GRENINJA_BATTLE_BOND_RAISES_STATS
+    next if user.abilityUsedOnce?
+    next if battle.pbAllFainted?(user.idxOpposingSide)
+    next if targets.none? { |b| b.damageState.fainted }
+    raised_stats = [:ATTACK, :SPECIAL_ATTACK, :SPEED]
+    next if raised_stats.none? { |stat| !user.pbCanRaiseStatStage?(stat, user) }
+    user.markAbilityUsedOnce
+    battle.pbShowAbilitySplash(user)
+    show_anim = true
+    raised_stats.each do |stat|
+      next if !user.pbCanRaiseStatStage?(stat, user)
+      if user.pbRaiseStatStage(stat, 1, user, show_anim)
+        show_anim = false
+      end
+    end
+    battle.pbHideAbilitySplash(user)
+  }
+)
+
 Battle::AbilityEffects::OnEndOfUsingMove.add(:BEASTBOOST,
   proc { |ability, user, targets, move, battle|
     next if battle.pbAllFainted?(user.idxOpposingSide)
@@ -2440,9 +2461,8 @@ Battle::AbilityEffects::OnEndOfUsingMove.add(:BEASTBOOST,
 Battle::AbilityEffects::OnEndOfUsingMove.add(:CHILLINGNEIGH,
   proc { |ability, user, targets, move, battle|
     next if battle.pbAllFainted?(user.idxOpposingSide)
-    numFainted = 0
-    targets.each { |b| numFainted += 1 if b.damageState.fainted }
-    next if numFainted == 0 || !user.pbCanRaiseStatStage?(:ATTACK, user)
+    next if targets.none? { |b| b.damageState.fainted }
+    next if !user.pbCanRaiseStatStage?(:ATTACK, user)
     user.ability_id = :CHILLINGNEIGH   # So the As One abilities can just copy this
     user.pbRaiseStatStageByAbility(:ATTACK, 1, user)
     user.ability_id = ability
@@ -2454,9 +2474,8 @@ Battle::AbilityEffects::OnEndOfUsingMove.copy(:CHILLINGNEIGH, :ASONECHILLINGNEIG
 Battle::AbilityEffects::OnEndOfUsingMove.add(:GRIMNEIGH,
   proc { |ability, user, targets, move, battle|
     next if battle.pbAllFainted?(user.idxOpposingSide)
-    numFainted = 0
-    targets.each { |b| numFainted += 1 if b.damageState.fainted }
-    next if numFainted == 0 || !user.pbCanRaiseStatStage?(:SPECIAL_ATTACK, user)
+    next if targets.none? { |b| b.damageState.fainted }
+    next if !user.pbCanRaiseStatStage?(:SPECIAL_ATTACK, user)
     user.ability_id = :GRIMNEIGH   # So the As One abilities can just copy this
     user.pbRaiseStatStageByAbility(:SPECIAL_ATTACK, 1, user)
     user.ability_id = ability

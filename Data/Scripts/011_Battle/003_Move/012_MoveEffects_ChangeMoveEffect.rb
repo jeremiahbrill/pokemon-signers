@@ -70,7 +70,7 @@ class Battle::Move::RandomlyDamageOrHealTarget < Battle::Move
     return super
   end
 
-  def pbBaseDamage(baseDmg, user, target)
+  def pbBasePower(base_power, user, target)
     return @presentDmg
   end
 
@@ -150,7 +150,7 @@ class Battle::Move::CurseTargetOrLowerUserSpd1RaiseUserAtkDef1 < Battle::Move
 
   def pbTarget(user)
     if user.pbHasType?(:GHOST)
-      ghost_target = (Settings::MECHANICS_GENERATION >= 8) ? :RandomNearFoe : :NearFoe
+      ghost_target = (Settings::MECHANICS_GENERATION == 8) ? :RandomNearFoe : :NearFoe
       return GameData::Target.get(ghost_target)
     end
     return super
@@ -345,11 +345,11 @@ class Battle::Move::HitsAllFoesAndPowersUpInPsychicTerrain < Battle::Move
     return super
   end
 
-  def pbBaseDamage(baseDmg, user, target)
+  def pbBasePower(base_power, user, target)
     if @battle.field.terrain == :Psychic && user.affectedByTerrain?
-      baseDmg = baseDmg * 3 / 2
+      base_power = base_power * 3 / 2
     end
-    return baseDmg
+    return base_power
   end
 end
 
@@ -384,9 +384,9 @@ class Battle::Move::DoublePowerAfterFusionFlare < Battle::Move
     super
   end
 
-  def pbBaseDamageMultiplier(damageMult, user, target)
-    damageMult *= 2 if @doublePower
-    return damageMult
+  def pbBasePowerMultiplier(power_mult, user, target)
+    power_mult *= 2 if @doublePower
+    return power_mult
   end
 
   def pbEffectGeneral(user)
@@ -409,9 +409,9 @@ class Battle::Move::DoublePowerAfterFusionBolt < Battle::Move
     super
   end
 
-  def pbBaseDamageMultiplier(damageMult, user, target)
-    damageMult *= 2 if @doublePower
-    return damageMult
+  def pbBasePowerMultiplier(power_mult, user, target)
+    power_mult *= 2 if @doublePower
+    return power_mult
   end
 
   def pbEffectGeneral(user)
@@ -575,7 +575,7 @@ class Battle::Move::PowerDependsOnUserStockpile < Battle::Move
     return false
   end
 
-  def pbBaseDamage(baseDmg, user, target)
+  def pbBasePower(base_power, user, target)
     return 100 * user.effects[PBEffects::Stockpile]
   end
 
@@ -701,6 +701,7 @@ class Battle::Move::UseLastMoveUsed < Battle::Move
 
   def initialize(battle, move)
     super
+    # TODO: Any more function codes that belong in here?
     @moveBlacklist = [
       # Struggle, Belch
       "Struggle",                                          # Struggle
@@ -830,6 +831,7 @@ class Battle::Move::UseMoveTargetIsAboutToUse < Battle::Move
 
   def initialize(battle, move)
     super
+    # TODO: Any more function codes that belong in here?
     @moveBlacklist = [
       "UserTakesTargetItem",                # Covet, Thief
       # Struggle, Belch
@@ -938,6 +940,7 @@ class Battle::Move::UseRandomMove < Battle::Move
 
   def initialize(battle, move)
     super
+    # TODO: Any more function codes that belong in here?
     @moveBlacklist = [
       "FlinchTargetFailsIfUserNotAsleep",                  # Snore
       "TargetActsNext",                                    # After You
@@ -1036,6 +1039,7 @@ class Battle::Move::UseRandomMoveFromUserParty < Battle::Move
 
   def initialize(battle, move)
     super
+    # TODO: Any more function codes that belong in here?
     @moveBlacklist = [
       # Struggle, Belch
       "Struggle",                                          # Struggle
@@ -1156,6 +1160,7 @@ class Battle::Move::UseRandomUserMoveIfAsleep < Battle::Move
 
   def initialize(battle, move)
     super
+    # TODO: Any more function codes that belong in here?
     @moveBlacklist = [
       "MultiTurnAttackPreventSleeping",                  # Uproar
       "MultiTurnAttackBideThenReturnDoubleDamage",       # Bide
@@ -1251,6 +1256,7 @@ class Battle::Move::ReplaceMoveThisBattleWithTargetLastMoveUsed < Battle::Move
 
   def initialize(battle, move)
     super
+    # TODO: Any more function codes that belong in here?
     @moveBlacklist = [
       "UseRandomMove",                                 # Metronome
       # Struggle

@@ -102,6 +102,7 @@ module GameData
       return false
     end
 
+    # TODO: Any more function codes to be added here?
     def display_type(pkmn, move = nil)
       if Settings::SHOW_MODIFIED_MOVE_PROPERTIES
         case @function_code
@@ -187,6 +188,7 @@ module GameData
       return @type
     end
 
+    # TODO: Any more function codes to be added here?
     def display_power(pkmn, move = nil)
       if Settings::SHOW_MODIFIED_MOVE_PROPERTIES
         case @function_code

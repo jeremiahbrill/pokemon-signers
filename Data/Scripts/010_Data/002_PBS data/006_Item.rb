@@ -137,7 +137,7 @@ module GameData
       @consumable               = !is_important? if @consumable.nil?
       @show_quantity            = hash[:show_quantity]
       @move                     = hash[:move]
-      @real_description         = hash[:real_description] || "???"
+      @real_description         = hash[:real_description]
       @pbs_file_suffix          = hash[:pbs_file_suffix]  || ""
     end
 
@@ -174,7 +174,12 @@ module GameData
 
     # @return [String] the translated description of this item
     def description
-      return pbGetMessageFromHash(MessageTypes::ITEM_DESCRIPTIONS, @real_description)
+      ret = pbGetMessageFromHash(MessageTypes::ITEM_DESCRIPTIONS, @real_description)
+      if ret.nil? && is_machine?
+        move_data = GameData::Move.get(@move)
+        return move_data.description
+      end
+      return ret || "???"
     end
 
     def bag_pocket

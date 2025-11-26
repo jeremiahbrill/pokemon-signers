@@ -679,12 +679,12 @@ end
 class Battle::Move::FlinchTargetDoublePowerIfTargetInSky < Battle::Move::FlinchTarget
   def hitsFlyingTargets?; return true; end
 
-  def pbBaseDamage(baseDmg, user, target)
-    baseDmg *= 2 if target.inTwoTurnAttack?("TwoTurnAttackInvulnerableInSky",
-                                            "TwoTurnAttackInvulnerableInSkyParalyzeTarget",
-                                            "TwoTurnAttackInvulnerableInSkyTargetCannotAct") ||
-                    target.effects[PBEffects::SkyDrop] >= 0
-    return baseDmg
+  def pbBasePower(base_power, user, target)
+    base_power *= 2 if target.inTwoTurnAttack?("TwoTurnAttackInvulnerableInSky",
+                                               "TwoTurnAttackInvulnerableInSkyParalyzeTarget",
+                                               "TwoTurnAttackInvulnerableInSkyTargetCannotAct") ||
+                       target.effects[PBEffects::SkyDrop] >= 0
+    return base_power
   end
 end
 
@@ -1098,6 +1098,7 @@ class Battle::Move::SetTargetAbilityToSimple < Battle::Move
   end
 
   def pbFailsAgainstTarget?(user, target, show_message)
+    # TODO: Any changes needed to affected abilities?
     if target.unstoppableAbility? || [:TRUANT, :SIMPLE].include?(target.ability_id)
       @battle.pbDisplay(_INTL("But it failed!")) if show_message
       return true
@@ -1132,6 +1133,7 @@ class Battle::Move::SetTargetAbilityToInsomnia < Battle::Move
   end
 
   def pbFailsAgainstTarget?(user, target, show_message)
+    # TODO: Any changes needed to affected abilities?
     if target.unstoppableAbility? || [:TRUANT, :INSOMNIA].include?(target.ability_id)
       @battle.pbDisplay(_INTL("But it failed!")) if show_message
       return true
@@ -1170,6 +1172,7 @@ class Battle::Move::SetUserAbilityToTargetAbility < Battle::Move
       @battle.pbDisplay(_INTL("But it failed!")) if show_message
       return true
     end
+    # TODO: Any changes needed to affected abilities?
     if target.ungainableAbility? ||
        [:HADRONENGINE, :ORICHALCUMPULSE].include?(target.ability_id)
       @battle.pbDisplay(_INTL("But it failed!")) if show_message
@@ -1217,6 +1220,7 @@ class Battle::Move::SetUserAndAlliesAbilityToTargetAbility < Battle::Move
       @battle.pbDisplay(_INTL("But it failed!")) if show_message
       return true
     end
+    # TODO: Any changes needed to affected abilities?
     if target.ungainableAbility? ||
        [:HADRONENGINE, :ORICHALCUMPULSE].include?(target.ability_id)
       @battle.pbDisplay(_INTL("But it failed!")) if show_message
@@ -1226,6 +1230,8 @@ class Battle::Move::SetUserAndAlliesAbilityToTargetAbility < Battle::Move
   end
 
   def pbEffectAgainstTarget(user, target)
+    # TODO: Should the determination of affected allies be in pbMoveFailed?
+    #       instead?
     user_side = [user] + user.allAllies
     user_side.delete_if { |battler| battler.unstoppableAbility? || battler.ability == target.ability }
     old_abils = []
@@ -1256,6 +1262,7 @@ class Battle::Move::SetTargetAbilityToUserAbility < Battle::Move
       @battle.pbDisplay(_INTL("But it failed!"))
       return true
     end
+    # TODO: Any changes needed to affected abilities?
     if user.ungainableAbility? ||
        [:HADRONENGINE, :ORICHALCUMPULSE, :POWEROFALCHEMY, :RECEIVER, :TRACE].include?(user.ability_id)
       @battle.pbDisplay(_INTL("But it failed!"))
@@ -1265,6 +1272,7 @@ class Battle::Move::SetTargetAbilityToUserAbility < Battle::Move
   end
 
   def pbFailsAgainstTarget?(user, target, show_message)
+    # TODO: Any changes needed to affected abilities?
     if target.unstoppableAbility? || target.ability == :TRUANT
       @battle.pbDisplay(_INTL("But it failed!")) if show_message
       return true
@@ -1299,6 +1307,7 @@ class Battle::Move::UserTargetSwapAbilities < Battle::Move
       @battle.pbDisplay(_INTL("But it failed!"))
       return true
     end
+    # TODO: Any changes needed to affected abilities?
     if user.ungainableAbility? ||
        [:HADRONENGINE, :ORICHALCUMPULSE, :WONDERGUARD].include?(user.ability_id)
       @battle.pbDisplay(_INTL("But it failed!"))
@@ -1317,6 +1326,7 @@ class Battle::Move::UserTargetSwapAbilities < Battle::Move
       @battle.pbDisplay(_INTL("But it failed!")) if show_message
       return true
     end
+    # TODO: Any changes needed to affected abilities?
     if target.ungainableAbility? ||
        [:HADRONENGINE, :ORICHALCUMPULSE, :WONDERGUARD].include?(target.ability_id)
       @battle.pbDisplay(_INTL("But it failed!")) if show_message

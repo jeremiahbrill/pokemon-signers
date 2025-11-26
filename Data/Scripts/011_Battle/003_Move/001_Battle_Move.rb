@@ -154,6 +154,7 @@ class Battle::Move
     return false
   end
 
+  # TODO: Any more function codes to be added here?
   def display_type(battler)
     case @function_code
     when "TypeDependsOnUserMorpekoFormRaiseUserSpeed1"
@@ -169,6 +170,7 @@ class Battle::Move
     return @realMove.display_type(battler.pokemon)
   end
 
+  # TODO: Any more function codes to be added here?
   def display_power(battler)
     if Settings::SHOW_MODIFIED_MOVE_PROPERTIES
       case @function_code
@@ -178,7 +180,7 @@ class Battle::Move
            "PowerHigherWithUserHP", "PowerLowerWithUserHP",
            "PowerHigherWithUserHappiness", "PowerLowerWithUserHappiness",
            "PowerHigherWithUserPositiveStatStages", "PowerDependsOnUserStockpile"
-        return pbBaseType(@power, battler, nil)
+        return pbBasePower(@power, battler, nil)
       end
     end
     return @realMove.display_power(battler.pokemon)

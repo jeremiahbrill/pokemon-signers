@@ -231,9 +231,9 @@ class Battle::Move
   # Damage calculation.
   #-----------------------------------------------------------------------------
 
-  def pbBaseDamage(baseDmg, user, target);              return baseDmg;    end
-  def pbBaseDamageMultiplier(damageMult, user, target); return damageMult; end
-  def pbModifyDamage(damageMult, user, target);         return damageMult; end
+  def pbBasePower(base_power, user, target);           return base_power; end
+  def pbBasePowerMultiplier(damageMult, user, target); return damageMult; end
+  def pbModifyDamage(damageMult, user, target);        return damageMult; end
 
   def pbGetAttackStats(user, target)
     return user.spatk, user.stages[:SPECIAL_ATTACK] + Battle::Battler::STAT_STAGE_MAXIMUM if specialMove?
@@ -259,7 +259,7 @@ class Battle::Move
     # Calculate whether this hit deals critical damage
     target.damageState.critical = pbIsCritical?(user, target)
     # Calcuate base power of move
-    baseDmg = pbBaseDamage(@power, user, target)
+    baseDmg = pbBasePower(@power, user, target)
     # Calculate user's attack stat
     atk, atkStage = pbGetAttackStats(user, target)
     if !target.hasActiveAbility?(:UNAWARE) || target.beingMoldBroken?
@@ -542,7 +542,7 @@ class Battle::Move
       multipliers[:final_damage_multiplier] *= 2
     end
     # Move-specific base damage modifiers
-    multipliers[:power_multiplier] = pbBaseDamageMultiplier(multipliers[:power_multiplier], user, target)
+    multipliers[:power_multiplier] = pbBasePowerMultiplier(multipliers[:power_multiplier], user, target)
     # Move-specific final damage modifiers
     multipliers[:final_damage_multiplier] = pbModifyDamage(multipliers[:final_damage_multiplier], user, target)
   end

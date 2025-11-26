@@ -68,7 +68,9 @@ Battle::AI::Handlers::MoveBasePower.add("HitTwoTimesTargetThenTargetAlly",
 #===============================================================================
 Battle::AI::Handlers::MoveBasePower.add("HitThreeTimesPowersUpWithEachHit",
   proc { |power, move, user, target, ai, battle|
-    next power * 6   # Hits do x1, x2, x3 ret in turn, for x6 in total
+    next power * 6 if user.has_active_ability?(:SKILLLINK) ||
+                      user.has_active_item?(:LOADEDDICE)   # Hits do x1, x2, x3 ret in turn, for x6 in total
+    next power * 47 / 10   # Average damage dealt
   }
 )
 Battle::AI::Handlers::MoveEffectAgainstTargetScore.add("HitThreeTimesPowersUpWithEachHit",
@@ -94,9 +96,23 @@ Battle::AI::Handlers::MoveEffectAgainstTargetScore.copy("HitTwoTimes",
 #===============================================================================
 #
 #===============================================================================
+Battle::AI::Handlers::MoveBasePower.add("HitTenTimes",
+  proc { |power, move, user, target, ai, battle|
+    next power * 10 if user.has_active_ability?(:SKILLLINK)   # Definitely 10 hits
+    next power * 7 if user.has_active_item?(:LOADEDDICE)      # Average of 4-10 hits
+    next power * 58 / 10   # Average damage dealt
+  }
+)
+Battle::AI::Handlers::MoveEffectAgainstTargetScore.copy("HitTwoTimes",
+                                                        "HitTenTimes")
+
+#===============================================================================
+#
+#===============================================================================
 Battle::AI::Handlers::MoveBasePower.add("HitTwoToFiveTimes",
   proc { |power, move, user, target, ai, battle|
     next power * 5 if user.has_active_ability?(:SKILLLINK)
+    next power * 41 / 10 if user.has_active_item?(:LOADEDDICE)
     next power * 31 / 10   # Average damage dealt
   }
 )
@@ -107,6 +123,7 @@ Battle::AI::Handlers::MoveEffectAgainstTargetScore.add("HitTwoToFiveTimes",
     if target.effects[PBEffects::Substitute] > 0 && !move.move.ignoresSubstitute?(user.battler)
       dmg = move.rough_damage
       num_hits = (user.has_active_ability?(:SKILLLINK)) ? 5 : 3   # 3 is about average
+      num_hits = 4 if user.has_active_item?(:LOADEDDICE)          # Most likely 4 hits
       score += 10 if target.effects[PBEffects::Substitute] < dmg * (num_hits - 1) / num_hits
     end
     next score
@@ -119,9 +136,10 @@ Battle::AI::Handlers::MoveEffectAgainstTargetScore.add("HitTwoToFiveTimes",
 Battle::AI::Handlers::MoveBasePower.add("HitTwoToFiveTimesOrThreeForAshGreninja",
   proc { |power, move, user, target, ai, battle|
     if user.battler.isSpecies?(:GRENINJA) && user.battler.form == 2
-      next move.move.pbBaseDamage(power, user.battler, target.battler) * move.move.pbNumHits(user.battler, [target.battler])
+      next move.move.pbBasePower(power, user.battler, target.battler) * move.move.pbNumHits(user.battler, [target.battler])
     end
     next power * 5 if user.has_active_ability?(:SKILLLINK)
+    next power * 41 / 10 if user.has_active_item?(:LOADEDDICE)
     next power * 31 / 10   # Average damage dealt
   }
 )
@@ -215,7 +233,7 @@ Battle::AI::Handlers::MoveEffectAgainstTargetScore.add("TwoTurnAttack",
       score -= 10 if user.hp < user.totalhp / 2
     end
     # Don't prefer if target has a protecting move
-    if ai.trainer.high_skill? && !(user.has_active_ability?(:UNSEENFIST) && move.move.contactMove?)
+    if ai.trainer.high_skill? && !(user.has_active_ability?(:UNSEENFIST) && move.move.pbContactMove?(user.battler))
       has_protect_move = false
       if move.pbTarget(user).num_targets > 1 &&
          (Settings::MECHANICS_GENERATION >= 7 || move.damagingMove?)
@@ -257,7 +275,7 @@ Battle::AI::Handlers::MoveEffectAgainstTargetScore.add("TwoTurnAttack",
 #===============================================================================
 Battle::AI::Handlers::MoveBasePower.add("TwoTurnAttackOneTurnInSun",
   proc { |power, move, user, target, ai, battle|
-    next move.move.pbBaseDamageMultiplier(power, user.battler, target.battler)
+    next move.move.pbBasePowerMultiplier(power, user.battler, target.battler)
   }
 )
 Battle::AI::Handlers::MoveEffectAgainstTargetScore.add("TwoTurnAttackOneTurnInSun",
@@ -499,7 +517,7 @@ Battle::AI::Handlers::MoveBasePower.add("MultiTurnAttackPowersUpEachTurn",
     #       rounds. It is nearly the average damage this move will do per round,
     #       assuming it hits for 3 rounds (hoping for hits in all 5 rounds is
     #       optimistic).
-    next move.move.pbBaseDamage(power, user.battler, target.battler) * 2
+    next move.move.pbBasePower(power, user.battler, target.battler) * 2
   }
 )
 

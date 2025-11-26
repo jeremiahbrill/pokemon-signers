@@ -513,9 +513,9 @@ class Battle::Move::PursueSwitchingFoe < Battle::Move
     return super
   end
 
-  def pbBaseDamage(baseDmg, user, target)
-    baseDmg *= 2 if @battle.switching
-    return baseDmg
+  def pbBasePower(base_power, user, target)
+    base_power *= 2 if @battle.switching
+    return base_power
   end
 end
 
@@ -552,9 +552,9 @@ end
 # If an ally is about to use the same move, make it go next, ignoring priority.
 #===============================================================================
 class Battle::Move::UsedAfterAllyRoundWithDoublePower < Battle::Move
-  def pbBaseDamage(baseDmg, user, target)
-    baseDmg *= 2 if user.pbOwnSide.effects[PBEffects::Round]
-    return baseDmg
+  def pbBasePower(base_power, user, target)
+    base_power *= 2 if user.pbOwnSide.effects[PBEffects::Round]
+    return base_power
   end
 
   def pbEffectGeneral(user)
@@ -651,6 +651,7 @@ class Battle::Move::TargetUsesItsLastUsedMoveAgain < Battle::Move
 
   def initialize(battle, move)
     super
+    # TODO: Any more function codes that belong in here?
     @moveBlacklist = [
       "MultiTurnAttackBideThenReturnDoubleDamage",       # Bide
       "ProtectUserFromDamagingMovesKingsShield",         # King's Shield
@@ -876,6 +877,7 @@ class Battle::Move::DisableTargetUsingDifferentMove < Battle::Move
 
   def initialize(battle, move)
     super
+    # TODO: Any more function codes that belong in here?
     @moveBlacklist = [
       "DisableTargetUsingDifferentMove",               # Encore
       # Struggle

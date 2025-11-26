@@ -14,6 +14,9 @@ class Battle::Move::UserTakesTargetItem < Battle::Move
     itemName = target.itemName
     user.item = target.item
     # Permanently steal the item from wild Pokémon
+    # TODO: If target.wild? and Settings::MECHANICS_GENERATION >= 9, put the
+    #       stolen item directly in the player's Bag instead of giving it to the
+    #       user.
     if target.wild? && !user.initialItem && target.item == target.initialItem
       user.setInitialItem(target.item)
       target.pbRemoveItem
@@ -166,14 +169,14 @@ end
 # If target has a losable item, damage is multiplied by 1.5.
 #===============================================================================
 class Battle::Move::RemoveTargetItem < Battle::Move
-  def pbBaseDamage(baseDmg, user, target)
+  def pbBasePower(base_power, user, target)
     if Settings::MECHANICS_GENERATION >= 6 &&
        target.item && !target.unlosableItem?(target.item)
       # NOTE: Damage is still boosted even if target has Sticky Hold or a
       #       substitute.
-      baseDmg = (baseDmg * 1.5).round
+      base_power = (base_power * 1.5).round
     end
-    return baseDmg
+    return base_power
   end
 
   def pbEffectAfterAllHits(user, target)
@@ -428,7 +431,7 @@ class Battle::Move::ThrowUserItemAtTarget < Battle::Move
 
   def pbNumHits(user, targets); return 1; end
 
-  def pbBaseDamage(baseDmg, user, target)
+  def pbBasePower(base_power, user, target)
     return 0 if !user.item
     user.item.flags.each do |flag|
       return [$~[1].to_i, 10].max if flag[/^Fling_(\d+)$/i]

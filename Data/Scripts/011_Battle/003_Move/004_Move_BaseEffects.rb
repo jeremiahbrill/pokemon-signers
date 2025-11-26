@@ -613,9 +613,9 @@ class Battle::Move::PledgeMove < Battle::Move
     return super
   end
 
-  def pbBaseDamage(baseDmg, user, target)
-    baseDmg *= 2 if @pledgeCombo
-    return baseDmg
+  def pbBasePower(base_power, user, target)
+    base_power *= 2 if @pledgeCombo
+    return base_power
   end
 
   def pbEffectGeneral(user)

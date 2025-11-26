@@ -98,6 +98,8 @@ class Battle::AI
 
   # These values are taken from the Complete-Fire-Red-Upgrade decomp here:
   # https://github.com/Skeli789/Complete-Fire-Red-Upgrade/blob/f7f35becbd111c7e936b126f6328fc52d9af68c8/src/ability_battle_effects.c#L41
+  # TODO: Ensure all abilities are listed here and have an AbilityRanking if
+  #       appropriate.
   BASE_ABILITY_RATINGS = {
     10 => [:DELTASTREAM, :DESOLATELAND, :HUGEPOWER, :MOODY, :PARENTALBOND,
            :POWERCONSTRUCT, :PRIMORDIALSEA, :PUREPOWER, :SHADOWTAG,
@@ -160,13 +162,15 @@ class Battle::AI
 
   #-----------------------------------------------------------------------------
 
+  # TODO: Ensure all items are listed here and have an AbilityRanking if
+  #       appropriate.
   BASE_ITEM_RATINGS = {
     10 => [:EVIOLITE, :FOCUSSASH, :LIFEORB, :THICKCLUB],
     9  => [:ASSAULTVEST, :BLACKSLUDGE, :CHOICEBAND, :CHOICESCARF, :CHOICESPECS,
            :DEEPSEATOOTH, :LEFTOVERS],
-    8  => [:LEEK, :STICK, :THROATSPRAY, :WEAKNESSPOLICY],
-    7  => [:EXPERTBELT, :LIGHTBALL, :LUMBERRY, :POWERHERB, :ROCKYHELMET,
-           :SITRUSBERRY],
+    8  => [:CLEARAMULET, :LEEK, :STICK, :THROATSPRAY, :WEAKNESSPOLICY],
+    7  => [:ABILITYSHIELD, :EXPERTBELT, :LIGHTBALL, :LOADEDDICE, :LUMBERRY,
+           :POWERHERB, :ROCKYHELMET, :SITRUSBERRY],
     6  => [:KINGSROCK, :LIECHIBERRY, :LIGHTCLAY, :PETAYABERRY, :RAZORFANG,
            :REDCARD, :SALACBERRY, :SHELLBELL, :WHITEHERB,
            # Type-resisting berries
@@ -179,18 +183,20 @@ class Battle::AI
            :FIREGEM, :FLYINGGEM, :GHOSTGEM, :GRASSGEM, :GROUNDGEM, :ICEGEM,
            :NORMALGEM, :POISONGEM, :PSYCHICGEM, :ROCKGEM, :STEELGEM, :WATERGEM,
            # Legendary Orbs
-           :ADAMANTORB, :GRISEOUSORB, :LUSTROUSORB, :SOULDEW,
+           :ADAMANTORB, :GRISEOUSORB, :LUSTROUSORB,
+           :ADAMANTCRYSTAL, :GRISEOUSCORE, :LUSTROUSGLOBE,
+           :SOULDEW,
            # Berries that heal HP and may confuse
            :AGUAVBERRY, :FIGYBERRY, :IAPAPABERRY, :MAGOBERRY, :WIKIBERRY],
     5  => [:CUSTAPBERRY, :DEEPSEASCALE, :EJECTBUTTON, :FOCUSBAND, :JABOCABERRY,
            :KEEBERRY, :LANSATBERRY, :MARANGABERRY, :MENTALHERB, :METRONOME,
-           :MUSCLEBAND, :QUICKCLAW, :RAZORCLAW, :ROWAPBERRY, :SCOPELENS,
-           :WISEGLASSES,
+           :MUSCLEBAND, :PUNCHINGGLOVE, :QUICKCLAW, :RAZORCLAW, :ROWAPBERRY,
+           :SCOPELENS, :WISEGLASSES,
            # Type power boosters
-           :BLACKBELT, :BLACKGLASSES, :CHARCOAL, :DRAGONFANG, :HARDSTONE,
-           :MAGNET, :METALCOAT, :MIRACLESEED, :MYSTICWATER, :NEVERMELTICE,
-           :POISONBARB, :SHARPBEAK, :SILKSCARF, :SILVERPOWDER, :SOFTSAND,
-           :SPELLTAG, :TWISTEDSPOON,
+           :BLACKBELT, :BLACKGLASSES, :CHARCOAL, :DRAGONFANG, :FAIRYFEATHER,
+           :HARDSTONE, :MAGNET, :METALCOAT, :MIRACLESEED, :MYSTICWATER,
+           :NEVERMELTICE, :POISONBARB, :SHARPBEAK, :SILKSCARF, :SILVERPOWDER,
+           :SOFTSAND, :SPELLTAG, :TWISTEDSPOON,
            :ODDINCENSE, :ROCKINCENSE, :ROSEINCENSE, :SEAINCENSE, :WAVEINCENSE,
            # Plates
            :DRACOPLATE, :DREADPLATE, :EARTHPLATE, :FISTPLATE, :FLAMEPLATE,
@@ -347,7 +353,9 @@ Battle::AI::Handlers::AbilityRanking.add(:SANDFORCE,
 
 Battle::AI::Handlers::AbilityRanking.add(:SKILLLINK,
   proc { |ability, score, battler, ai|
-    next score if battler.check_for_move { |m| m.is_a?(Battle::Move::HitTwoToFiveTimes) }
+    next score if battler.check_for_move { |m| m.is_a?(Battle::Move::HitTwoToFiveTimes) ||
+                                               m.is_a?(Battle::Move::HitThreeTimesPowersUpWithEachHit) ||
+                                               m.is_a?(Battle::Move::HitTenTimes) }
     next 0
   }
 )
@@ -391,6 +399,8 @@ Battle::AI::Handlers::ItemRanking.add(:ADAMANTORB,
     next 0
   }
 )
+
+Battle::AI::Handlers::ItemRanking.copy(:ADAMANTORB, :ADAMANTCRYSTAL)
 
 Battle::AI::Handlers::ItemRanking.add(:AGUAVBERRY,
   proc { |item, score, battler, ai|
@@ -565,6 +575,8 @@ Battle::AI::Handlers::ItemRanking.add(:GRISEOUSORB,
   }
 )
 
+Battle::AI::Handlers::ItemRanking.copy(:GRISEOUSORB, :GRISEOUSCORE)
+
 Battle::AI::Handlers::ItemRanking.add(:HEATROCK,
   proc { |item, score, battler, ai|
     next score if battler.check_for_move { |m| m.is_a?(Battle::Move::StartSunWeather) }
@@ -643,6 +655,15 @@ Battle::AI::Handlers::ItemRanking.add(:LIGHTCLAY,
   }
 )
 
+Battle::AI::Handlers::ItemRanking.add(:LOADEDDICE,
+  proc { |ability, score, battler, ai|
+    next score if battler.check_for_move { |m| m.is_a?(Battle::Move::HitTwoToFiveTimes) ||
+                                               m.is_a?(Battle::Move::HitThreeTimesPowersUpWithEachHit) ||
+                                               m.is_a?(Battle::Move::HitTenTimes) }
+    next 0
+  }
+)
+
 Battle::AI::Handlers::ItemRanking.add(:LUCKYPUNCH,
   proc { |item, score, battler, ai|
     next score if battler.battler.isSpecies?(:CHANSEY)
@@ -657,6 +678,8 @@ Battle::AI::Handlers::ItemRanking.add(:LUSTROUSORB,
     next 0
   }
 )
+
+Battle::AI::Handlers::ItemRanking.copy(:LUSTROUSORB, :LUSTROUSGLOBE)
 
 Battle::AI::Handlers::ItemRanking.add(:MAGOBERRY,
   proc { |item, score, battler, ai|
@@ -709,6 +732,13 @@ Battle::AI::Handlers::ItemRanking.add(:POWERHERB,
 Battle::AI::Handlers::ItemRanking.add(:PSYCHICSEED,
   proc { |item, score, battler, ai|
     next score if battler.check_for_move { |m| m.is_a?(Battle::Move::StartPsychicTerrain) }
+    next 0
+  }
+)
+
+Battle::AI::Handlers::ItemRanking.add(:PUNCHINGGLOVE,
+  proc { |ability, score, battler, ai|
+    next score if battler.check_for_move { |m| m.punchingMove? && m.contactMove? }
     next 0
   }
 )
@@ -823,10 +853,10 @@ Battle::AI::Handlers::ItemRanking.add(:ZOOMLENS,
 
 Battle::AI::Handlers::ItemRanking.addIf(:type_boosting_items,
   proc { |item|
-    next [:BLACKBELT, :BLACKGLASSES, :CHARCOAL, :DRAGONFANG, :HARDSTONE,
-          :MAGNET, :METALCOAT, :MIRACLESEED, :MYSTICWATER, :NEVERMELTICE,
-          :POISONBARB, :SHARPBEAK, :SILKSCARF, :SILVERPOWDER, :SOFTSAND,
-          :SPELLTAG, :TWISTEDSPOON,
+    next [:BLACKBELT, :BLACKGLASSES, :CHARCOAL, :DRAGONFANG, :FAIRYFEATHER,
+          :HARDSTONE, :MAGNET, :METALCOAT, :MIRACLESEED, :MYSTICWATER,
+          :NEVERMELTICE, :POISONBARB, :SHARPBEAK, :SILKSCARF, :SILVERPOWDER,
+          :SOFTSAND,:SPELLTAG, :TWISTEDSPOON,
           :DRACOPLATE, :DREADPLATE, :EARTHPLATE, :FISTPLATE, :FLAMEPLATE,
           :ICICLEPLATE, :INSECTPLATE, :IRONPLATE, :MEADOWPLATE, :MINDPLATE,
           :PIXIEPLATE, :SKYPLATE, :SPLASHPLATE, :SPOOKYPLATE, :STONEPLATE,
@@ -839,7 +869,7 @@ Battle::AI::Handlers::ItemRanking.addIf(:type_boosting_items,
       :DARK     => [:BLACKGLASSES, :DREADPLATE],
       :DRAGON   => [:DRAGONFANG, :DRACOPLATE],
       :ELECTRIC => [:MAGNET, :ZAPPLATE],
-      :FAIRY    => [:PIXIEPLATE],
+      :FAIRY    => [:FAIRYFEATHER, :PIXIEPLATE],
       :FIGHTING => [:BLACKBELT, :FISTPLATE],
       :FIRE     => [:CHARCOAL, :FLAMEPLATE],
       :FLYING   => [:SHARPBEAK, :SKYPLATE],

@@ -511,10 +511,13 @@ class Battle
       pbCancelChoice(b.index)   # Restore unused items to Bag
       Battle::AbilityEffects.triggerOnSwitchOut(b.ability, b, true) if b.abilityActive?
     end
-    pbParty(0).each_with_index do |pkmn, i|
-      next if !pkmn
-      @peer.pbOnLeavingBattle(self, pkmn, @usedInBattle[0][i], true)   # Reset form
-      pkmn.item = @initialItems[0][i]
+    2.times do |side|   # We do both sides in case the foe side includes a caught wild Pokémon
+      pbParty(side).each_with_index do |pkmn, i|
+        next if !pkmn
+        @peer.pbOnLeavingBattle(self, pkmn, @usedInBattle[side][i], true)   # Reset form
+        pkmn.item = @initialItems[side][i]
+        # TODO: Restore all consumed held items (except berries).
+      end
     end
     return @decision
   end
