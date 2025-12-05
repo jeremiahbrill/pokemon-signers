@@ -30,8 +30,8 @@ The user attacks by biting the target. If the target is holding a Berry, the use
 The user attacks by biting the target. If the target is holding a Berry, the user eats it and gains its effect.
 The user attacks the target with powdery scales blown by the wind. This may also raise all the user's stats.
 The user attacks the target with powdery scales blown by the wind. This may also raise all the user's stats.
-When the user knocks out a target with this move, the user’s Attack stat is raised sharply.
-When the user knocks out a target with this move, the user’s Attack stat is raised sharply.
+When the user knocks out a target with this move, the user's Attack stat is raised sharply.
+When the user knocks out a target with this move, the user's Attack stat is raised sharply.
 When the user knocks out a target with this move, the user's Attack stat is raised drastically.
 When the user knocks out a target with this move, the user's Attack stat is raised drastically.
 The user attacks by pouncing on the target. This also lowers the target's Speed stat.
