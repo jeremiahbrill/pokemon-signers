@@ -18,6 +18,10 @@ module GameData
     attr_writer :real_description
   end
 
+  class Item
+    attr_writer :real_description
+  end
+
   class Species
     attr_writer :real_pokedex_entry
   end
@@ -122,21 +126,21 @@ end
 #===============================================================================
 # Add this to the debug menu.
 #===============================================================================
-MenuHandlers.add(:debug_menu, :edit_ability_descriptions, {
-  "name"        => "Edit ability descriptions",
-  "parent"      => :main,
-  "description" => "Edit ability descriptions",
-  "always_show" => true,
-  "effect"      => proc { |sprites, viewport|
-    screen = DescriptionEditorAbility.new
-    loop do
-      Graphics.update
-      Input.update
-      screen.update
-      break if screen.disposed?
-    end
-  }
-})
+# MenuHandlers.add(:debug_menu, :edit_ability_descriptions, {
+#   "name"        => "Edit ability descriptions",
+#   "parent"      => :main,
+#   "description" => "Edit ability descriptions",
+#   "always_show" => true,
+#   "effect"      => proc { |sprites, viewport|
+#     screen = DescriptionEditorAbility.new
+#     loop do
+#       Graphics.update
+#       Input.update
+#       screen.update
+#       break if screen.disposed?
+#     end
+#   }
+# })
 
 #===============================================================================
 #
@@ -288,13 +292,149 @@ end
 #===============================================================================
 # Add this to the debug menu.
 #===============================================================================
-MenuHandlers.add(:debug_menu, :edit_move_descriptions, {
-  "name"        => "Edit move descriptions",
+# MenuHandlers.add(:debug_menu, :edit_move_descriptions, {
+#   "name"        => "Edit move descriptions",
+#   "parent"      => :main,
+#   "description" => "Edit move descriptions",
+#   "always_show" => true,
+#   "effect"      => proc { |sprites, viewport|
+#     screen = DescriptionEditorMove.new
+#     loop do
+#       Graphics.update
+#       Input.update
+#       screen.update
+#       break if screen.disposed?
+#     end
+#   }
+# })
+
+#===============================================================================
+#
+#===============================================================================
+class DescriptionEditorItem
+  UI_FOLDER = "Graphics/UI/"
+  BG_PAGE   = "Items"
+
+  def initialize
+    @viewport = Viewport.new(0, 0, Graphics.width, Graphics.height)
+    @viewport.z = 99999 + 100
+    @background = IconSprite.new(0, 0, @viewport)
+    @background.setBitmap("Graphics/UI/Bag/bg_#{BG_PAGE}")
+
+    @bitmaps = {}
+    @bitmaps[:types]       = AnimatedBitmap.new(UI_FOLDER + _INTL("types"))
+
+    @overlay = BitmapSprite.new(Graphics.width, Graphics.height, @viewport)
+    @overlay.z = 1
+    @overlay.add_text_theme(:default, Color.new(64, 64, 64), Color.new(176, 176, 176))
+    @overlay.add_text_theme(:black, Color.new(64, 64, 64), Color.new(176, 176, 176))
+    @overlay.add_text_theme(:white, Color.new(248, 248, 248), Color.new(104, 104, 104))
+    pbSetSystemFont(@overlay.bitmap)
+
+    @text_box = UIControls::TextBox.new(Graphics.width, 24, @viewport)
+    @text_box.box_width = Graphics.width
+    @text_box.y = 4
+    @text_box.z = 2
+    @text_box.set_interactive_rects
+
+    @sprite_item_description = Window_UnformattedTextPokemon.newWithSize(
+      "", 76, 272, Graphics.width - 98, 128, @viewport
+    )
+    @sprite_item_description.baseColor   = Color.new(248, 248, 248)
+    @sprite_item_description.shadowColor = Color.new(40, 40, 40)
+    @sprite_item_description.visible     = true
+    @sprite_item_description.windowskin  = nil
+
+    @item_index = -1
+    @item_keys = GameData::Item.keys
+    change_item_index(1)
+    @disposed = false
+  end
+
+  def dispose
+    @text_box.dispose
+    @sprite_item_description.dispose
+    @background.dispose
+    @overlay.dispose
+    @viewport.dispose
+    @bitmaps.each_pair { |key, bitmap| bitmap&.dispose if !bitmap.disposed? }
+    @bitmaps.clear
+    @disposed = true
+  end
+
+  def disposed?
+    return @disposed
+  end
+
+  def change_item_index(offset)
+    return if offset == 0
+    new_val = [[@item_index + offset, 0].max, @item_keys.length - 1].min
+    return if @item_index == new_val
+    @item_index = new_val
+    @item = GameData::Item.get(@item_keys[@item_index])
+    @text_box.value = @item.real_description.clone
+    refresh_overlay
+  end
+
+  def refresh_overlay
+    @overlay.bitmap.clear
+    @overlay.bitmap.fill_rect(0, 0, Graphics.width, 32, Color.new(255, 255, 255))
+    base   = Color.new(64, 64, 64)
+    shadow = Color.new(176, 176, 176)
+    # Draw item name
+    item_name_x = 166 + 16 + 16
+    item_name_y = 28 + 16 + 24
+    item_name = @item.name
+    @overlay.draw_themed_text(item_name, item_name_x, item_name_y, :left, :black)
+    # Item index
+    @overlay.draw_themed_text(sprintf("%d/%d", @item_index + 1, @item_keys.length),
+                              item_name_x, item_name_y + 32, :left, :black)
+    # Pocket
+    @overlay.draw_themed_text(@item.bag_pocket.to_s + " pocket",
+                              item_name_x, item_name_y + 64, :left, :black)
+    # Item description
+    @sprite_item_description.text = @text_box.value
+  end
+
+  def update
+    old_text = @text_box.value.clone
+    old_busy = @text_box.busy?
+    @text_box.update
+    @text_box.repaint
+    @sprite_item_description.text = @text_box.value
+    if !@text_box.busy?
+      if Input.repeat?(Input::UP)
+        change_item_index(-1)
+      elsif Input.repeat?(Input::DOWN)
+        change_item_index(1)
+      elsif Input.repeat?(Input::QUICK_UP)
+        change_item_index(-10)
+      elsif Input.repeat?(Input::QUICK_DOWN)
+        change_item_index(10)
+      elsif Input.trigger?(Input::ACTION)
+        pbPlayDecisionSE
+        @item.real_description = @text_box.value.clone
+      # elsif Input.trigger?(Input::SPECIAL)
+      #   @text_box.value = @item.real_description.clone
+      #   @sprite_item_description.text = @text_box.value
+      elsif Input.trigger?(Input::BACK)
+        pbPlayCancelSE
+        dispose
+      end
+    end
+  end
+end
+
+#===============================================================================
+# Add this to the debug menu.
+#===============================================================================
+MenuHandlers.add(:debug_menu, :edit_item_descriptions, {
+  "name"        => "Edit item descriptions",
   "parent"      => :main,
-  "description" => "Edit move descriptions",
+  "description" => "Edit item descriptions",
   "always_show" => true,
   "effect"      => proc { |sprites, viewport|
-    screen = DescriptionEditorMove.new
+    screen = DescriptionEditorItem.new
     loop do
       Graphics.update
       Input.update
