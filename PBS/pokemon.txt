@@ -6196,7 +6196,7 @@ Habitat = Forest
 Category = Big Horn
 Pokedex = Stantler's magnificent antlers were once traded at high prices as works of art. As a result, this Pokémon was hunted close to extinction.
 Generation = 2
-Evolution = WYRDEER,HasMove,PSYSHIELDBASH
+Evolution = WYRDEER,Counter,20
 #-------------------------------
 [SMEARGLE]
 Name = Smeargle

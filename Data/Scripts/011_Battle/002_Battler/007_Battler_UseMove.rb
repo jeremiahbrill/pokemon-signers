@@ -260,6 +260,9 @@ class Battle::Battler
     if @pokemon.isSpecies?(:PRIMEAPE) && @lastMoveUsed == :RAGEFIST
       @pokemon.evolution_counter += 1
     end
+    if @pokemon.isSpecies?(:STANTLER) && @lastMoveUsed == :PSYSHIELDBASH
+      @pokemon.evolution_counter += 1
+    end
     if !specialUsage
       @lastRegularMoveUsed   = move.id   # For Disable, Encore, Instruct, Mimic, Mirror Move, Sketch, Spite
       @lastRegularMoveTarget = choice[3]   # For Instruct (remembering original target is fine)
