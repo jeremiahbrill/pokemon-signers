@@ -3,7 +3,25 @@
 #===============================================================================
 module Settings
   #-----------------------------------------------------------------------------
-  # Turn order and disobedience
+  # UI.
+  #-----------------------------------------------------------------------------
+
+  # Whether the main color of a move's name in the Fight menu in battle matches
+  # the pixel at coordinate (10,34) in cursor_fight.png for that move's type
+  # (true), or whether the move name's color is the default black (false).
+  BATTLE_MOVE_NAME_COLOR_FROM_GRAPHIC = true
+  # Whether the data box for a selected Pokémon in battle (either because you're
+  # choosing a command for it or targeting it) moves up and down a little.
+  BOB_BATTLE_DATA_BOX_IF_SELECTED = true
+  # Whether the sprite of a selected Pokémon in battle (when choosing a command
+  # for it) moves up and down a little.
+  BOB_BATTLER_SPRITE_IF_SELECTED = true
+  # Whether the sprite of a selected Pokémon in battle (when targeting it)
+  # flashes visible/invisible.
+  FLASH_BATTLER_SPRITE_IF_TARGETED = true
+
+  #-----------------------------------------------------------------------------
+  # Turn order and disobedience.
   #-----------------------------------------------------------------------------
 
   # Whether turn order is recalculated after a Pokémon Mega Evolves.
@@ -19,7 +37,7 @@ module Settings
   FOREIGN_HIGH_LEVEL_POKEMON_CAN_DISOBEY      = true
 
   #-----------------------------------------------------------------------------
-  # Mega Evolution
+  # Mega Evolution.
   #-----------------------------------------------------------------------------
 
   # The Game Switch which, while ON, prevents all Pokémon in battle from Mega
@@ -27,7 +45,7 @@ module Settings
   NO_MEGA_EVOLUTION = 34
 
   #-----------------------------------------------------------------------------
-  # Move usage calculations
+  # Move usage calculations.
   #-----------------------------------------------------------------------------
 
   # Whether a move's physical/special category depends on the move itself as in
@@ -38,21 +56,21 @@ module Settings
   # critical hit rate can be copied by Transform/Psych Up.
   NEW_CRITICAL_HIT_RATE_MECHANICS = (MECHANICS_GENERATION >= 6)
   # Whether several effects apply relating to a Pokémon's type:
-  #   * Electric-type immunity to paralysis
-  #   * Ghost-type immunity to being trapped
-  #   * Grass-type immunity to powder moves and Effect Spore
-  #   * Poison-type Pokémon can't miss when using Toxic
+  #   * Electric-type immunity to paralysis.
+  #   * Ghost-type immunity to being trapped.
+  #   * Grass-type immunity to powder moves and Effect Spore.
+  #   * Poison-type Pokémon can't miss when using Toxic.
   MORE_TYPE_EFFECTS               = (MECHANICS_GENERATION >= 6)
   # The minimum number of Gym Badges required to boost each stat of a player's
   # Pokémon by 1.1x, in battle only.
-  NUM_BADGES_BOOST_ATTACK  = (MECHANICS_GENERATION >= 4) ? 999 : 1
-  NUM_BADGES_BOOST_DEFENSE = (MECHANICS_GENERATION >= 4) ? 999 : 5
-  NUM_BADGES_BOOST_SPATK   = (MECHANICS_GENERATION >= 4) ? 999 : 7
-  NUM_BADGES_BOOST_SPDEF   = (MECHANICS_GENERATION >= 4) ? 999 : 7
-  NUM_BADGES_BOOST_SPEED   = (MECHANICS_GENERATION >= 4) ? 999 : 3
+  NUM_BADGES_BOOST_ATTACK          = (MECHANICS_GENERATION >= 4) ? 999 : 1
+  NUM_BADGES_BOOST_DEFENSE         = (MECHANICS_GENERATION >= 4) ? 999 : 5
+  NUM_BADGES_BOOST_SPECIAL_ATTACK  = (MECHANICS_GENERATION >= 4) ? 999 : 7
+  NUM_BADGES_BOOST_SPECIAL_DEFENSE = (MECHANICS_GENERATION >= 4) ? 999 : 7
+  NUM_BADGES_BOOST_SPEED           = (MECHANICS_GENERATION >= 4) ? 999 : 3
 
   #-----------------------------------------------------------------------------
-  # Move, ability and item effects
+  # Move, ability and item effects.
   #-----------------------------------------------------------------------------
 
   # Whether a battle's default weather or default terrain can (false) or cannot
@@ -69,19 +87,19 @@ module Settings
   # Whether X items (X Attack, etc.) raise their stat by 2 stages (true) or 1
   # (false).
   X_STAT_ITEMS_RAISE_BY_TWO_STAGES               = (MECHANICS_GENERATION >= 7)
-  # Whether some Poké Balls have catch rate multipliers from Gen 7 (true) or
+  # Whether some Poké Balls have catch rate multipliers from Gen 7+ (true) or
   # from earlier generations (false).
   NEW_POKE_BALL_CATCH_RATES                      = (MECHANICS_GENERATION >= 7)
   # Whether Soul Dew powers up Psychic and Dragon-type moves by 20% (true) or
   # raises the holder's Special Attack and Special Defense by 50% (false).
   SOUL_DEW_POWERS_UP_TYPES                       = (MECHANICS_GENERATION >= 7)
   # Whether Greninja's Battle Bond ability makes it change into Ash-Greninja
-  # (false) or raises its Atk/SpAtk/Spd (true) when it knocks out a target.
-  # Either way, it only happens once per battle.
+  # (false) or raises its Attack/Sp. Atk/Speed (true) when it knocks out a
+  # target. Either way, it only happens once per battle.
   GRENINJA_BATTLE_BOND_RAISES_STATS              = (MECHANICS_GENERATION >= 9)
 
   #-----------------------------------------------------------------------------
-  # Affection
+  # Affection.
   #-----------------------------------------------------------------------------
 
   # Whether Pokémon with high happiness will gain more Exp from battles, have a
@@ -95,20 +113,20 @@ module Settings
   APPLY_HAPPINESS_SOFT_CAP = AFFECTION_EFFECTS
 
   #-----------------------------------------------------------------------------
-  # Capturing Pokémon
+  # Capturing Pokémon.
   #-----------------------------------------------------------------------------
 
   # Whether it is easier for wild Pokémon below level 13 to be caught.
   CATCH_RATE_BONUS_FOR_LOW_LEVEL                      = (MECHANICS_GENERATION >= 8)
-  # If the player doesn't have at least this number of Gym Badges, the chance of
-  # catching any wild Pokémon whose level is higher than the player's Pokémon
-  # will be divided by 10. 0 means this penalty never applies. Note that this
-  # shouldn't be used with the Setting directly below.
+  # If the player has fewer Gym Badges than this, the chance of catching any
+  # wild Pokémon whose level is higher than the player's Pokémon will be divided
+  # by 10. 0 means this penalty never applies. Note that this shouldn't be used
+  # with the CATCH_RATE_PENALTY_IF_POKEMON_WILL_NOT_OBEY Setting.
   NUM_BADGES_TO_NOT_MAKE_HIGHER_LEVEL_CAPTURES_HARDER = (MECHANICS_GENERATION == 8) ? 8 : 0
   # If true, wild Pokémon that would disobey the player because of their level
   # (except if it's within 5 levels of the maximum obedience level) will be
-  # harder to catch. Note that this shouldn't be used with the Setting directly
-  # above.
+  # harder to catch. Note that this shouldn't be used with the
+  # NUM_BADGES_TO_NOT_MAKE_HIGHER_LEVEL_CAPTURES_HARDER Setting.
   CATCH_RATE_PENALTY_IF_POKEMON_WILL_NOT_OBEY         = (MECHANICS_GENERATION >= 9)
   # Whether the critical capture mechanic applies. Note that its calculation is
   # based on a total of 600+ species (i.e. that many species need to be caught
@@ -121,7 +139,7 @@ module Settings
   NEW_CAPTURE_CAN_REPLACE_PARTY_MEMBER                = (MECHANICS_GENERATION >= 7)
 
   #-----------------------------------------------------------------------------
-  # Exp and EV gain
+  # Exp and EV gain.
   #-----------------------------------------------------------------------------
 
   # Whether the Exp gained from beating a Pokémon should be scaled depending on
@@ -142,21 +160,23 @@ module Settings
   GAIN_EXP_FOR_CAPTURE          = (MECHANICS_GENERATION >= 6)
 
   #-----------------------------------------------------------------------------
-  # End of battle
+  # End of battle.
   #-----------------------------------------------------------------------------
 
+  # Whether the Run command in trainer battles allows the player to end the
+  # battle as their loss (true) or does nothing (false).
   CAN_FORFEIT_TRAINER_BATTLES         = (MECHANICS_GENERATION >= 9)
   # The Game Switch which, while ON, prevents the player from losing money if
   # they lose a battle (they can still gain money from trainers for winning).
   NO_MONEY_LOSS                       = 33
-  # Whether party Pokémon check whether they can evolve after all battles
-  # regardless of the outcome (true), or only after battles the player won (false).
+  # Whether party Pokémon check if they can evolve after all battles regardless
+  # of the outcome (true), or only after battles the player won (false).
   CHECK_EVOLUTION_AFTER_ALL_BATTLES   = (MECHANICS_GENERATION >= 6)
   # Whether fainted Pokémon can try to evolve after a battle.
   CHECK_EVOLUTION_FOR_FAINTED_POKEMON = true
 
   #-----------------------------------------------------------------------------
-  # AI
+  # AI.
   #-----------------------------------------------------------------------------
 
   # Whether wild Pokémon with the "Legendary", "Mythical" or "UltraBeast" flag

@@ -9,15 +9,27 @@ module Settings
   GAME_VERSION = "1.0.0"
 
   # The generation that the battle system follows. Used throughout the battle
-  # scripts, and also by some other settings which are used in and out of battle
-  # (you can of course change those settings to suit your game).
+  # scripts, and also by some other Settings which are used in and out of battle
+  # (you can of course change those Settings to suit your game).
   # Note that this isn't perfect. Essentials doesn't accurately replicate every
   # single generation's mechanics. It's considered to be good enough. Only
   # generations 5 and later are reasonably supported.
   MECHANICS_GENERATION = 9
 
+  # The save slot options available to the player. Is one of:
+  #   * :one       = Classic saving. There is only one save file and it is
+  #                  replaced upon saving..
+  #   * :adventure = Each adventure (i.e. starting a New Game) has its own
+  #                  single save slot. Allows the player to have multiple
+  #                  adventures saved, but each adventure behaves clasically
+  #                  when it comes to saving.
+  #   * :multiple  = An infinite number of save slots are always available. The
+  #                  player can choose to save in an empty save slot at any
+  #                  time, or overwrite an existing save slot.
+  SAVE_SLOTS = :multiple
+
   #-----------------------------------------------------------------------------
-  # Credits
+  # Credits.
   #-----------------------------------------------------------------------------
 
   # Your game's credits, in an array. You can allow certain lines to be
@@ -25,6 +37,7 @@ module Settings
   # To split a line into two columns, put "<s>" in it. Plugin credits and
   # Essentials engine credits are added to the end of these credits
   # automatically.
+  # Everything in here is just an example! Replace it all with your credits.
   def self.game_credits
     return [
       _INTL("My Game by:"),
@@ -42,7 +55,7 @@ module Settings
   end
 
   #-----------------------------------------------------------------------------
-  # The player and NPCs
+  # The player and NPCs.
   #-----------------------------------------------------------------------------
 
   # The maximum amount of money the player can have.
@@ -65,7 +78,7 @@ module Settings
   ]
 
   #-----------------------------------------------------------------------------
-  # Overworld
+  # Overworld.
   #-----------------------------------------------------------------------------
 
   # Whether outdoor maps should be shaded according to the time of day.
@@ -74,7 +87,7 @@ module Settings
   ANIMATE_REFLECTIONS        = true
   # Whether planted berries grow according to Gen 4 mechanics (true) or Gen 3
   # mechanics (false).
-  NEW_BERRY_PLANTS           = (MECHANICS_GENERATION >= 4)
+  NEW_BERRY_PLANT_MECHANICS  = (MECHANICS_GENERATION >= 4)
   # Whether fishing automatically hooks the Pokémon (true), or whether there is
   # a reaction test first (false).
   FISHING_AUTO_HOOK          = false
@@ -84,17 +97,10 @@ module Settings
   # The ID of the common event that runs when the player stops fishing (runs
   # instead of showing the reeling in animation).
   FISHING_END_COMMON_EVENT   = -1
-  # The number of steps allowed before a Safari Zone game is over (0=infinite).
+  # The number of steps allowed in a Safari Zone game before it ends (0=infinite).
   SAFARI_STEPS               = 600
   # The number of seconds a Bug-Catching Contest lasts for (0=infinite).
   BUG_CONTEST_TIME           = 20 * 60   # 20 minutes
-  # Pairs of map IDs, where the location sign isn't shown when moving from one
-  # of the maps in a pair to the other (and vice versa). Useful for single long
-  # routes/towns that are spread over multiple maps.
-  #   e.g. [4,5,16,17,42,43] will be map pairs 4,5 and 16,17 and 42,43.
-  # Moving between two maps that have the exact same name won't show the
-  # location sign anyway, so you don't need to list those maps here.
-  NO_LOCATION_SIGNS          = []
   # Whether poisoned Pokémon will lose HP while walking around in the field.
   POISON_IN_FIELD            = (MECHANICS_GENERATION <= 4)
   # Whether poisoned Pokémon will faint while walking around in the field
@@ -102,18 +108,18 @@ module Settings
   POISON_FAINT_IN_FIELD      = (MECHANICS_GENERATION <= 3)
 
   #-----------------------------------------------------------------------------
-  # Using moves in the overworld
+  # Using moves in the overworld.
   #-----------------------------------------------------------------------------
-  # Whether you need at least a certain number of badges to use some hidden
-  # moves in the field (true), or whether you need one specific badge to use
-  # them (false). The amounts/specific badges are defined below.
+  # Whether you need at least a certain number of Gym Badges to use some hidden
+  # moves in the field (true), or whether you need one specific Gym Badge to use
+  # them (false). The amounts/specific Gym Badges are defined below.
   FIELD_MOVES_COUNT_BADGES = true
-  # Depending on FIELD_MOVES_COUNT_BADGES, either the number of badges required
-  # to use each hidden move in the field, or the specific badge number required
-  # to use each move. Remember that badge 0 is the first badge, badge 1 is the
-  # second badge, etc.
-  #   e.g. To require the second badge, put false and 1.
-  #        To require at least 2 badges, put true and 2.
+  # Depending on FIELD_MOVES_COUNT_BADGES, either the number of Gym Badges
+  # required to use each hidden move in the field, or the specific Gym Badge
+  # required to use each move. Remember that Gym Badge 0 is the first Gym Badge,
+  # Gym Badge 1 is the second Gym Badge, etc.
+  #   e.g. To specifically require the second Gym Badge, put false and 1.
+  #        To require at least 2 Gym Badges, put true and 2.
   BADGE_FOR_CUT       = 1
   BADGE_FOR_FLASH     = 2
   BADGE_FOR_ROCKSMASH = 3
@@ -124,38 +130,38 @@ module Settings
   BADGE_FOR_WATERFALL = 8
 
   #-----------------------------------------------------------------------------
-  # Pokémon
+  # Pokémon.
   #-----------------------------------------------------------------------------
 
   # The maximum level Pokémon can reach.
-  MAXIMUM_LEVEL                       = 100
+  MAXIMUM_LEVEL                            = 100
   # The level of newly hatched Pokémon.
-  EGG_LEVEL                           = 1
+  EGG_LEVEL                                = 1
   # The odds of a newly generated Pokémon being shiny (out of 65536).
-  SHINY_POKEMON_CHANCE                = (MECHANICS_GENERATION >= 6) ? 16 : 8
+  SHINY_POKEMON_CHANCE                     = (MECHANICS_GENERATION >= 6) ? 16 : 8
   # Whether super shininess is enabled (uses a different shiny animation).
-  SUPER_SHINY                         = (MECHANICS_GENERATION == 8)
+  SUPER_SHINY                              = (MECHANICS_GENERATION == 8)
   # Whether Pokémon with the "Legendary", "Mythical" or "Ultra Beast" flags will
   # have at least 3 perfect IVs.
-  LEGENDARIES_HAVE_SOME_PERFECT_IVS   = (MECHANICS_GENERATION >= 6)
+  LEGENDARIES_HAVE_SOME_PERFECT_IVS        = (MECHANICS_GENERATION >= 6)
   # The odds of a wild Pokémon/bred egg having Pokérus (out of 65536).
-  POKERUS_CHANCE                      = 3
+  POKERUS_CHANCE                           = 3
   # Whether IVs and EVs are treated as 0 when calculating a Pokémon's stats.
   # IVs and EVs still exist, and are used by Hidden Power and some cosmetic
   # things as normal.
-  DISABLE_IVS_AND_EVS                 = false
+  DISABLE_IVS_AND_EVS                      = false
   # Whether the Move Relearner can also teach egg moves that the Pokémon knew
   # when it hatched and moves that the Pokémon was once taught by a TR. Moves
   # from the Pokémon's level-up moveset of the same or a lower level than the
   # Pokémon can always be relearned.
-  MOVE_RELEARNER_CAN_TEACH_MORE_MOVES = (MECHANICS_GENERATION >= 6)
+  MOVE_RELEARNER_CAN_TEACH_MORE_MOVES      = (MECHANICS_GENERATION >= 6)
   # Whether the Move Relearner can teach all moves in the Pokémon's moveset
   # (true) or only the moves normally learned at/below the Pokémon's current
   # level (false).
   MOVE_RELEARNER_CAN_TEACH_ANY_LEVEL_MOVES = (MECHANICS_GENERATION == 7)
 
   #-----------------------------------------------------------------------------
-  # Breeding Pokémon and Day Care
+  # Breeding Pokémon and Day Care.
   #-----------------------------------------------------------------------------
 
   # Whether Pokémon in the Day Care gain Exp for each step the player takes.
@@ -173,7 +179,7 @@ module Settings
   BREEDING_CAN_INHERIT_EGG_MOVES_FROM_MOTHER = (MECHANICS_GENERATION >= 6)
 
   #-----------------------------------------------------------------------------
-  # Roaming Pokémon
+  # Roaming Pokémon.
   #-----------------------------------------------------------------------------
 
   # A list of maps used by roaming Pokémon. Each map has an array of other maps
@@ -198,9 +204,9 @@ module Settings
   #   * :game_switch - The Pokémon roams if this is nil or <=0 or if that Game
   #                    Switch is ON. Optional.
   #   * :encounter_type - One of:
-  #       :all = grass, walking in cave, surfing (default)
-  #       :land = grass, walking in cave
-  #       :water = surfing, fishing
+  #       :all     = grass, walking in cave, surfing (default)
+  #       :land    = grass, walking in cave
+  #       :water   = surfing, fishing
   #       :surfing = surfing
   #       :fishing = fishing
   #   * :bgm - The BGM to play for the encounter. Optional.
@@ -245,7 +251,7 @@ module Settings
   ]
 
   #-----------------------------------------------------------------------------
-  # Party and Pokémon storage
+  # Party and Pokémon storage.
   #-----------------------------------------------------------------------------
 
   # The maximum number of Pokémon that can be in the party.
@@ -257,7 +263,7 @@ module Settings
   HEAL_STORED_POKEMON = (MECHANICS_GENERATION <= 7)
 
   #-----------------------------------------------------------------------------
-  # Items
+  # Items.
   #-----------------------------------------------------------------------------
 
   # Whether various HP-healing items heal the amounts they do in Gen 7+ (true)
@@ -279,7 +285,7 @@ module Settings
   # Pokémon. This applies to Exp-changing items (Rare Candy, Exp Candies) and
   # EV-changing items (vitamins, feathers, EV-lowering berries).
   USE_MULTIPLE_STAT_ITEMS_AT_ONCE      = (MECHANICS_GENERATION >= 8)
-  # If a move taught by a TM/HM/TR replaces another move, this setting is
+  # If a move taught by a TM/HM/TR replaces another move, this Setting is
   # whether the machine's move retains the replaced move's PP (true), or whether
   # the machine's move has full PP (false).
   TAUGHT_MACHINES_KEEP_OLD_PP          = (MECHANICS_GENERATION == 5)
@@ -292,7 +298,7 @@ module Settings
   ITEM_SELL_PRICE_DIVISOR              = (MECHANICS_GENERATION >= 9) ? 4 : 2
 
   #-----------------------------------------------------------------------------
-  # Pokédex
+  # Pokédex.
   #-----------------------------------------------------------------------------
 
   # The names of the Regional Pokédex lists, in the order they are defined in
@@ -310,11 +316,6 @@ module Settings
       _INTL("National Pokédex")
     ]
   end
-  # Whether all forms of a given species will be immediately available to view
-  # in the Pokédex so long as that species has been seen at all (true), or
-  # whether each form needs to be seen specifically before that form appears in
-  # the Pokédex (false).
-  DEX_SHOWS_ALL_FORMS                       = false
   # An array of numbers, where each number is that of a Dex list (in the same
   # order as above, except the National Dex is -1). All Dex lists included here
   # will begin their numbering at 0 rather than 1 (e.g. Victini in Unova's Dex).
@@ -325,41 +326,16 @@ module Settings
   SHOW_NEW_SPECIES_POKEDEX_ENTRY_MORE_OFTEN = (MECHANICS_GENERATION >= 7)
 
   #-----------------------------------------------------------------------------
-  # Town Map
+  # Phone contact rematches.
   #-----------------------------------------------------------------------------
 
-  # A set of arrays, each containing details of a graphic to be shown on the
-  # region map if appropriate. The values for each array are as follows:
-  #   * Region number.
-  #   * Game Switch; the graphic is shown if this is ON (non-wall maps only).
-  #   * X coordinate of the graphic on the map, in squares.
-  #   * Y coordinate of the graphic on the map, in squares.
-  #   * Name of the graphic, found in the Graphics/UI/Town Map folder.
-  #   * The graphic will always (true) or never (false) be shown on a wall map.
-  REGION_MAP_EXTRAS = [
-    [0, 51, 16, 15, "hidden_Berth", false],
-    [0, 52, 20, 14, "hidden_Faraday", false]
-  ]
-  # Whether the player can use Fly while looking at the Town Map. This is only
-  # allowed if the player can use Fly normally.
-  CAN_FLY_FROM_TOWN_MAP = true
-
-  #-----------------------------------------------------------------------------
-  # Phone
-  #-----------------------------------------------------------------------------
-
-  # The default setting for Phone.rematches_enabled, which determines whether
+  # The default value of Phone.rematches_enabled, which determines whether
   # trainers registered in the Phone can become ready for a rematch. If false,
   # Phone.rematches_enabled = true will enable rematches at any point you want.
-  PHONE_REMATCHES_POSSIBLE_FROM_BEGINNING     = false
-  # Whether the messages in a phone call with a trainer are colored blue or red
-  # depending on that trainer's gender. Note that this doesn't apply to contacts
-  # whose phone calls are in a Common Event; they will need to be colored
-  # manually in their Common Events.
-  COLOR_PHONE_CALL_MESSAGES_BY_CONTACT_GENDER = true
+  PHONE_REMATCHES_POSSIBLE_FROM_BEGINNING = false
 
   #-----------------------------------------------------------------------------
-  # Battle starting
+  # Battle starting.
   #-----------------------------------------------------------------------------
 
   # Whether Repel uses the level of the first Pokémon in the party regardless of
@@ -376,7 +352,7 @@ module Settings
   OVERWORLD_WEATHER_SETS_BATTLE_TERRAIN    = (MECHANICS_GENERATION >= 8)
 
   #-----------------------------------------------------------------------------
-  # Game Switches
+  # Game Switches.
   #-----------------------------------------------------------------------------
 
   # The Game Switch that is set to ON when the player blacks out.
@@ -395,7 +371,7 @@ module Settings
   DISABLE_BOX_LINK_SWITCH   = 35
 
   #-----------------------------------------------------------------------------
-  # Overworld animation IDs
+  # Overworld animation IDs.
   #-----------------------------------------------------------------------------
 
   # ID of the animation played when the player steps on grass (grass rustling).
@@ -423,7 +399,7 @@ module Settings
   PLANT_SPARKLE_ANIMATION_ID   = 7
 
   #-----------------------------------------------------------------------------
-  # Files
+  # Files.
   #-----------------------------------------------------------------------------
 
   DEFAULT_WILD_BATTLE_BGM     = "Battle wild"
@@ -433,7 +409,7 @@ module Settings
   DEFAULT_TRAINER_VICTORY_BGM = "Battle victory"
 
   #-----------------------------------------------------------------------------
-  # Languages
+  # Languages.
   #-----------------------------------------------------------------------------
 
   # An array of available languages in the game. Each one is an array containing
@@ -447,7 +423,7 @@ module Settings
   ]
 
   #-----------------------------------------------------------------------------
-  # Screen size and zoom
+  # Screen size and zoom.
   #-----------------------------------------------------------------------------
 
   # The default screen width (at a scale of 1.0). You should also edit the
@@ -460,67 +436,7 @@ module Settings
   SCREEN_SCALE  = 1.0
 
   #-----------------------------------------------------------------------------
-  # Messages
-  #-----------------------------------------------------------------------------
-
-  # Available speech frames. These are graphic files in "Graphics/Windowskins/".
-  SPEECH_WINDOWSKINS = [
-    "speech hgss 1",
-    "speech hgss 2",
-    "speech hgss 3",
-    "speech hgss 4",
-    "speech hgss 5",
-    "speech hgss 6",
-    "speech hgss 7",
-    "speech hgss 8",
-    "speech hgss 9",
-    "speech hgss 10",
-    "speech hgss 11",
-    "speech hgss 12",
-    "speech hgss 13",
-    "speech hgss 14",
-    "speech hgss 15",
-    "speech hgss 16",
-    "speech hgss 17",
-    "speech hgss 18",
-    "speech hgss 19",
-    "speech hgss 20",
-    "speech pl 18"
-  ]
-  # Available menu frames. These are graphic files in "Graphics/Windowskins/".
-  MENU_WINDOWSKINS = [
-    "choice 1",
-    "choice 2",
-    "choice 3",
-    "choice 4",
-    "choice 5",
-    "choice 6",
-    "choice 7",
-    "choice 8",
-    "choice 9",
-    "choice 10",
-    "choice 11",
-    "choice 12",
-    "choice 13",
-    "choice 14",
-    "choice 15",
-    "choice 16",
-    "choice 17",
-    "choice 18",
-    "choice 19",
-    "choice 20",
-    "choice 21",
-    "choice 22",
-    "choice 23",
-    "choice 24",
-    "choice 25",
-    "choice 26",
-    "choice 27",
-    "choice 28"
-  ]
-
-  #-----------------------------------------------------------------------------
-  # Debug helpers
+  # Debug helpers.
   #-----------------------------------------------------------------------------
 
   # Whether the game will ask you if you want to fully compile every time you
