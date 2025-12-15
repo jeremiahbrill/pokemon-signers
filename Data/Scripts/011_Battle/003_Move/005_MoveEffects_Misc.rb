@@ -635,6 +635,10 @@ class Battle::Move::RemoveUserBindingAndEntryHazards < Battle::Move::StatUpMove
     @statUp = [:SPEED, 1]
   end
 
+  def pbAdditionalEffect(user, target)
+    super if Settings::MECHANICS_GENERATION >= 8
+  end
+
   def pbEffectAfterAllHits(user, target)
     return if user.fainted? || target.damageState.unaffected
     if user.effects[PBEffects::Trapping] > 0
@@ -665,10 +669,6 @@ class Battle::Move::RemoveUserBindingAndEntryHazards < Battle::Move::StatUpMove
       user.pbOwnSide.effects[PBEffects::StickyWeb] = false
       @battle.pbDisplay(_INTL("{1} blew away sticky webs!", user.pbThis))
     end
-  end
-
-  def pbAdditionalEffect(user, target)
-    super if Settings::MECHANICS_GENERATION >= 8
   end
 end
 

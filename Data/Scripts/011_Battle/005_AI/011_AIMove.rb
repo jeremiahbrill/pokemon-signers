@@ -314,14 +314,14 @@ class Battle::AI::AIMove
     if @ai.trainer.high_skill? && user.battler.pbOwnedByPlayer?
       if physicalMove?(calc_type) && @ai.battle.pbPlayer.badge_count >= Settings::NUM_BADGES_BOOST_ATTACK
         multipliers[:attack_multiplier] *= 1.1
-      elsif specialMove?(calc_type) && @ai.battle.pbPlayer.badge_count >= Settings::NUM_BADGES_BOOST_SPATK
+      elsif specialMove?(calc_type) && @ai.battle.pbPlayer.badge_count >= Settings::NUM_BADGES_BOOST_SPECIAL_ATTACK
         multipliers[:attack_multiplier] *= 1.1
       end
     end
     if @ai.trainer.high_skill? && target.battler.pbOwnedByPlayer?
       if physicalMove?(calc_type) && @ai.battle.pbPlayer.badge_count >= Settings::NUM_BADGES_BOOST_DEFENSE
         multipliers[:defense_multiplier] *= 1.1
-      elsif specialMove?(calc_type) && @ai.battle.pbPlayer.badge_count >= Settings::NUM_BADGES_BOOST_SPDEF
+      elsif specialMove?(calc_type) && @ai.battle.pbPlayer.badge_count >= Settings::NUM_BADGES_BOOST_SPECIAL_DEFENSE
         multipliers[:defense_multiplier] *= 1.1
       end
     end

@@ -29,11 +29,18 @@ module Battle::CatchAndStoreMixin
         cmd += 1 if cmd >= 1 && @sendToBoxes == 2
         case cmd
         when 0   # Add to your party
+          can_store = false
+          eachInTeam(0, 0) do |pkmn, i|
+            can_store = true if !pkmn.cannot_store
+            break if can_store
+          end
+          if !can_store
+            pbDisplay(_INTL("You can't make room in your party for {1}!", pkmn.name))
+            break
+          end
           pbDisplay(_INTL("Choose a Pokémon in your party to send to your Boxes."))
           party_index = -1
           @scene.pbPartyScreen(0, (@sendToBoxes != 2), 1) do |idxParty, _party_screen|
-            # TODO: Check pkmn.cannot_store. Also figure something out if every
-            #       party Pokémon has that.
             party_index = idxParty
             next true
           end

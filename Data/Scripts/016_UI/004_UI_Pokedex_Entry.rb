@@ -361,7 +361,7 @@ class UI::PokedexEntryVisuals < UI::BaseVisuals
       if sp.single_gendered?   # Or genderless
         real_gender = (sp.gender_ratio == :AlwaysFemale) ? 1 : 0
         [false, true].each do |real_shiny|
-          next if !$player.pokedex.seen_form?(@species, real_gender, sp.form, real_shiny) && !Settings::DEX_SHOWS_ALL_FORMS
+          next if !$player.pokedex.seen_form?(@species, real_gender, sp.form, real_shiny) && !Settings::POKEDEX_SHOWS_ALL_FORMS
           record_gender = real_gender
           record_gender = 2 if sp.gender_ratio == :Genderless
           record_shiny = (Settings::SHOW_SHINY_SPRITES_IN_POKEDEX) ? real_shiny : false
@@ -373,7 +373,7 @@ class UI::PokedexEntryVisuals < UI::BaseVisuals
       if has_form_gender_differences
         2.times do |real_gender|
           [false, true].each do |real_shiny|
-            next if !$player.pokedex.seen_form?(@species, real_gender, sp.form, real_shiny) && !Settings::DEX_SHOWS_ALL_FORMS
+            next if !$player.pokedex.seen_form?(@species, real_gender, sp.form, real_shiny) && !Settings::POKEDEX_SHOWS_ALL_FORMS
             record_shiny = (Settings::SHOW_SHINY_SPRITES_IN_POKEDEX) ? real_shiny : false
             @viewable_forms.push([sp.form_name, real_gender, sp.form, record_shiny])
           end
@@ -382,7 +382,7 @@ class UI::PokedexEntryVisuals < UI::BaseVisuals
         2.times do |real_gender|
           found_for_gender = false
           [false, true].each do |real_shiny|
-            next if !$player.pokedex.seen_form?(@species, real_gender, sp.form, real_shiny) && !Settings::DEX_SHOWS_ALL_FORMS
+            next if !$player.pokedex.seen_form?(@species, real_gender, sp.form, real_shiny) && !Settings::POKEDEX_SHOWS_ALL_FORMS
             found_for_gender = true
             record_shiny = (Settings::SHOW_SHINY_SPRITES_IN_POKEDEX) ? real_shiny : false
             @viewable_forms.push([sp.form_name || _INTL("One Form"), 0, sp.form, record_shiny])
@@ -1085,9 +1085,7 @@ class UI::PokedexEntry < UI::BaseScreen
 end
 
 #===============================================================================
-# TODO: Maybe allow a Pokemon object to be passed in, and if so, change the last
-#       viewed info for its species to match the passed Pokémon? Would be done
-#       if unlocked == true.
+#
 #===============================================================================
 def pbShowPokedexEntry(species, unlocked = true, no_fade = false)
   # Determine the Pokédex number

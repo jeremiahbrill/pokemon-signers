@@ -3165,7 +3165,6 @@ Battle::AbilityEffects::OnSwitchIn.add(:FOREWARN,
     battle.allOtherSideBattlers(battler.index).each do |b|
       b.eachMove do |m|
         power = m.power
-        # TODO: Are there any new function codes that need to be added here?
         power = 160 if ["OHKO", "OHKOIce", "OHKOHitsUndergroundTarget"].include?(m.function_code)
         power = 150 if ["PowerHigherWithUserHP"].include?(m.function_code)    # Eruption
         # Counter, Mirror Coat, Metal Burst

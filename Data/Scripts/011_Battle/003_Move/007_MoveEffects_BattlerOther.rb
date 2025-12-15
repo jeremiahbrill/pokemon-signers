@@ -129,8 +129,8 @@ class Battle::Move::PoisonTargetLowerTargetSpeed1 < Battle::Move
 end
 
 #===============================================================================
-# Removes trapping moves, entry hazards and Leech Seed on user/user's side.
-# Poisons the target. (Mortal Spin)
+# Poisons the target. Removes trapping moves, entry hazards and Leech Seed on
+# user/user's side. (Mortal Spin)
 #===============================================================================
 class Battle::Move::PoisonTargetRemoveUserBindingAndEntryHazards < Battle::Move::PoisonTarget
   def pbEffectAfterAllHits(user, target)
@@ -585,8 +585,8 @@ class Battle::Move::CureTargetBurn < Battle::Move
 end
 
 #===============================================================================
-# Safeguards the user's side from being inflicted with status problems.
-# (Safeguard)
+# For 5 rounds, safeguards the user's side from being inflicted with status
+# problems. (Safeguard)
 #===============================================================================
 class Battle::Move::StartUserSideImmunityToInflictedStatus < Battle::Move
   def canSnatch?; return true; end
@@ -1202,9 +1202,9 @@ class Battle::Move::SetUserAndAlliesAbilityToTargetAbility < Battle::Move
 
   def pbMoveFailed?(user, targets)
     failed = true
-    failed = false if !user.unstoppableAbility?
-    failed = false if user.allAllies.any? { |ally| !ally.unstoppableAbility? }
-    if failed
+    @valid_targets = [user] + user.allAllies
+    @valid_targets.delete_if { |battler| battler.unstoppableAbility? }
+    if @valid_targets.empty?
       @battle.pbDisplay(_INTL("But it failed!"))
       return true
     end
@@ -1216,7 +1216,8 @@ class Battle::Move::SetUserAndAlliesAbilityToTargetAbility < Battle::Move
       @battle.pbDisplay(_INTL("But it failed!")) if show_message
       return true
     end
-    if user.ability == target.ability && user.allAllies.none? { |ally| ally.ability != target.ability }
+    @valid_targets.delete_if { |battler| battler.ability_id == target.ability_id }
+    if @valid_targets.empty?
       @battle.pbDisplay(_INTL("But it failed!")) if show_message
       return true
     end
@@ -1230,13 +1231,9 @@ class Battle::Move::SetUserAndAlliesAbilityToTargetAbility < Battle::Move
   end
 
   def pbEffectAgainstTarget(user, target)
-    # TODO: Should the determination of affected allies be in pbMoveFailed?
-    #       instead?
-    user_side = [user] + user.allAllies
-    user_side.delete_if { |battler| battler.unstoppableAbility? || battler.ability == target.ability }
     old_abils = []
     # Change all abilities
-    user_side.each do |battler|
+    @valid_targets.each do |battler|
       old_abils[battler.index] = battler.ability
       @battle.pbShowAbilitySplash(battler, true, false)
       battler.ability = target.ability
@@ -1246,8 +1243,8 @@ class Battle::Move::SetUserAndAlliesAbilityToTargetAbility < Battle::Move
       @battle.pbHideAbilitySplash(battler)
     end
     # Effects after abilities were changed
-    user_side.each { |battler| battler.pbOnLosingAbility(old_abils[battler.index]) }
-    user_side.each { |battler| battler.pbTriggerAbilityOnGainingIt }
+    @valid_targets.each { |battler| battler.pbOnLosingAbility(old_abils[battler.index]) }
+    @valid_targets.each { |battler| battler.pbTriggerAbilityOnGainingIt }
   end
 end
 

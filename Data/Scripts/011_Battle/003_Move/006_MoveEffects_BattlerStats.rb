@@ -553,8 +553,8 @@ class Battle::Move::RaiseUserAtkSpd1 < Battle::Move::MultiStatUpMove
 end
 
 #===============================================================================
-# Removes trapping moves, entry hazards and Leech Seed on user/user's side.
-# Poisons the target. (Tidy Up)
+# Increases the user's Attack and Speed by 1 stage each. Removes substitutes and
+# entry hazards on both sides. (Tidy Up)
 #===============================================================================
 class Battle::Move::RaiseUserAtkSpd1RemoveEntryHazardsAndSubstitutes < Battle::Move::RaiseUserAtkSpd1
   def pbMoveFailed?(user, targets)
@@ -580,6 +580,7 @@ class Battle::Move::RaiseUserAtkSpd1RemoveEntryHazardsAndSubstitutes < Battle::M
   end
 
   def pbEffectGeneral(user)
+    super
     something_tidied = false
     @battle.allBattlers.each do |b|
       next if b.effects[PBEffects::Substitute] == 0

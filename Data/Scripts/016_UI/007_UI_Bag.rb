@@ -64,6 +64,19 @@ class UI::BagVisualsList < Window_DrawableCommand
     return Rect.new(x, y, cursor_width, @row_height)
   end
 
+  def crop_text(string, max_width, continue_string = "…")
+    return string if max_width <= 0
+    return string if self.contents.text_size(string).width <= max_width
+    ret = string
+    continue_width = self.contents.text_size(continue_string).width
+    loop do
+      ret = ret[0...-1]
+      break if self.contents.text_size(ret).width <= max_width - continue_width
+    end
+    ret += continue_string
+    return ret
+  end
+
   #-----------------------------------------------------------------------------
 
   # This draws all the visible options first, and then draws the cursor. It also
@@ -97,9 +110,7 @@ class UI::BagVisualsList < Window_DrawableCommand
       this_base_color   = @switching_base_color || self.baseColor
       this_shadow_color = @switching_shadow_color || self.shadowColor
     end
-    # Draw item name
-    pbDrawShadowText(self.contents, rect.x, rect.y + 2, rect.width, rect.height,
-                     item_data.display_name, this_base_color, this_shadow_color)
+    max_text_width = rect.width
     # Draw register icon
     showing_register_icon = false
     if item_data.is_important?
@@ -110,12 +121,14 @@ class UI::BagVisualsList < Window_DrawableCommand
         )
         showing_register_icon = true
       elsif pbCanRegisterItem?(this_item_id)
+        # TODO: Can anything be done to improve this?
         pbDrawImagePositions(
           self.contents,
           [[bag_folder + _INTL("icon_register"), rect.x + rect.width - 72, rect.y + 8, 0, 24, -1, 24]]
         )
         showing_register_icon = true
       end
+      max_text_width = rect.width - 72 - 4 if showing_register_icon
     end
     # Draw quantity
     if item_data.show_quantity? && !showing_register_icon
@@ -124,7 +137,12 @@ class UI::BagVisualsList < Window_DrawableCommand
       xQty    = rect.x + rect.width - self.contents.text_size(qtytext).width - 16
       pbDrawShadowText(self.contents, xQty, rect.y + 2, rect.width, rect.height,
                       qtytext, this_base_color, this_shadow_color)
+      max_text_width = xQty - rect.x - 4
     end
+    # Draw item name
+    item_name = crop_text(item_data.display_name, max_text_width)
+    pbDrawShadowText(self.contents, rect.x, rect.y + 2, rect.width, rect.height,
+                     item_name, this_base_color, this_shadow_color)
   end
 
   def drawCursor(index, rect)
@@ -523,10 +541,6 @@ class UI::BagVisuals < UI::BaseVisuals
   def refresh_party_display
     @sprites[:party_icons].bitmap.clear
     return if item.nil? || @mode == :choose_item
-    item_data = GameData::Item.get(item)
-    use_type = item_data.field_use
-    # TODO: If @mode == :choose_item_in_battle, also check for item usage on a
-    #       battler.
     return if !pbCanUseItemOnPokemon?(item)
     icon_x = 0
     icon_y = 0
@@ -535,8 +549,6 @@ class UI::BagVisuals < UI::BaseVisuals
     Settings::MAX_PARTY_SIZE.times do |i|
       pkmn = $player.party[i]
       this_icon_x = (icon_size[0] - icon_overlap) * i
-      # TODO: If @mode == :choose_item_in_battle, also check for item usage on a
-      #       battler.
       usable = pbItemHasEffectOnPokemon?(item, pkmn)
       icon_offset = 2
       if pkmn

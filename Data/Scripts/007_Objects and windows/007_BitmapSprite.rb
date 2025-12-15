@@ -27,7 +27,7 @@ class BitmapSprite < Sprite
     @text_themes[id] = [base_color, shadow_color]
   end
 
-  # TODO: Replaces def pbDrawTextPositions.
+  # NOTE: Replaces def pbDrawTextPositions.
   def draw_themed_text(string, text_x, text_y, align = :left, theme = :default, outline = :shadow)
     string_size = self.bitmap.text_size(string)
     case align
@@ -49,7 +49,7 @@ class BitmapSprite < Sprite
     end
   end
 
-  # TODO: Replaces def pbDrawShadowText.
+  # NOTE: Replaces def pbDrawShadowText.
   def draw_shadowed_text(string, text_x, text_y, theme)
     return if !@text_themes[theme]
     base_color, shadow_color = @text_themes[theme]
@@ -68,7 +68,7 @@ class BitmapSprite < Sprite
     end
   end
 
-  # TODO: Replaces def pbDrawOutlineText.
+  # NOTE: Replaces def pbDrawOutlineText.
   def draw_outlined_text(string, text_x, text_y, theme)
     return if !@text_themes[theme]
     base_color, shadow_color = @text_themes[theme]
@@ -92,7 +92,7 @@ class BitmapSprite < Sprite
     end
   end
 
-  # TODO: Replaces def pbDrawPlainText.
+  # NOTE: Replaces def pbDrawPlainText.
   def draw_plain_text(string, text_x, text_y, theme)
     return if !@text_themes[theme]
     base_color = @text_themes[theme][0]
@@ -106,7 +106,7 @@ class BitmapSprite < Sprite
 
   #-----------------------------------------------------------------------------
 
-  # TODO: Replaces def pbDrawImagePositions.
+  # NOTE: Replaces def pbDrawImagePositions.
   def draw_image(filename, image_x, image_y, src_x = 0, src_y = 0, src_width = -1, src_height = -1)
     src_bitmap = (filename.is_a?(AnimatedBitmap)) ? filename : AnimatedBitmap.new(pbBitmapName(filename))
     src_width = (src_width >= 0) ? src_width : src_bitmap.width

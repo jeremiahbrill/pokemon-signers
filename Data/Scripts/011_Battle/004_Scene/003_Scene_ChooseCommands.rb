@@ -133,7 +133,7 @@ class Battle::Scene
       commands = {}
       commands[:switch_in]     = _INTL("Switch In") if mode == 0 && pkmn.able? &&
                                                        (!@battle.rules[:cannot_switch] || !canCancel)
-      commands[:send_to_boxes] = _INTL("Send to Boxes") if mode == 1
+      commands[:send_to_boxes] = _INTL("Send to Boxes") if mode == 1 && !pkmn.cannot_store
       commands[:select]        = _INTL("Select") if mode == 3
       commands[:summary]       = _INTL("Summary")
       commands[:cancel]        = _INTL("Cancel")
@@ -178,6 +178,9 @@ class Battle::Scene
     bag_screen = UI::Bag.new($bag, mode: :choose_item_in_battle)
     bag_screen.set_filter_proc(proc { |itm|
       use_type = GameData::Item.get(itm).battle_use
+      # TODO: If use_type == 3, check UsableOnBattler handlers for the item and
+      #       idxBattler. Every BattleUseOnBattler handler needs a corresponding
+      #       UsableOnBattler handler created for it.
       next use_type && use_type > 0
     })
     bag_screen.show_and_hide do

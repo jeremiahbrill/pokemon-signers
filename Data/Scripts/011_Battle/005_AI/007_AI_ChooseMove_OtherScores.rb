@@ -366,7 +366,7 @@ Battle::AI::Handlers::GeneralMoveAgainstTargetScore.add(:thawing_move_against_fr
 # Don't prefer a damaging move if it will trigger the target's ability or held
 # item when used, e.g. Effect Spore/Rough Skin, Pickpocket, Rocky Helmet, Red
 # Card.
-# TODO: These abilities/items may not be triggerable after all (e.g. they
+# NOTE: These abilities/items may not be triggerable after all (e.g. they
 #       require the move to make contact but it doesn't), or may have a negative
 #       effect for the target (e.g. Air Balloon popping), but it's too much
 #       effort to go into detail deciding all this.

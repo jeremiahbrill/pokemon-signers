@@ -616,21 +616,6 @@ class Battle::Scene
     pbAnimationCore(anims, user, target || user)
   end
 
-  # Ball burst common animations should have a focus of "Target" and a priority
-  # of "Front".
-  # TODO: This is unused. It also doesn't support the new animation format.
-  def pbBallBurstCommonAnimation(_picture_ex, anim_name, battler, target_x, target_y)
-    return if nil_or_empty?(anim_name)
-    animations = pbLoadBattleAnimations
-    anim = animations&.get_from_name("Common:" + anim_name)
-    return if !anim
-    animPlayer = PBAnimationPlayerX.new(anim, battler, nil, self)
-    animPlayer.discard_user_and_target_sprites   # Don't involve user/target in animation
-    animPlayer.set_target_origin(target_x, target_y)
-    animPlayer.start
-    @animations.push(animPlayer)
-  end
-
   #-----------------------------------------------------------------------------
 
   def play_better_animation(anim_data, user, targets)

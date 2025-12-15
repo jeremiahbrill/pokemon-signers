@@ -19,7 +19,7 @@ class BerryPlantData
   end
 
   def reset(planting = false)
-    @new_mechanics      = Settings::NEW_BERRY_PLANTS
+    @new_mechanics      = Settings::NEW_BERRY_PLANT_MECHANICS
     @berry_id           = nil
     @mulch_id           = nil if !planting
     @time_alive         = 0
@@ -337,7 +337,7 @@ def pbBerryPlant
       pbMessage(_INTL("The {1} plant is growing bigger.", berry_name))
     else     # X flowering
       this_event.turn_right   # Stop the event turning towards the player
-      if Settings::NEW_BERRY_PLANTS
+      if Settings::NEW_BERRY_PLANT_MECHANICS
         pbMessage(_INTL("This {1} plant is in bloom!", berry_name))
       else
         case berry_plant.watering_count
@@ -361,7 +361,7 @@ def pbBerryPlant
                                        GameData::Item.get(item).name))
       berry_plant.water
       pbMessage("\\se[Water berry plant]" + _INTL("{1} watered the plant.", $player.name) + "\\wtnp[40]")
-      if Settings::NEW_BERRY_PLANTS
+      if Settings::NEW_BERRY_PLANT_MECHANICS
         pbMessage(_INTL("There! All happy!"))
       else
         pbMessage(_INTL("The plant seemed to be delighted."))
@@ -372,7 +372,7 @@ def pbBerryPlant
   end
   # Nothing planted yet
   ask_to_plant = true
-  if Settings::NEW_BERRY_PLANTS
+  if Settings::NEW_BERRY_PLANT_MECHANICS
     # New mechanics
     if berry_plant.mulch_id
       pbMessage(_INTL("{1} has been laid down.", GameData::Item.get(berry_plant.mulch_id).name))
@@ -427,7 +427,7 @@ def pbBerryPlant
       $stats.berries_planted += 1
       berry_plant.plant(berry)
       $bag.remove(berry)
-      if Settings::NEW_BERRY_PLANTS
+      if Settings::NEW_BERRY_PLANT_MECHANICS
         pbMessage(_INTL("The {1} was planted in the soft, earthy soil.",
                         GameData::Item.get(berry).name))
       elsif GameData::Item.get(berry).name.starts_with_vowel?
@@ -470,7 +470,7 @@ def pbPickBerry(berry, qty = 1)
   pocket = berry.bag_pocket
   pbMessage(_INTL("You put the {1} in\nyour Bag's <icon=bagPocket{2}>\\c[1]{3}\\c[0] pocket.",
                   berry_name, pocket, GameData::BagPocket.get(pocket).name) + "\1")
-  if Settings::NEW_BERRY_PLANTS
+  if Settings::NEW_BERRY_PLANT_MECHANICS
     pbMessage(_INTL("The soil returned to its soft and earthy state."))
   else
     pbMessage(_INTL("The soil returned to its soft and loamy state."))

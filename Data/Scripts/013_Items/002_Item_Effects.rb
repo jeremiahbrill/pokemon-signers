@@ -799,6 +799,7 @@ ItemHandlers::UsableOnPokemon.add(:ETHER, proc { |item, pkmn|
   next pkmn.moves.any? { |mov| mov.total_pp > 0 && mov.pp < mov.total_pp }
 })
 ItemHandlers::UseOnPokemon.add(:ETHER, proc { |item, qty, pkmn, screen|
+  pbPlayDecisionSE
   move = screen.choose_move(pkmn, _INTL("Restore which move?"))
   next false if move < 0
   if pbRestorePP(pkmn, move, 10) == 0
@@ -815,6 +816,7 @@ ItemHandlers::UseOnPokemon.copy(:ETHER, :LEPPABERRY)
 
 ItemHandlers::UsableOnPokemon.copy(:ETHER, :MAXETHER)
 ItemHandlers::UseOnPokemon.add(:MAXETHER, proc { |item, qty, pkmn, screen|
+  pbPlayDecisionSE
   move = screen.choose_move(pkmn, _INTL("Restore which move?"))
   next false if move < 0
   if pbRestorePP(pkmn, move, pkmn.moves[move].total_pp - pkmn.moves[move].pp) == 0
@@ -862,6 +864,7 @@ ItemHandlers::UsableOnPokemon.add(:PPUP, proc { |item, pkmn|
   next pkmn.moves.any? { |mov| mov.ppup < 3 }
 })
 ItemHandlers::UseOnPokemon.add(:PPUP, proc { |item, qty, pkmn, screen|
+  pbPlayDecisionSE
   move = screen.choose_move(pkmn, _INTL("Boost PP of which move?"))
   next false if move < 0
   if pkmn.moves[move].total_pp <= 1 || pkmn.moves[move].ppup >= 3
@@ -877,6 +880,7 @@ ItemHandlers::UseOnPokemon.add(:PPUP, proc { |item, qty, pkmn, screen|
 
 ItemHandlers::UsableOnPokemon.copy(:PPUP, :PPMAX)
 ItemHandlers::UseOnPokemon.add(:PPMAX, proc { |item, qty, pkmn, screen|
+  pbPlayDecisionSE
   move = screen.choose_move(pkmn, _INTL("Boost PP of which move?"))
   next false if move < 0
   if pkmn.moves[move].total_pp <= 1 || pkmn.moves[move].ppup >= 3

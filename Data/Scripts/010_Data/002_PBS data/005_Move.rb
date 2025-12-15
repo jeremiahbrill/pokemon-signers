@@ -102,7 +102,6 @@ module GameData
       return false
     end
 
-    # TODO: Any more function codes to be added here?
     def display_type(pkmn, move = nil)
       if Settings::SHOW_MODIFIED_MOVE_PROPERTIES
         case @function_code
@@ -183,12 +182,23 @@ module GameData
           end
         when "TypeIsUserFirstType"
           return pkmn.types[0]
+        when "TypeDependsOnUserOgerponForm"
+          if pkmn.isSpecies?(:OGERPON)
+            return :WATER if pkmn.form == 1
+            return :FIRE if pkmn.form == 2
+            return :ROCK if pkmn.form == 3
+          end
+        when "TypeDependsOnUserTaurosFormRemoveScreens"
+          if pkmn.isSpecies?(:TAUROS)
+            return :FIGHTING if pkmn.form == 1
+            return :FIRE if pkmn.form == 2
+            return :WATER if pkmn.form == 3
+          end
         end
       end
       return @type
     end
 
-    # TODO: Any more function codes to be added here?
     def display_power(pkmn, move = nil)
       if Settings::SHOW_MODIFIED_MOVE_PROPERTIES
         case @function_code

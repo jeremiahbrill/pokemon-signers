@@ -229,9 +229,6 @@ class UI::PartyDebug < UI::BaseScreen
   end
 
   def choose_move(pkmn, message, index = 0)
-    # TODO: The move names can get rather wide, making the message box rather
-    #       thin. It's just about acceptable, but maybe the choice window needs
-    #       to be displayed above the message box instead of to the right of it.
     move_names = []
     pkmn.moves.each do |move|
       next if !move || !move.id
@@ -241,7 +238,7 @@ class UI::PartyDebug < UI::BaseScreen
         move_names.push(_INTL("{1} (PP: {2}/{3})", move.name, move.pp, move.total_pp))
       end
     end
-    return show_menu(message, move_names, index)
+    return show_menu(message, move_names, index, align: :vertical)
   end
 end
 

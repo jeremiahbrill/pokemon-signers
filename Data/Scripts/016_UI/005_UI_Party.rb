@@ -501,10 +501,10 @@ class UI::PartyVisuals < UI::BaseVisuals
     return ret
   end
 
-  def show_menu(text, options, index = 0, cmd_side: :right)
+  def show_menu(text, options, index = 0, align: :horizontal, cmd_side: :right)
     @sprites[:help_window].visible = false
 #    cmd_side = (@index.even?) ? :right : :left
-    ret = super(text, options, index, cmd_side: cmd_side)
+    ret = super(text, options, index, align: align, cmd_side: cmd_side)
     @sprites[:help_window].visible = true
     return ret
   end
@@ -1294,9 +1294,6 @@ class UI::Party < UI::BaseScreen
   end
 
   def choose_move(pkmn, message)
-    # TODO: The move names can get rather wide, making the message box rather
-    #       thin. It's just about acceptable, but maybe the choice window needs
-    #       to be displayed above the message box instead of to the right of it.
     move_names = []
     pkmn.moves.each do |move|
       next if !move || !move.id
@@ -1306,7 +1303,7 @@ class UI::Party < UI::BaseScreen
         move_names.push(_INTL("{1} (PP: {2}/{3})", move.name, move.pp, move.total_pp))
       end
     end
-    return show_menu(message, move_names)
+    return show_menu(message, move_names, align: :vertical)
   end
 
   alias pbChooseMove choose_move

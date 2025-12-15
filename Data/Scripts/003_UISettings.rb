@@ -37,6 +37,8 @@ module Settings
   # Whether the player is allowed to rename a Pokémon while looking at its
   # summary screen.
   ALLOW_RENAMING_POKEMON_IN_SUMMARY_SCREEN = (MECHANICS_GENERATION >= 9)
+  # TODO: Allow forgetting/remembering moves from the summary screen. Gen 9
+  #       feature.
 
   #-----------------------------------------------------------------------------
   # Town Map.
@@ -169,7 +171,4 @@ module Settings
     "choice 27",
     "choice 28"
   ]
-
-  # TODO: Allow forgetting/remembering moves from the summary screen. Gen 9
-  #       feature.
 end

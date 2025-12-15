@@ -161,7 +161,6 @@ module Input
 
   #-----------------------------------------------------------------------------
 
-  # TODO: Maybe cache the return values of this method?
   def self.input_to_keys(input)
     ret = [DEFAULT_INPUT_MAPPINGS.dig(input, 0)&.clone || [], DEFAULT_INPUT_MAPPINGS.dig(input, 1)&.clone || []]
     if $PokemonSystem && $PokemonSystem.controls[input]
