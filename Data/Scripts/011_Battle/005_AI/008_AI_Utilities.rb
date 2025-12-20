@@ -167,12 +167,12 @@ class Battle::AI
            :OBLIVIOUS, :POWERSPOT, :PROPELLERTAIL, :PUNKROCK, :SHELLARMOR,
            :STALWART, :STEADFAST, :STEELYSPIRIT, :SUCTIONCUPS, :TANGLEDFEET,
            :TERASHIFT, :WANDERINGSPIRIT, :WEAKARMOR],
-    1  => [:BIGPECKS, :CUDCHEW, :KEENEYE, :MAGMAARMOR, :PICKUP, :RIVALRY,
-           :STENCH],
+    1  => [:BIGPECKS, :CUDCHEW, :ILLUMINATE, :KEENEYE, :MAGMAARMOR, :PICKUP,
+           :RIVALRY, :STENCH],
     0  => [:ASONECHILLINGNEIGH, :ASONEGRIMNEIGH, :BALLFETCH, :BATTERY,
            :CHILLINGNEIGH, :FLOWERVEIL, :FRIENDGUARD, :GRIMNEIGH, :HEALER,
-           :HONEYGATHER, :ILLUMINATE, :MINUS, :PLUS, :POWEROFALCHEMY,
-           :QUICKDRAW, :RECEIVER, :RUNAWAY, :SYMBIOSIS, :TELEPATHY, :UNSEENFIST,
+           :HONEYGATHER, :MINUS, :PLUS, :POWEROFALCHEMY, :QUICKDRAW, :RECEIVER,
+           :RUNAWAY, :SYMBIOSIS, :TELEPATHY, :UNSEENFIST,
            # Abilities with OnSwitchIn effects that are useless after switching
            # in (because these scores are only used to rate moves, which are
            # used after switch-ins)
@@ -340,6 +340,13 @@ Battle::AI::Handlers::AbilityRanking.add(:HUGEPOWER,
 )
 
 Battle::AI::Handlers::AbilityRanking.copy(:HUGEPOWER, :PUREPOWER)
+
+Battle::AI::Handlers::AbilityRanking.add(:ILLUMINATE,
+  proc { |ability, score, battler, ai|
+    next 0 if Settings::MECHANICS_GENERATION <= 8
+    next score
+  }
+)
 
 Battle::AI::Handlers::AbilityRanking.add(:IRONFIST,
   proc { |ability, score, battler, ai|

@@ -581,8 +581,11 @@ class Battle::Battler
         # NOTE: Petal Dance being used because of Dancer shouldn't lock the
         #       Dancer into using that move, and shouldn't contribute to its
         #       turn counter if it's already locked into Petal Dance.
+        # NOTE: ProtectRate shouldn't be reset because of Dancer using a
+        #       different move.
         oldOutrage = nextUser.effects[PBEffects::Outrage]
         nextUser.effects[PBEffects::Outrage] += 1 if nextUser.effects[PBEffects::Outrage] > 0
+        oldProtectRate = nextUser.effects[PBEffects::ProtectRate]
         oldCurrentMove = nextUser.currentMove
         preTarget = choice[3]
         preTarget = user.index if nextUser.opposes?(user) || !nextUser.opposes?(preTarget)
@@ -599,6 +602,7 @@ class Battle::Battler
           @battle.checkStatChangeResponses
           nextUser.lastRoundMoved = oldLastRoundMoved
           nextUser.effects[PBEffects::Outrage] = oldOutrage
+          nextUser.effects[PBEffects::ProtectRate] = oldProtectRate
           nextUser.currentMove = oldCurrentMove
           @battle.pbJudge
           return if @battle.decided?

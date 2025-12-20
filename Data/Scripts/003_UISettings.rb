@@ -38,7 +38,7 @@ module Settings
   # summary screen.
   ALLOW_RENAMING_POKEMON_IN_SUMMARY_SCREEN = (MECHANICS_GENERATION >= 9)
   # TODO: Allow forgetting/remembering moves from the summary screen. Gen 9
-  #       feature.
+  #       feature. Also add "Skip Move Learning" to Options if true.
 
   #-----------------------------------------------------------------------------
   # Town Map.

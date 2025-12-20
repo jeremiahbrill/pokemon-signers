@@ -34,7 +34,7 @@ class GameStats
   attr_accessor :pokerus_infections
   attr_accessor :shadow_pokemon_purified
   # Battles
-  attr_accessor :wild_battles_won, :wild_battles_lost, :wild_battles_fled   # Fled counts both player and wild Pokémon fleeing
+  attr_accessor :wild_battles_won, :wild_battles_lost, :wild_battles_fled   # Won includes catches, fled counts both player and wild Pokémon fleeing
   attr_accessor :trainer_battles_won, :trainer_battles_lost
   attr_accessor :total_exp_gained
   attr_accessor :battle_money_gained, :battle_money_lost
