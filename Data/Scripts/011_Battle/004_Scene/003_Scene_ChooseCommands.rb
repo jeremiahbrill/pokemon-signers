@@ -180,6 +180,11 @@ class Battle::Scene
       use_type = GameData::Item.get(itm).battle_use
       next use_type && use_type > 0
     })
+    party_battlers = []
+    @battle.eachInTeamFromBattlerIndex(idxBattler) do |pkmn, i|
+      party_battlers.push(@battle.pbFindBattler(i, idxBattler))
+    end
+    bag_screen.visuals.battlers = party_battlers
     bag_screen.show_and_hide do
       # Loop while in Bag screen
       loop do

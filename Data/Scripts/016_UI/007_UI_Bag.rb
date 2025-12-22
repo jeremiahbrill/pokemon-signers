@@ -171,7 +171,8 @@ end
 #
 #===============================================================================
 class UI::BagVisuals < UI::BaseVisuals
-  attr_reader :pocket
+  attr_reader   :pocket
+  attr_accessor :battlers
 
   GRAPHICS_FOLDER   = "Bag/"   # Subfolder in Graphics/UI
   TEXT_COLOR_THEMES = {   # Themes not in DEFAULT_TEXT_COLOR_THEMES
@@ -541,13 +542,13 @@ class UI::BagVisuals < UI::BaseVisuals
   def refresh_party_display
     @sprites[:party_icons].bitmap.clear
     return if item.nil? || @mode == :choose_item
-    # TODO: Pass an array of battlers into this UI in battle. If the item's
-    #       battle usability is 3 (i.e. on a battler), display the party and use
-    #       the battlers array to determine if the item has an effect on any.
-    #       Use new pbCanUseItemOnBattler? and pbItemHasEffectOnBattler?
-    #       methods below to check the item for items with battle usability 3.
-    #       All when @mode == :battle_choose_item.
-    return if !pbCanUseItemOnPokemon?(item)
+    use_on_battler = false
+    if @mode == :battle_choose_item && GameData::Item.get(item).battle_use == 3
+      return if !pbCanUseItemOnBattler?(item)
+      use_on_battler = true
+    else
+      return if !pbCanUseItemOnPokemon?(item)
+    end
     icon_x = 0
     icon_y = 0
     icon_size = [@bitmaps[:party_icons].height, @bitmaps[:party_icons].height]
@@ -555,9 +556,13 @@ class UI::BagVisuals < UI::BaseVisuals
     Settings::MAX_PARTY_SIZE.times do |i|
       pkmn = $player.party[i]
       this_icon_x = (icon_size[0] - icon_overlap) * i
-      usable = pbItemHasEffectOnPokemon?(item, pkmn)
+      if use_on_battler
+        usable = pbItemHasEffectOnBattler?(item, (@battlers) ? @battlers[i] : nil)
+      else
+        usable = pbItemHasEffectOnPokemon?(item, pkmn)
+      end
       icon_offset = 2
-      if pkmn
+      if pkmn || (@Battlers && @battlers[i])
         icon_offset = (usable) ? 0 : 1
       end
       draw_image(@bitmaps[:party_icons], this_icon_x, icon_y,
