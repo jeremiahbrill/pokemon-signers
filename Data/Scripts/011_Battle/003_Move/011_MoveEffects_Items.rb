@@ -11,10 +11,14 @@ class Battle::Move::UserTakesTargetItem < Battle::Move
     return if target.unlosableItem?(target.item)
     return if user.unlosableItem?(target.item)
     return if target.hasActiveAbility?(:STICKYHOLD) && !target.beingMoldBroken?
-    @battle.swapHeldItems(user, target)
-    # TODO: If target.wild? and Settings::MECHANICS_GENERATION >= 9, put the
-    #       stolen item directly in the player's Bag instead of giving it to the
-    #       user.
+    if Settings::STOLEN_HELD_ITEMS_GO_INTO_BAG && user.pbOwnedByPlayer? && target.wild? &&
+       $bag.can_add?(target.item_id)
+      $bag.add(target.item_id)
+      target.pbRemoveItem
+      @battle.initialItems[target.idxOwnSide][target.pokemonIndex][0] = nil   # To avoid duplication
+    else
+      @battle.swapHeldItems(user, target)
+    end
     @battle.pbDisplay(_INTL("{1} stole {2}'s {3}!", user.pbThis, target.pbThis(true), user.itemName))
     user.pbHeldItemTriggerCheck
   end

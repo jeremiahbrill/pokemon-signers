@@ -515,7 +515,7 @@ class Battle
         next if pkmn_item[0].nil?   # No initial item to restore
         next if pbTeam(side)[i].hasItem?   # Can't restore item if already holding one
         if pkmn_item[3] ||   # Knocked off
-           (Settings::MECHANICS_GENERATION >= 9 &&   # Only restores consumed items in Gen 9+
+           (Settings::RESTORE_HELD_ITEMS_AFTER_BATTLE &&
             !GameData::Item.get(pkmn_item[0]).is_berry?)   # Can't restore consumed berries
           # Restore knocked off/consumed item
           pbTeam(side)[i].item = pkmn_item[0]

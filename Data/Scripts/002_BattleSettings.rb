@@ -84,6 +84,10 @@ module Settings
   USE_SNOWSTORM_WEATHER_INSTEAD_OF_HAIL          = (MECHANICS_GENERATION >= 9)
   # Whether weather caused by an ability lasts 5 rounds (true) or forever (false).
   FIXED_DURATION_WEATHER_FROM_ABILITY            = (MECHANICS_GENERATION >= 6)
+  # Whether held items stolen from a wild target by a player's Pokémon using
+  # Covet/Thief go straight into the player's Bag (true) or end up being held by
+  # the Pokémon that used Covet/Thief (false).
+  STOLEN_HELD_ITEMS_GO_INTO_BAG                  = (MECHANICS_GENERATION >= 9)
   # Whether X items (X Attack, etc.) raise their stat by 2 stages (true) or 1
   # (false).
   X_STAT_ITEMS_RAISE_BY_TWO_STAGES               = (MECHANICS_GENERATION >= 7)
@@ -169,6 +173,9 @@ module Settings
   # The Game Switch which, while ON, prevents the player from losing money if
   # they lose a battle (they can still gain money from trainers for winning).
   NO_MONEY_LOSS                       = 33
+  # Whether held items that have been consumed (except for berries) will be
+  # recovered at the end of a battle.
+  RESTORE_HELD_ITEMS_AFTER_BATTLE     = (MECHANICS_GENERATION >= 9)
   # Whether party Pokémon check if they can evolve after all battles regardless
   # of the outcome (true), or only after battles the player won (false).
   CHECK_EVOLUTION_AFTER_ALL_BATTLES   = (MECHANICS_GENERATION >= 6)
