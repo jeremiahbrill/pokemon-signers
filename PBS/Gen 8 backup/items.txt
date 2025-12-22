@@ -5173,7 +5173,7 @@ BPPrice = 32
 FieldUse = TR
 Flags = Fling_10
 Move = ROAR
-Description = The target is scared off, and a different Pokémon is dragged out. In the wild, this ends a battle against a single Pokémon.
+Description = The target is scared off, and a different Pokémon is dragged out. This ends a battle against a wild Pokémon.
 #-------------------------------
 [TM06]
 Name = TM06
@@ -5239,7 +5239,7 @@ BPPrice = 32
 FieldUse = TR
 Flags = Fling_10
 Move = SUNNYDAY
-Description = The user intensifies the sun for five turns, powering up Fire-type attacks. The sunlight also lowers the power of Water-type attacks.
+Description = The user intensifies the sun for five turns, powering up Fire attacks and weakening Water attacks.
 #-------------------------------
 [TM12]
 Name = TM12
@@ -5316,7 +5316,7 @@ BPPrice = 32
 FieldUse = TR
 Flags = Fling_10
 Move = RAINDANCE
-Description = The user summons a heavy rain that falls for five turns, powering up Water-type attacks and lowering the power of Fire-type attacks.
+Description = The user summons a heavy rain that falls for five turns, powering up Water attacks and weakening Fire attacks.
 #-------------------------------
 [TM19]
 Name = TM19
@@ -5426,7 +5426,7 @@ BPPrice = 32
 FieldUse = TR
 Flags = Fling_80
 Move = DIG
-Description = The user burrows into the ground on the first turn, then attacks on the next turn. This can also be used to exit dungeons.
+Description = The user burrows into the ground on the first turn, then attacks the next turn. This can also be used to exit dungeons.
 #-------------------------------
 [TM29]
 Name = TM29
@@ -5437,7 +5437,7 @@ BPPrice = 32
 FieldUse = TR
 Flags = Fling_90
 Move = PSYCHIC
-Description = The target is hit with a strong telekinetic force to inflicts damage. This may also lower the target's Sp. Def stat.
+Description = The target is hit with a strong telekinetic force to inflict damage. This may also lower the target's Sp. Def.
 #-------------------------------
 [TM30]
 Name = TM30
@@ -5525,7 +5525,7 @@ BPPrice = 32
 FieldUse = TR
 Flags = Fling_10
 Move = SANDSTORM
-Description = Summons a five-turn sandstorm to damage all Pokémon except Rock, Ground and Steel types. Also raises the Sp. Def stats of Rock types.
+Description = Summons a sandstorm to damage Pokémon that aren't Rock, Ground or Steel type. Boosts the Sp. Def of Rock types.
 #-------------------------------
 [TM38]
 Name = TM38
@@ -5547,7 +5547,7 @@ BPPrice = 32
 FieldUse = TR
 Flags = Fling_60
 Move = ROCKTOMB
-Description = The user hurls boulders at the target to inflict damage. This also lowers the target's Speed stat by cutting off its movement.
+Description = The user hurls boulders at the target to inflict damage. This also lowers the target's Speed stat.
 #-------------------------------
 [TM40]
 Name = TM40
@@ -5613,7 +5613,7 @@ BPPrice = 32
 FieldUse = TR
 Flags = Fling_10
 Move = ATTRACT
-Description = If the target is of the opposite gender to the user, it becomes infatuated with the user and will sometimes be unable to use moves.
+Description = If the target is of the opposite gender to the user, it becomes infatuated with the user and may be unable to attack.
 #-------------------------------
 [TM46]
 Name = TM46
@@ -5624,7 +5624,7 @@ BPPrice = 32
 FieldUse = TR
 Flags = Fling_60
 Move = THIEF
-Description = The user attacks and simultaneously steals the target's held item. The user can't steal anything if it already holds an item.
+Description = The user attacks and also steals the target's held item. The user can't steal anything if it already holds an item.
 #-------------------------------
 [TM47]
 Name = TM47
@@ -5778,7 +5778,7 @@ BPPrice = 32
 FieldUse = TR
 Flags = Fling_75
 Move = DRAINPUNCH
-Description = The user attacks with an energy-draining punch. The user's HP is restored by up to half the damage taken by the target.
+Description = The user attacks with an energy-draining punch. The user's HP is restored by half the damage inflicted.
 #-------------------------------
 [TM61]
 Name = TM61
@@ -5833,7 +5833,7 @@ BPPrice = 32
 FieldUse = TR
 Flags = Fling_70
 Move = SHADOWCLAW
-Description = The user attacks by slashing the target with a sharp claw made from shadows. This move has a higher chance of landing a critical hit.
+Description = The user attacks by slashing the target with a sharp claw. This move has a higher chance of landing a critical hit.
 #-------------------------------
 [TM66]
 Name = TM66
@@ -5899,7 +5899,7 @@ BPPrice = 80
 FieldUse = TR
 Flags = Fling_100
 Move = STONEEDGE
-Description = The user stabs the target with sharpened stones. This move has a heightened chance of landing a critical hit.
+Description = The user stabs the target with sharpened stones. This move has a higher chance of landing a critical hit.
 #-------------------------------
 [TM72]
 Name = TM72
@@ -5932,7 +5932,7 @@ BPPrice = 32
 FieldUse = TR
 Flags = Fling_10
 Move = GYROBALL
-Description = The user tackles the target with a high-speed spin. The slower the user is than the target, the greater the move's power.
+Description = The user tackles the target with a high-speed spin. The slower the user is than the target, the greater the power.
 #-------------------------------
 [TM75]
 Name = TM75
@@ -5954,7 +5954,7 @@ BPPrice = 32
 FieldUse = TR
 Flags = Fling_10
 Move = STEALTHROCK
-Description = The user lays a trap of levitating stones around the opposing team. The trap damages opposing Pokémon that switch into battle.
+Description = The user lays a trap of levitating stones around the opposing team. This damages opposing Pokémon switching in.
 #-------------------------------
 [TM77]
 Name = TM77
@@ -5976,7 +5976,7 @@ BPPrice = 32
 FieldUse = TR
 Flags = Fling_55
 Move = SNARL
-Description = The user attacks the targets by crying out as if it's ranting about something. This also lowers the Sp. Atk stats of the targets.
+Description = The user attacks the targets by crying out as if ranting about something. This also lowers the targets' Sp. Atk stats.
 #-------------------------------
 [TM79]
 Name = TM79
@@ -6152,7 +6152,7 @@ BPPrice = 40
 FieldUse = TR
 Flags = Fling_90
 Move = FLY
-Description = The user flies up into the sky on the first turn, then attacks on the next turn. This can also be used to fly to any familiar town.
+Description = The user flies up on the first turn, then attacks on the next turn. This can also be used to fly to any familiar town.
 #-------------------------------
 [TM95]
 Name = TM95
@@ -6163,7 +6163,7 @@ BPPrice = 64
 FieldUse = TR
 Flags = Fling_90
 Move = SURF
-Description = The user attacks everything around it by swamping the area with a giant wave. This can also be used for crossing water.
+Description = The user attacks by swamping the entire area with a giant wave. This can also be used for crossing water.
 #-------------------------------
 [TM96]
 Name = TM96
@@ -6185,7 +6185,7 @@ BPPrice = 32
 FieldUse = TR
 Flags = Fling_10
 Move = DEFOG
-Description = A strong wind blows away the target's barriers such as Light Screen or Reflect. This also lowers the target's evasiveness.
+Description = A strong wind blows away the target's barriers. This also lowers the target's evasiveness.
 #-------------------------------
 [TM98]
 Name = TM98
@@ -6236,7 +6236,7 @@ Pocket = Machines
 Price = 0
 FieldUse = HM
 Move = FLY
-Description = The user flies up into the sky on the first turn, then attacks on the next turn. This can also be used to fly to any familiar town.
+Description = The user flies up on the first turn, then attacks on the next turn. This can also be used to fly to any familiar town.
 #-------------------------------
 [HM03]
 Name = HM03
@@ -6245,7 +6245,7 @@ Pocket = Machines
 Price = 0
 FieldUse = HM
 Move = SURF
-Description = The user attacks everything around it by swamping the area with a giant wave. This can also be used for crossing water.
+Description = The user attacks by swamping the entire area with a giant wave. This can also be used for crossing water.
 #-------------------------------
 [HM04]
 Name = HM04
@@ -6272,7 +6272,7 @@ Pocket = Machines
 Price = 0
 FieldUse = HM
 Move = DIVE
-Description = The user dives on the first turn, then floats up and attacks on the next turn. This can also be used to dive deep in the ocean.
+Description = The user dives on the first turn, then floats up and attacks on the next turn. This can also be used to go underwater.
 #-------------------------------
 [BICYCLE]
 Name = Bicycle

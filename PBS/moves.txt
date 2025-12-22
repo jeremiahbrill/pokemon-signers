@@ -7563,7 +7563,7 @@ Target = NearOther
 FunctionCode = PoisonTarget
 Flags = Contact,CanProtect,CanMirrorMove,HighCriticalHitRate
 EffectChance = 10
-Description = The user hits the target with its tail. This move has a higher chance of landing a critican hit and may also poison the target.
+Description = The user hits the target with its tail. This move has a higher chance of landing a critical hit and may also poison the target.
 #-------------------------------
 [ACID]
 Name = Acid
@@ -7892,7 +7892,7 @@ Target = NearOther
 FunctionCode = LowerTargetSpDef1
 Flags = CanProtect,CanMirrorMove
 EffectChance = 10
-Description = The target is hit with a strong telekinetic force to inflicts damage. This may also lower the target's Sp. Def stat.
+Description = The target is hit with a strong telekinetic force to inflict damage. This may also lower the target's Sp. Def stat.
 #-------------------------------
 [PSYCHICFANGS]
 Name = Psychic Fangs
@@ -8824,7 +8824,7 @@ TotalPP = 10
 Target = BothSides
 FunctionCode = StartSandstormWeather
 Flags = Wind
-Description = Summons a five-turn sandstorm to damage all Pokémon except Rock, Ground and Steel types. Also raises the Sp. Def stats of Rock types.
+Description = Summons a five-turn sandstorm to damage all Pokémon except Rock, Ground and Steel types. Also boosts the Sp. Def stats of Rock types.
 #-------------------------------
 [STEALTHROCK]
 Name = Stealth Rock

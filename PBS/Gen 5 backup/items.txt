@@ -3603,7 +3603,7 @@ Price = 1000
 BPPrice = 6
 FieldUse = TM
 Move = ROAR
-Description = The target is scared off, and a different Pokémon is dragged out. In the wild, this ends a battle against a single Pokémon.
+Description = The target is scared off, and a different Pokémon is dragged out. This ends a battle against a wild Pokémon.
 #-------------------------------
 [TM06]
 Name = TM06
@@ -3643,7 +3643,7 @@ Price = 2000
 BPPrice = 6
 FieldUse = TM
 Move = VENOSHOCK
-Description = The user drenches the target in a special poisonous liquid. This move's power is doubled if the target is poisoned.
+Description = The user drenches the target in a special poisonous liquid. This move's power doubles if the target is poisoned.
 #-------------------------------
 [TM10]
 Name = TM10
@@ -3663,7 +3663,7 @@ Price = 2000
 BPPrice = 6
 FieldUse = TM
 Move = SUNNYDAY
-Description = The user intensifies the sun for five turns, powering up Fire-type attacks. The sunlight also lowers the power of Water-type attacks.
+Description = The user intensifies the sun for five turns, powering up Fire attacks and weakening Water attacks.
 #-------------------------------
 [TM12]
 Name = TM12
@@ -3733,7 +3733,7 @@ Price = 2000
 BPPrice = 6
 FieldUse = TM
 Move = RAINDANCE
-Description = The user summons a heavy rain that falls for five turns, powering up Water-type attacks and lowering the power of Fire-type attacks.
+Description = The user summons a heavy rain that falls for five turns, powering up Water attacks and weakening Fire attacks.
 #-------------------------------
 [TM19]
 Name = TM19
@@ -3783,7 +3783,7 @@ Price = 3000
 BPPrice = 18
 FieldUse = TM
 Move = SMACKDOWN
-Description = The user throws a stone or similar projectile to inflict damage. If the target is in the air, it will be knocked to the ground.
+Description = The user throws a stone to inflict damage. If the target is in the air, it will be knocked to the ground.
 #-------------------------------
 [TM24]
 Name = TM24
@@ -3833,7 +3833,7 @@ Price = 2000
 BPPrice = 6
 FieldUse = TM
 Move = DIG
-Description = The user burrows into the ground on the first turn, then attacks on the next turn. This can also be used to exit dungeons.
+Description = The user burrows into the ground on the first turn, then attacks the next turn. This can also be used to exit dungeons.
 #-------------------------------
 [TM29]
 Name = TM29
@@ -3843,7 +3843,7 @@ Price = 3000
 BPPrice = 6
 FieldUse = TM
 Move = PSYCHIC
-Description = The target is hit with a strong telekinetic force to inflicts damage. This may also lower the target's Sp. Def stat.
+Description = The target is hit with a strong telekinetic force to inflict damage. This may also lower the target's Sp. Def.
 #-------------------------------
 [TM30]
 Name = TM30
@@ -3923,7 +3923,7 @@ Price = 2000
 BPPrice = 6
 FieldUse = TM
 Move = SANDSTORM
-Description = Summons a five-turn sandstorm to damage all Pokémon except Rock, Ground and Steel types. Also raises the Sp. Def stats of Rock types.
+Description = Summons a sandstorm to damage Pokémon that aren't Rock, Ground or Steel type. Boosts the Sp. Def of Rock types.
 #-------------------------------
 [TM38]
 Name = TM38
@@ -3943,7 +3943,7 @@ Price = 2000
 BPPrice = 6
 FieldUse = TM
 Move = ROCKTOMB
-Description = The user hurls boulders at the target to inflict damage. This also lowers the target's Speed stat by cutting off its movement.
+Description = The user hurls boulders at the target to inflict damage. This also lowers the target's Speed stat.
 #-------------------------------
 [TM40]
 Name = TM40
@@ -3983,7 +3983,7 @@ Price = 2000
 BPPrice = 6
 FieldUse = TM
 Move = FLAMECHARGE
-Description = Cloaking itself in flame, the user attacks the target. Then, building up momentum, the user raises its Speed stat.
+Description = Cloaking itself in flame, the user attacks the target. Then, building up momentum, the user raises its Speed.
 #-------------------------------
 [TM44]
 Name = TM44
@@ -4003,7 +4003,7 @@ Price = 3000
 BPPrice = 6
 FieldUse = TM
 Move = ATTRACT
-Description = If the target is of the opposite gender to the user, it becomes infatuated with the user and will sometimes be unable to use moves.
+Description = If the target is of the opposite gender to the user, it becomes infatuated with the user and may be unable to attack.
 #-------------------------------
 [TM46]
 Name = TM46
@@ -4013,7 +4013,7 @@ Price = 2000
 BPPrice = 6
 FieldUse = TM
 Move = THIEF
-Description = The user attacks and simultaneously steals the target's held item. The user can't steal anything if it already holds an item.
+Description = The user attacks and also steals the target's held item. The user can't steal anything if it already holds an item.
 #-------------------------------
 [TM47]
 Name = TM47
@@ -4033,7 +4033,7 @@ Price = 3000
 BPPrice = 18
 FieldUse = TM
 Move = ROUND
-Description = The user attacks the target with a song. If others use this move, they will act straight away, and their Rounds will be powered up.
+Description = The user attacks the target with a song. If others use Round, they will act straight away and it will be powered up.
 #-------------------------------
 [TM49]
 Name = TM49
@@ -4043,7 +4043,7 @@ Price = 1500
 BPPrice = 6
 FieldUse = TM
 Move = ECHOEDVOICE
-Description = The user attacks the target with an echoing voice. If this move is used consecutively by any Pokémon, its power is boosted.
+Description = The user attacks with an echoing voice. If this move is used consecutively by any Pokémon, its power is boosted.
 #-------------------------------
 [TM50]
 Name = TM50
@@ -4143,7 +4143,7 @@ Price = 1500
 BPPrice = 6
 FieldUse = TM
 Move = INCINERATE
-Description = The user attacks opposing Pokémon with fire. Certain items held by those hit, such as Berries, become burned up and unusable.
+Description = The user attacks opposing Pokémon with fire. Certain items held by those hit, such as Berries, become burned up.
 #-------------------------------
 [TM60]
 Name = TM60
@@ -4183,7 +4183,7 @@ Price = 2000
 BPPrice = 6
 FieldUse = TM
 Move = EMBARGO
-Description = This move prevents the target from using its held item for five turns. Its Trainer is also prevented from using items on it.
+Description = Prevents the target from using its held item for five turns. Its Trainer is also prevented from using items on it.
 #-------------------------------
 [TM64]
 Name = TM64
@@ -4203,7 +4203,7 @@ Price = 3000
 BPPrice = 6
 FieldUse = TM
 Move = SHADOWCLAW
-Description = The user attacks by slashing the target with a sharp claw made from shadows. This move has a higher chance of landing a critical hit.
+Description = The user attacks by slashing the target with a sharp claw. This move has a higher chance of landing a critical hit.
 #-------------------------------
 [TM66]
 Name = TM66
@@ -4263,7 +4263,7 @@ Price = 3000
 BPPrice = 6
 FieldUse = TM
 Move = STONEEDGE
-Description = The user stabs the target with sharpened stones. This move has a heightened chance of landing a critical hit.
+Description = The user stabs the target with sharpened stones. This move has a higher chance of landing a critical hit.
 #-------------------------------
 [TM72]
 Name = TM72
@@ -4293,7 +4293,7 @@ Price = 3000
 BPPrice = 6
 FieldUse = TM
 Move = GYROBALL
-Description = The user tackles the target with a high-speed spin. The slower the user is than the target, the greater the move's power.
+Description = The user tackles the target with a high-speed spin. The slower the user is than the target, the greater the power.
 #-------------------------------
 [TM75]
 Name = TM75
@@ -4373,7 +4373,7 @@ Price = 1000
 BPPrice = 6
 FieldUse = TM
 Move = DRAGONTAIL
-Description = The target is knocked away, and a different Pokémon is dragged out. In the wild, this ends a battle against a single Pokémon.
+Description = The target is knocked away, and a different Pokémon is dragged out. This ends a battle against a wild Pokémon.
 #-------------------------------
 [TM83]
 Name = TM83
@@ -4503,7 +4503,7 @@ Price = 3000
 BPPrice = 6
 FieldUse = TM
 Move = SNARL
-Description = The user attacks the targets by crying out as if it's ranting about something. This also lowers the Sp. Atk stats of the targets.
+Description = The user attacks the targets by crying out as if ranting about something. This also lowers the targets' Sp. Atk stats.
 #-------------------------------
 [HM01]
 Name = HM01
@@ -4521,7 +4521,7 @@ Pocket = Machines
 Price = 0
 FieldUse = HM
 Move = FLY
-Description = The user flies up into the sky on the first turn, then attacks on the next turn. This can also be used to fly to any familiar town.
+Description = The user flies up on the first turn, then attacks on the next turn. This can also be used to fly to any familiar town.
 #-------------------------------
 [HM03]
 Name = HM03
@@ -4530,7 +4530,7 @@ Pocket = Machines
 Price = 0
 FieldUse = HM
 Move = SURF
-Description = The user attacks everything around it by swamping the area with a giant wave. This can also be used for crossing water.
+Description = The user attacks by swamping the entire area with a giant wave. This can also be used for crossing water.
 #-------------------------------
 [HM04]
 Name = HM04
@@ -4557,7 +4557,7 @@ Pocket = Machines
 Price = 0
 FieldUse = HM
 Move = DIVE
-Description = The user dives on the first turn, then floats up and attacks on the next turn. This can also be used to dive deep in the ocean.
+Description = The user dives on the first turn, then floats up and attacks on the next turn. This can also be used to go underwater.
 #-------------------------------
 [BICYCLE]
 Name = Bicycle
