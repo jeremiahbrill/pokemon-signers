@@ -113,7 +113,7 @@ class UI::BagVisualsList < Window_DrawableCommand
     max_text_width = rect.width
     # Draw register icon
     showing_register_icon = false
-    if item_data.is_important?
+    if !item_data.show_quantity?
       if @bag.registered?(this_item_id)
         pbDrawImagePositions(
           self.contents,
@@ -121,7 +121,6 @@ class UI::BagVisualsList < Window_DrawableCommand
         )
         showing_register_icon = true
       elsif pbCanRegisterItem?(this_item_id)
-        # TODO: Can anything be done to improve this?
         pbDrawImagePositions(
           self.contents,
           [[bag_folder + _INTL("icon_register"), rect.x + rect.width - 72, rect.y + 8, 0, 24, -1, 24]]

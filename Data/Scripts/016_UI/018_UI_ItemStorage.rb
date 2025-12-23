@@ -394,31 +394,19 @@ module UIHelper
       elsif Input.repeat?(Input::UP)
         curnumber += 1
         curnumber = 1 if curnumber > maximum
-        if curnumber != oldnumber
-          numwindow.text = _ISPRINTF("×{1:03d}", curnumber)
-          pbPlayCursorSE
-        end
       elsif Input.repeat?(Input::DOWN)
         curnumber -= 1
         curnumber = maximum if curnumber < 1
-        if curnumber != oldnumber
-          numwindow.text = _ISPRINTF("×{1:03d}", curnumber)
-          pbPlayCursorSE
-        end
       elsif Input.repeat?(Input::LEFT)
         curnumber -= 10
         curnumber = 1 if curnumber < 1
-        if curnumber != oldnumber
-          numwindow.text = _ISPRINTF("×{1:03d}", curnumber)
-          pbPlayCursorSE
-        end
       elsif Input.repeat?(Input::RIGHT)
         curnumber += 10
         curnumber = maximum if curnumber > maximum
-        if curnumber != oldnumber
-          numwindow.text = _ISPRINTF("×{1:03d}", curnumber)
-          pbPlayCursorSE
-        end
+      end
+      if curnumber != oldnumber
+        numwindow.text = _ISPRINTF("×{1:03d}", curnumber)
+        pbPlayCursorSE
       end
     end
     numwindow.dispose

@@ -959,9 +959,6 @@ class UI::Party < UI::BaseScreen
       screen.refresh if pbTakeItemFromPokemon(pkmn, screen)
     }
   })
-  # TODO: Switching Pokémon goes through the regular navigate, but switching items
-  #       (here) has the whole switching process in this handler. Be consistent.
-  #       Have a def navigate_switching_items?
   ACTIONS.add(:item_move, {
     :effect => proc { |screen|
       pbPlayDecisionSE

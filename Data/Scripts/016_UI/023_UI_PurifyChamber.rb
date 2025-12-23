@@ -1275,16 +1275,6 @@ class PurifyChamberScene
     pbRefresh
   end
 
-  # TODO: Add a def choose_pokemon/def choose_pokemon_core to UI::PokemonStorage
-  #       so that we can filter which Pokémon are selectable by this. Make
-  #       unselectable Pokémon semi-transparent in the storage screen (but only
-  #       if a def set_filter_proc is also added to UI::PokemonStorage, which I
-  #       may skip for convenience).
-  #       Constraints are:
-  #         * Can't select an egg.
-  #         * Can't select the last able Pokémon in the party.
-  #         * Can't select Shadow Pokémon OR non-Shadow Pokémon, depending on
-  #           which position we're choosing a Pokémon for.
   def pbChoosePokemon
     pos = nil
     pbFadeOutInWithUpdate(@sprites) do
