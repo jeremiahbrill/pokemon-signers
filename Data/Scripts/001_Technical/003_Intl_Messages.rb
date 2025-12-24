@@ -796,7 +796,12 @@ end
 # parameters by replacing {1}, {2}, etc. with those placeholders.
 def _INTL(*arg)
   begin
-    string = MessageTypes.getFromHash(MessageTypes::SCRIPT_TEXTS, arg[0])
+    if $player&.female?
+      string = MessageTypes.getFromHash(MessageTypes::SCRIPT_TEXTS, "[F]" + arg[0])
+      string = MessageTypes.getFromHash(MessageTypes::SCRIPT_TEXTS, arg[0]) if string == "[F]" + arg[0]
+    else
+      string = MessageTypes.getFromHash(MessageTypes::SCRIPT_TEXTS, arg[0])
+    end
   rescue
     string = arg[0]
   end
@@ -812,7 +817,12 @@ end
 # This version acts more like sprintf, supports e.g. {1:d} or {2:s}
 def _ISPRINTF(*arg)
   begin
-    string = MessageTypes.getFromHash(MessageTypes::SCRIPT_TEXTS, arg[0])
+    if $player&.female?
+      string = MessageTypes.getFromHash(MessageTypes::SCRIPT_TEXTS, "[F]" + arg[0])
+      string = MessageTypes.getFromHash(MessageTypes::SCRIPT_TEXTS, arg[0]) if string == "[F]" + arg[0]
+    else
+      string = MessageTypes.getFromHash(MessageTypes::SCRIPT_TEXTS, arg[0])
+    end
   rescue
     string = arg[0]
   end
@@ -828,7 +838,12 @@ def _I(str, *arg)
 end
 
 def _MAPINTL(mapid, *arg)
-  string = MessageTypes.getFromMapHash(mapid, arg[0])
+  if $player&.female?
+    string = MessageTypes.getFromMapHash(mapid, "[F]" + arg[0])
+    string = MessageTypes.getFromMapHash(mapid, arg[0]) if string == "[F]" + arg[0]
+  else
+    string = MessageTypes.getFromMapHash(mapid, arg[0])
+  end
   string = string.clone
   (1...arg.length).each do |i|
     string.gsub!(/\{#{i}\}/, arg[i].to_s)
@@ -837,7 +852,12 @@ def _MAPINTL(mapid, *arg)
 end
 
 def _MAPISPRINTF(mapid, *arg)
-  string = MessageTypes.getFromMapHash(mapid, arg[0])
+  if $player&.female?
+    string = MessageTypes.getFromMapHash(mapid, "[F]" + arg[0])
+    string = MessageTypes.getFromMapHash(mapid, arg[0]) if string == "[F]" + arg[0]
+  else
+    string = MessageTypes.getFromMapHash(mapid, arg[0])
+  end
   string = string.clone
   (1...arg.length).each do |i|
     string.gsub!(/\{#{i}\:([^\}]+?)\}/) { |m| next sprintf("%" + $1, arg[i]) }
