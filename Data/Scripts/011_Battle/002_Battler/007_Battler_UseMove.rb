@@ -280,13 +280,13 @@ class Battle::Battler
     if !specialUsage
       targets.each do |b|
         next unless b.opposes?(user) && b.hasActiveAbility?(:PRESSURE)
-        PBDebug.log("[Ability triggered] #{b.pbThis}'s #{b.abilityName}")
+        PBDebug.log("[Ability triggered] #{b.pbOfThis} #{b.abilityName}")
         user.pbReducePP(move)
       end
       if move.pbTarget(user).affects_foe_side
         @battle.allOtherSideBattlers(user).each do |b|
           next unless b.hasActiveAbility?(:PRESSURE)
-          PBDebug.log("[Ability triggered] #{b.pbThis}'s #{b.abilityName}")
+          PBDebug.log("[Ability triggered] #{b.pbOfThis} #{b.abilityName}")
           user.pbReducePP(move)
         end
       end
@@ -314,7 +314,7 @@ class Battle::Battler
     # Snatch's message (user is the new user, self is the original user)
     if move.snatched
       @lastMoveFailed = true   # Intentionally applies to self, not user
-      @battle.pbDisplay(_INTL("{1} snatched {2}'s move!", user.pbThis, pbThis(true)))
+      @battle.pbDisplay(_INTL("{1} snatched {2} move!", user.pbThis, pbOfThis(true)))
     end
     # "But it failed!" checks
     if move.pbMoveFailed?(user, targets)
@@ -375,7 +375,7 @@ class Battle::Battler
       @battle.pbShowAbilitySplash(user)
       user.pbChangeTypes(move.calcType)
       typeName = GameData::Type.get(move.calcType).name
-      @battle.pbDisplay(_INTL("{1}'s type changed to {2}!", user.pbThis, typeName))
+      @battle.pbDisplay(_INTL("{1} type changed to {2}!", user.pbOfThis, typeName))
       user.markAbilityUsedThisSwitchIn if Settings::MECHANICS_GENERATION >= 9
       @battle.pbHideAbilitySplash(user)
       # NOTE: The GF games say that if Curse is used by a non-Ghost-type
@@ -773,7 +773,7 @@ class Battle::Battler
       chance = move.pbFlinchChance(user, b)
       next if chance <= 0
       if @battle.pbRandom(100) < chance
-        PBDebug.log("[Item/ability triggered] #{user.pbThis}'s King's Rock/Razor Fang or Stench")
+        PBDebug.log("[Item/ability triggered] #{user.pbOfThis} King's Rock/Razor Fang or Stench")
         b.pbFlinch(user)
       end
     end

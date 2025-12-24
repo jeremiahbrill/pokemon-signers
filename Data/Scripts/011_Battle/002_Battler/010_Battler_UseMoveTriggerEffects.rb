@@ -50,12 +50,12 @@ class Battle::Battler
       # Rage
       if target.effects[PBEffects::Rage] && !target.fainted? &&
          target.pbCanRaiseStatStage?(:ATTACK, target)
-        @battle.pbDisplay(_INTL("{1}'s rage is building!", target.pbThis))
+        @battle.pbDisplay(_INTL("{1} rage is building!", target.pbOfThis))
         target.pbRaiseStatStage(:ATTACK, 1, target)
       end
       # Beak Blast
       if target.effects[PBEffects::BeakBlast]
-        PBDebug.log("[Lingering effect] #{target.pbThis}'s Beak Blast")
+        PBDebug.log("[Lingering effect] #{target.pbOfThis} Beak Blast")
         if move.pbContactMove?(user) && user.affectedByContactEffect? &&
            user.pbCanBurn?(target, false, self)
           user.pbBurn(target)
@@ -72,8 +72,8 @@ class Battle::Battler
       # Grudge
       if target.effects[PBEffects::Grudge] && target.fainted?
         user.pbSetPP(move, 0)
-        @battle.pbDisplay(_INTL("{1}'s {2} lost all of its PP due to the grudge!",
-                                user.pbThis, move.name))
+        @battle.pbDisplay(_INTL("{1} {2} lost all of its PP due to the grudge!",
+                                user.pbOfThis, move.name))
       end
       # Destiny Bond (recording that it should apply)
       if target.effects[PBEffects::DestinyBond] && target.fainted? &&

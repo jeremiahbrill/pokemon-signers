@@ -61,14 +61,14 @@ class Battle
     allOtherSideBattlers(idxBattler).each do |b|
       next if !b.abilityActive?
       if Battle::AbilityEffects.triggerTrappingByTarget(b.ability, battler, b, self)
-        party_screen&.show_message(_INTL("{1}'s {2} prevents switching!", b.pbThis, b.abilityName))
+        party_screen&.show_message(_INTL("{1} {2} prevents switching!", b.pbOfThis, b.abilityName))
         return false
       end
     end
     allOtherSideBattlers(idxBattler).each do |b|
       next if !b.itemActive?
       if Battle::ItemEffects.triggerTrappingByTarget(b.item, battler, b, self)
-        party_screen&.show_message(_INTL("{1}'s {2} prevents switching!", b.pbThis, b.itemName))
+        party_screen&.show_message(_INTL("{1} {2} prevents switching!", b.pbOfThis, b.itemName))
         return false
       end
     end

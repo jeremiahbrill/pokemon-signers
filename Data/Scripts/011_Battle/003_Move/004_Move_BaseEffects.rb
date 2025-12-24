@@ -123,7 +123,7 @@ class Battle::Move::MultiStatUpMove < Battle::Move
       break
     end
     if failed
-      @battle.pbDisplay(_INTL("{1}'s stats won't go any higher!", user.pbThis))
+      @battle.pbDisplay(_INTL("{1} stats won't go any higher!", user.pbOfThis))
       return true
     end
     return false
@@ -227,14 +227,14 @@ class Battle::Move::TargetMultiStatDownMove < Battle::Move
           canLower = true
           break
         end
-        @battle.pbDisplay(_INTL("{1}'s stats won't go any higher!", user.pbThis)) if !canLower && show_message
+        @battle.pbDisplay(_INTL("{1} stats won't go any higher!", user.pbOfThis)) if !canLower && show_message
       else
         (@statDown.length / 2).times do |i|
           next if target.statStageAtMin?(@statDown[i * 2])
           canLower = true
           break
         end
-        @battle.pbDisplay(_INTL("{1}'s stats won't go any lower!", user.pbThis)) if !canLower && show_message
+        @battle.pbDisplay(_INTL("{1} stats won't go any lower!", user.pbOfThis)) if !canLower && show_message
       end
       if canLower
         target.pbCanLowerStatStage?(@statDown[0], user, self, show_message)
@@ -256,7 +256,7 @@ class Battle::Move::TargetMultiStatDownMove < Battle::Move
       if failed
         @battle.pbShowAbilitySplash(target)
         if !Battle::Scene::USE_ABILITY_SPLASH
-          @battle.pbDisplay(_INTL("{1}'s {2} activated!", target.pbThis, target.abilityName))
+          @battle.pbDisplay(_INTL("{1} {2} activated!", target.pbOfThis, target.abilityName))
         end
         user.pbCanLowerStatStage?(@statDown[0], target, self, true, false, true)   # Show fail message
         @battle.pbHideAbilitySplash(target)
@@ -409,7 +409,7 @@ class Battle::Move::HealingMove < Battle::Move
 
   def pbMoveFailed?(user, targets)
     if user.hp == user.totalhp
-      @battle.pbDisplay(_INTL("{1}'s HP is full!", user.pbThis))
+      @battle.pbDisplay(_INTL("{1} HP is full!", user.pbOfThis))
       return true
     end
     return false
@@ -418,7 +418,7 @@ class Battle::Move::HealingMove < Battle::Move
   def pbEffectGeneral(user)
     amt = pbHealAmount(user)
     user.pbRecoverHP(amt)
-    @battle.pbDisplay(_INTL("{1}'s HP was restored.", user.pbThis))
+    @battle.pbDisplay(_INTL("{1} HP was restored.", user.pbOfThis))
   end
 end
 
@@ -622,8 +622,8 @@ class Battle::Move::PledgeMove < Battle::Move
   def pbEffectGeneral(user)
     user.effects[PBEffects::FirstPledge] = nil
     return if !@pledgeSetup
-    @battle.pbDisplay(_INTL("{1} is waiting for {2}'s move...",
-                            user.pbThis, @pledgeOtherUser.pbThis(true)))
+    @battle.pbDisplay(_INTL("{1} is waiting for {2} move...",
+                            user.pbThis, @pledgeOtherUser.pbOfThis(true)))
     @pledgeOtherUser.effects[PBEffects::FirstPledge] = @function_code
     @pledgeOtherUser.effects[PBEffects::MoveNext]    = true
     user.lastMoveFailed = true   # Treated as a failure for Stomping Tantrum
@@ -643,7 +643,7 @@ class Battle::Move::PledgeMove < Battle::Move
     when :Rainbow   # Fire + Water
       if user.pbOwnSide.effects[PBEffects::Rainbow] == 0
         user.pbOwnSide.effects[PBEffects::Rainbow] = 4
-        msg = _INTL("A rainbow appeared in the sky on {1}'s side!", user.pbTeam(true))
+        msg = _INTL("A rainbow appeared in the sky on {1} side!", user.pbOfTeam(true))
         animName = (user.opposes?) ? "RainbowOpp" : "Rainbow"
       end
     when :Swamp   # Water + Grass

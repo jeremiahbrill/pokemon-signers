@@ -19,8 +19,8 @@ class Battle::Battler
     # Check the stat stage
     if statStageAtMax?(stat)
       if showFailMsg
-        @battle.pbDisplay(_INTL("{1}'s {2} won't go any higher!",
-                                pbThis, GameData::Stat.get(stat).name))
+        @battle.pbDisplay(_INTL("{1} {2} won't go any higher!",
+                                pbOfThis, GameData::Stat.get(stat).name))
       end
       return false
     end
@@ -41,7 +41,7 @@ class Battle::Battler
     if increment > 0
       stat_name = GameData::Stat.get(stat).name
       new = @stages[stat] + increment
-      PBDebug.log("[Stat change] #{pbThis}'s #{stat_name} changed by +#{increment} (#{@stages[stat]} -> #{new})")
+      PBDebug.log("[Stat change] #{pbOfThis} #{stat_name} changed by +#{increment} (#{@stages[stat]} -> #{new})")
       @stages[stat] += increment
       @stagesChangeRecord[0][stat] ||= 0
       @stagesChangeRecord[0][stat] += increment
@@ -61,9 +61,9 @@ class Battle::Battler
     # Stat up animation and message
     @battle.pbCommonAnimation("StatUp", self) if showAnim
     arrStatTexts = [
-      _INTL("{1}'s {2} rose!", pbThis, GameData::Stat.get(stat).name),
-      _INTL("{1}'s {2} rose sharply!", pbThis, GameData::Stat.get(stat).name),
-      _INTL("{1}'s {2} rose drastically!", pbThis, GameData::Stat.get(stat).name)
+      _INTL("{1} {2} rose!", pbOfThis, GameData::Stat.get(stat).name),
+      _INTL("{1} {2} rose sharply!", pbOfThis, GameData::Stat.get(stat).name),
+      _INTL("{1} {2} rose drastically!", pbOfThis, GameData::Stat.get(stat).name)
     ]
     @battle.pbDisplay(arrStatTexts[[increment - 1, 2].min])
     # Trigger abilities upon stat gain
@@ -85,15 +85,15 @@ class Battle::Battler
     @battle.pbCommonAnimation("StatUp", self) if showAnim
     if user.index == @index
       arrStatTexts = [
-        _INTL("{1}'s {2} raised its {3}!", pbThis, cause, GameData::Stat.get(stat).name),
-        _INTL("{1}'s {2} sharply raised its {3}!", pbThis, cause, GameData::Stat.get(stat).name),
-        _INTL("{1}'s {2} drastically raised its {3}!", pbThis, cause, GameData::Stat.get(stat).name)
+        _INTL("{1} {2} raised its {3}!", pbOfThis, cause, GameData::Stat.get(stat).name),
+        _INTL("{1} {2} sharply raised its {3}!", pbOfThis, cause, GameData::Stat.get(stat).name),
+        _INTL("{1} {2} drastically raised its {3}!", pbOfThis, cause, GameData::Stat.get(stat).name)
       ]
     else
       arrStatTexts = [
-        _INTL("{1}'s {2} raised {3}'s {4}!", user.pbThis, cause, pbThis(true), GameData::Stat.get(stat).name),
-        _INTL("{1}'s {2} sharply raised {3}'s {4}!", user.pbThis, cause, pbThis(true), GameData::Stat.get(stat).name),
-        _INTL("{1}'s {2} drastically raised {3}'s {4}!", user.pbThis, cause, pbThis(true), GameData::Stat.get(stat).name)
+        _INTL("{1} {2} raised {3} {4}!", user.pbOfThis, cause, pbOfThis(true), GameData::Stat.get(stat).name),
+        _INTL("{1} {2} sharply raised {3} {4}!", user.pbOfThis, cause, pbOfThis(true), GameData::Stat.get(stat).name),
+        _INTL("{1} {2} drastically raised {3} {4}!", user.pbOfThis, cause, pbOfThis(true), GameData::Stat.get(stat).name)
       ]
     end
     @battle.pbDisplay(arrStatTexts[[increment - 1, 2].min])
@@ -175,8 +175,8 @@ class Battle::Battler
     # Check the stat stage
     if statStageAtMin?(stat)
       if showFailMsg
-        @battle.pbDisplay(_INTL("{1}'s {2} won't go any lower!",
-                                pbThis, GameData::Stat.get(stat).name))
+        @battle.pbDisplay(_INTL("{1} {2} won't go any lower!",
+                                pbOfThis, GameData::Stat.get(stat).name))
       end
       return false
     end
@@ -197,7 +197,7 @@ class Battle::Battler
     if increment > 0
       stat_name = GameData::Stat.get(stat).name
       new = @stages[stat] - increment
-      PBDebug.log("[Stat change] #{pbThis}'s #{stat_name} changed by -#{increment} (#{@stages[stat]} -> #{new})")
+      PBDebug.log("[Stat change] #{pbOfThis} #{stat_name} changed by -#{increment} (#{@stages[stat]} -> #{new})")
       @stages[stat] -= increment
       @stagesChangeRecord[1][stat] ||= 0
       @stagesChangeRecord[1][stat] += increment
@@ -220,7 +220,7 @@ class Battle::Battler
         if mirrorArmorSplash < 2
           @battle.pbShowAbilitySplash(self)
           if !Battle::Scene::USE_ABILITY_SPLASH
-            @battle.pbDisplay(_INTL("{1}'s {2} activated!", pbThis, abilityName))
+            @battle.pbDisplay(_INTL("{1} {2} activated!", pbOfThis, abilityName))
           end
         end
         ret = false
@@ -237,9 +237,9 @@ class Battle::Battler
     # Stat down animation and message
     @battle.pbCommonAnimation("StatDown", self) if showAnim
     arrStatTexts = [
-      _INTL("{1}'s {2} fell!", pbThis, GameData::Stat.get(stat).name),
-      _INTL("{1}'s {2} harshly fell!", pbThis, GameData::Stat.get(stat).name),
-      _INTL("{1}'s {2} severely fell!", pbThis, GameData::Stat.get(stat).name)
+      _INTL("{1} {2} fell!", pbOfThis, GameData::Stat.get(stat).name),
+      _INTL("{1} {2} harshly fell!", pbOfThis, GameData::Stat.get(stat).name),
+      _INTL("{1} {2} severely fell!", pbOfThis, GameData::Stat.get(stat).name)
     ]
     @battle.pbDisplay(arrStatTexts[[increment - 1, 2].min])
     # Trigger abilities upon stat loss
@@ -261,7 +261,7 @@ class Battle::Battler
          user && user.index != @index && !statStageAtMin?(stat)
         @battle.pbShowAbilitySplash(self)
         if !Battle::Scene::USE_ABILITY_SPLASH
-          @battle.pbDisplay(_INTL("{1}'s {2} activated!", pbThis, abilityName))
+          @battle.pbDisplay(_INTL("{1} {2} activated!", pbOfThis, abilityName))
         end
         ret = false
         if user.pbCanLowerStatStage?(stat, self, nil, true, ignoreContrary, true)
@@ -278,15 +278,15 @@ class Battle::Battler
     @battle.pbCommonAnimation("StatDown", self) if showAnim
     if user.index == @index
       arrStatTexts = [
-        _INTL("{1}'s {2} lowered its {3}!", pbThis, cause, GameData::Stat.get(stat).name),
-        _INTL("{1}'s {2} harshly lowered its {3}!", pbThis, cause, GameData::Stat.get(stat).name),
-        _INTL("{1}'s {2} severely lowered its {3}!", pbThis, cause, GameData::Stat.get(stat).name)
+        _INTL("{1} {2} lowered its {3}!", pbOfThis, cause, GameData::Stat.get(stat).name),
+        _INTL("{1} {2} harshly lowered its {3}!", pbOfThis, cause, GameData::Stat.get(stat).name),
+        _INTL("{1} {2} severely lowered its {3}!", pbOfThis, cause, GameData::Stat.get(stat).name)
       ]
     else
       arrStatTexts = [
-        _INTL("{1}'s {2} lowered {3}'s {4}!", user.pbThis, cause, pbThis(true), GameData::Stat.get(stat).name),
-        _INTL("{1}'s {2} harshly lowered {3}'s {4}!", user.pbThis, cause, pbThis(true), GameData::Stat.get(stat).name),
-        _INTL("{1}'s {2} severely lowered {3}'s {4}!", user.pbThis, cause, pbThis(true), GameData::Stat.get(stat).name)
+        _INTL("{1} {2} lowered {3} {4}!", user.pbOfThis, cause, pbOfThis(true), GameData::Stat.get(stat).name),
+        _INTL("{1} {2} harshly lowered {3} {4}!", user.pbOfThis, cause, pbOfThis(true), GameData::Stat.get(stat).name),
+        _INTL("{1} {2} severely lowered {3} {4}!", user.pbOfThis, cause, pbOfThis(true), GameData::Stat.get(stat).name)
       ]
     end
     @battle.pbDisplay(arrStatTexts[[increment - 1, 2].min])
@@ -319,17 +319,17 @@ class Battle::Battler
       if Battle::Scene::USE_ABILITY_SPLASH
         @battle.pbDisplay(_INTL("{1} is protected by its substitute!", pbThis))
       else
-        @battle.pbDisplay(_INTL("{1}'s substitute protected it from {2}'s {3}!",
-                                pbThis, user.pbThis(true), user.abilityName))
+        @battle.pbDisplay(_INTL("{1} substitute protected it from {2} {3}!",
+                                pbOfThis, user.pbOfThis(true), user.abilityName))
       end
       return false
     end
     if Settings::MECHANICS_GENERATION >= 8 && hasActiveAbility?([:OBLIVIOUS, :OWNTEMPO, :INNERFOCUS, :SCRAPPY])
       @battle.pbShowAbilitySplash(self)
       if Battle::Scene::USE_ABILITY_SPLASH
-        @battle.pbDisplay(_INTL("{1}'s {2} cannot be lowered!", pbThis, GameData::Stat.get(:ATTACK).name))
+        @battle.pbDisplay(_INTL("{1} {2} cannot be lowered!", pbOfThis, GameData::Stat.get(:ATTACK).name))
       else
-        @battle.pbDisplay(_INTL("{1}'s {2} prevents {3} loss!", pbThis, abilityName,
+        @battle.pbDisplay(_INTL("{1} {2} prevents {3} loss!", pbOfThis, abilityName,
                                 GameData::Stat.get(:ATTACK).name))
       end
       @battle.pbHideAbilitySplash(self)
@@ -350,29 +350,29 @@ class Battle::Battler
     #       Intimidate ability by name).
     if !hasActiveAbility?(:CONTRARY)
       if pbOwnSide.effects[PBEffects::Mist] > 0
-        @battle.pbDisplay(_INTL("{1} is protected from {2}'s {3} by Mist!",
-                                pbThis, user.pbThis(true), user.abilityName))
+        @battle.pbDisplay(_INTL("{1} is protected from {2} {3} by Mist!",
+                                pbThis, user.pbOfThis(true), user.abilityName))
         return false
       end
       if abilityActive? &&
          (Battle::AbilityEffects.triggerStatLossImmunity(self.ability, self, :ATTACK, @battle, false) ||
           Battle::AbilityEffects.triggerStatLossImmunityNonIgnorable(self.ability, self, :ATTACK, @battle, false))
-        @battle.pbDisplay(_INTL("{1}'s {2} prevented {3}'s {4} from working!",
-                                pbThis, abilityName, user.pbThis(true), user.abilityName))
+        @battle.pbDisplay(_INTL("{1} {2} prevented {3} {4} from working!",
+                                pbOfThis, abilityName, user.pbOfThis(true), user.abilityName))
         return false
       end
       allAllies.each do |b|
         next if !b.abilityActive?
         if Battle::AbilityEffects.triggerStatLossImmunityFromAlly(b.ability, b, self, :ATTACK, @battle, false)
-          @battle.pbDisplay(_INTL("{1} is protected from {2}'s {3} by {4}'s {5}!",
-                                  pbThis, user.pbThis(true), user.abilityName, b.pbThis(true), b.abilityName))
+          @battle.pbDisplay(_INTL("{1} is protected from {2} {3} by {4} {5}!",
+                                  pbThis, user.pbOfThis(true), user.abilityName, b.pbOfThis(true), b.abilityName))
           return false
         end
       end
       if itemActive? &&
          Battle::ItemEffects.triggerStatLossImmunity(self.item, self, :ATTACK, @battle, false)
-        @battle.pbDisplay(_INTL("{1}'s {2} prevented {3}'s {4} from working!",
-                                pbThis, itemName, user.pbThis(true), user.abilityName))
+        @battle.pbDisplay(_INTL("{1} {2} prevented {3} {4} from working!",
+                                pbOfThis, itemName, user.pbOfThis(true), user.abilityName))
         return false
       end
     end
@@ -392,8 +392,8 @@ class Battle::Battler
       if Battle::Scene::USE_ABILITY_SPLASH
         @battle.pbDisplay(_INTL("{1} is protected by its substitute!", pbThis))
       else
-        @battle.pbDisplay(_INTL("{1}'s substitute protected it from {2}'s {3}!",
-                                pbThis, user.pbThis(true), user.abilityName))
+        @battle.pbDisplay(_INTL("{1} substitute protected it from {2} {3}!",
+                                pbOfThis, user.pbOfThis(true), user.abilityName))
       end
       return false
     end
@@ -405,29 +405,29 @@ class Battle::Battler
     #       mention the Supersweet Syrup ability by name).
     if !hasActiveAbility?(:CONTRARY)
       if pbOwnSide.effects[PBEffects::Mist] > 0
-        @battle.pbDisplay(_INTL("{1} is protected from {2}'s {3} by Mist!",
-                                pbThis, user.pbThis(true), user.abilityName))
+        @battle.pbDisplay(_INTL("{1} is protected from {2} {3} by Mist!",
+                                pbThis, user.pbOfThis(true), user.abilityName))
         return false
       end
       if abilityActive? &&
          (Battle::AbilityEffects.triggerStatLossImmunity(self.ability, self, :EVASION, @battle, false) ||
           Battle::AbilityEffects.triggerStatLossImmunityNonIgnorable(self.ability, self, :EVASION, @battle, false))
-        @battle.pbDisplay(_INTL("{1}'s {2} prevented {3}'s {4} from working!",
-                                pbThis, abilityName, user.pbThis(true), user.abilityName))
+        @battle.pbDisplay(_INTL("{1} {2} prevented {3} {4} from working!",
+                                pbOfThis, abilityName, user.pbOfThis(true), user.abilityName))
         return false
       end
       allAllies.each do |b|
         next if !b.abilityActive?
         if Battle::AbilityEffects.triggerStatLossImmunityFromAlly(b.ability, b, self, :EVASION, @battle, false)
-          @battle.pbDisplay(_INTL("{1} is protected from {2}'s {3} by {4}'s {5}!",
-                                  pbThis, user.pbThis(true), user.abilityName, b.pbThis(true), b.abilityName))
+          @battle.pbDisplay(_INTL("{1} is protected from {2} {3} by {4} {5}!",
+                                  pbThis, user.pbOfThis(true), user.abilityName, b.pbOfThis(true), b.abilityName))
           return false
         end
       end
       if itemActive? &&
          Battle::ItemEffects.triggerStatLossImmunity(self.item, self, :EVASION, @battle, false)
-        @battle.pbDisplay(_INTL("{1}'s {2} prevented {3}'s {4} from working!",
-                                pbThis, itemName, user.pbThis(true), user.abilityName))
+        @battle.pbDisplay(_INTL("{1} {2} prevented {3} {4} from working!",
+                                pbOfThis, itemName, user.pbOfThis(true), user.abilityName))
         return false
       end
     end

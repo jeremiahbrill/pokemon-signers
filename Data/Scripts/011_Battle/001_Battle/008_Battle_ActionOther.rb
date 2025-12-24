@@ -154,8 +154,8 @@ class Battle
     when 1   # Rayquaza
       pbDisplay(_INTL("{1}'s fervent wish has reached {2}!", trainerName, battler.pbThis))
     else
-      pbDisplay(_INTL("{1}'s {2} is reacting to {3}'s {4}!",
-                      battler.pbThis, battler.itemName, trainerName, pbGetMegaRingName(idxBattler)))
+      pbDisplay(_INTL("{1} {2} is reacting to {3}'s {4}!",
+                      battler.pbOfThis, battler.itemName, trainerName, pbGetMegaRingName(idxBattler)))
     end
     pbCommonAnimation("MegaEvolution", battler)
     battler.pokemon.makeMega
@@ -205,6 +205,6 @@ class Battle
     elsif battler.isSpecies?(:GROUDON)
       pbCommonAnimation("PrimalGroudon2", battler)
     end
-    pbDisplay(_INTL("{1}'s Primal Reversion!\nIt reverted to its primal form!", battler.pbThis))
+    pbDisplay(_INTL("{1} Primal Reversion!\nIt reverted to its primal form!", battler.pbOfThis))
   end
 end

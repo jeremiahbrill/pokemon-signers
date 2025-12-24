@@ -240,6 +240,19 @@ class Battle::Battler
     return name
   end
 
+  def pbOfThis(lowerCase = false)
+    if opposes?
+      if @battle.trainerBattle?
+        return lowerCase ? _INTL("the opposing {1}'s", name) : _INTL("The opposing {1}'s", name)
+      else
+        return lowerCase ? _INTL("the wild {1}'s", name) : _INTL("The wild {1}'s", name)
+      end
+    elsif !pbOwnedByPlayer?
+      return lowerCase ? _INTL("the ally {1}'s", name) : _INTL("The ally {1}'s", name)
+    end
+    return name
+  end
+
   def pbTeam(lowerCase = false)
     if opposes?
       return lowerCase ? _INTL("the opposing team") : _INTL("The opposing team")
@@ -247,11 +260,25 @@ class Battle::Battler
     return lowerCase ? _INTL("your team") : _INTL("Your team")
   end
 
+  def pbOfTeam(lowerCase = false)
+    if opposes?
+      return lowerCase ? _INTL("the opposing team's") : _INTL("The opposing team's")
+    end
+    return lowerCase ? _INTL("your team's") : _INTL("Your team's")
+  end
+
   def pbOpposingTeam(lowerCase = false)
     if opposes?
       return lowerCase ? _INTL("your team") : _INTL("Your team")
     end
     return lowerCase ? _INTL("the opposing team") : _INTL("The opposing team")
+  end
+
+  def pbOfOpposingTeam(lowerCase = false)
+    if opposes?
+      return lowerCase ? _INTL("your team's") : _INTL("Your team's")
+    end
+    return lowerCase ? _INTL("the opposing team's") : _INTL("The opposing team's")
   end
 
   #-----------------------------------------------------------------------------

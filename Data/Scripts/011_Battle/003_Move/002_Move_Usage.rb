@@ -156,8 +156,8 @@ class Battle::Move
         if Battle::Scene::USE_ABILITY_SPLASH
           @battle.pbDisplay(_INTL("{1} is unaffected!", target.pbThis))
         else
-          @battle.pbDisplay(_INTL("{1} is unaffected because of {2}'s {3}!",
-                                  target.pbThis, b.pbThis(true), b.abilityName))
+          @battle.pbDisplay(_INTL("{1} is unaffected because of {2} {3}!",
+                                  target.pbThis, b.pbOfThis(true), b.abilityName))
         end
         @battle.pbHideAbilitySplash(b)
       end
@@ -261,7 +261,7 @@ class Battle::Move
         oldHP = b.hp
         if b.damageState.substitute
           old_sub_hp = b.effects[PBEffects::Substitute] + b.damageState.hpLost
-          PBDebug.log("[Substitute HP change] #{b.pbThis}'s substitute lost #{b.damageState.hpLost} HP (#{old_sub_hp} -> #{b.effects[PBEffects::Substitute]})")
+          PBDebug.log("[Substitute HP change] #{b.pbOfThis} substitute lost #{b.damageState.hpLost} HP (#{old_sub_hp} -> #{b.effects[PBEffects::Substitute]})")
         else
           oldHP += b.damageState.hpLost
         end
@@ -332,7 +332,7 @@ class Battle::Move
     end
     if target.damageState.substitute && target.effects[PBEffects::Substitute] == 0
       target.effects[PBEffects::Substitute] = 0
-      @battle.pbDisplay(_INTL("{1}'s substitute faded!", target.pbThis))
+      @battle.pbDisplay(_INTL("{1} substitute faded!", target.pbOfThis))
     end
   end
 
@@ -342,15 +342,15 @@ class Battle::Move
       if Battle::Scene::USE_ABILITY_SPLASH
         @battle.pbDisplay(_INTL("Its disguise served it as a decoy!"))
       else
-        @battle.pbDisplay(_INTL("{1}'s disguise served it as a decoy!", target.pbThis))
+        @battle.pbDisplay(_INTL("{1} disguise served it as a decoy!", target.pbOfThis))
       end
       @battle.pbHideAbilitySplash(target)
-      target.pbChangeForm(1, _INTL("{1}'s disguise was busted!", target.pbThis))
+      target.pbChangeForm(1, _INTL("{1} disguise was busted!", target.pbOfThis))
       target.pbReduceHP(target.totalhp / 8, false) if Settings::MECHANICS_GENERATION >= 8
     elsif target.damageState.iceFace
       @battle.pbShowAbilitySplash(target)
       if !Battle::Scene::USE_ABILITY_SPLASH
-        @battle.pbDisplay(_INTL("{1}'s {2} activated!", target.pbThis, target.abilityName))
+        @battle.pbDisplay(_INTL("{1} {2} activated!", target.pbOfThis, target.abilityName))
       end
       target.pbChangeForm(1, _INTL("{1} transformed!", target.pbThis))
       @battle.pbHideAbilitySplash(target)

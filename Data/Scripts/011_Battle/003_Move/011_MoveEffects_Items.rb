@@ -19,7 +19,7 @@ class Battle::Move::UserTakesTargetItem < Battle::Move
     else
       @battle.swapHeldItems(user, target)
     end
-    @battle.pbDisplay(_INTL("{1} stole {2}'s {3}!", user.pbThis, target.pbThis(true), user.itemName))
+    @battle.pbDisplay(_INTL("{1} stole {2} {3}!", user.pbThis, target.pbOfThis(true), user.itemName))
     user.pbHeldItemTriggerCheck
   end
 end
@@ -177,7 +177,7 @@ class Battle::Move::DestroyTargetBerryOrGem < Battle::Move
     return if target.hasActiveAbility?(:STICKYHOLD) && !target.beingMoldBroken?
     item_name = target.itemName
     target.pbRemoveItem
-    @battle.pbDisplay(_INTL("{1}'s {2} was incinerated!", target.pbThis, item_name))
+    @battle.pbDisplay(_INTL("{1} {2} was incinerated!", target.pbOfThis, item_name))
   end
 end
 
@@ -218,8 +218,8 @@ class Battle::Move::CorrodeTargetItem < Battle::Move
 
   def pbEffectAgainstTarget(user, target)
     @battle.corrosiveGas[target.index % 2][target.pokemonIndex] = true
-    @battle.pbDisplay(_INTL("{1} corroded {2}'s {3}!",
-                            user.pbThis, target.pbThis(true), target.itemName))
+    @battle.pbDisplay(_INTL("{1} corroded {2} {3}!",
+                            user.pbThis, target.pbOfThis(true), target.itemName))
   end
 end
 

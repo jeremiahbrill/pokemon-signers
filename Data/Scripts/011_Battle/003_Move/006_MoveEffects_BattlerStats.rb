@@ -518,7 +518,7 @@ class Battle::Move::LowerUserDefSpDef1RaiseUserAtkSpAtkSpd2 < Battle::Move
       break
     end
     if failed
-      @battle.pbDisplay(_INTL("{1}'s stats can't be changed further!", user.pbThis))
+      @battle.pbDisplay(_INTL("{1} stats can't be changed further!", user.pbOfThis))
       return true
     end
     return false
@@ -586,7 +586,7 @@ class Battle::Move::RaiseUserAtkSpd1RemoveEntryHazardsAndSubstitutes < Battle::M
       next if b.effects[PBEffects::Substitute] == 0
       b.effects[PBEffects::Substitute] = 0
       something_tidied = true
-      @battle.pbDisplay(_INTL("{1}'s substitute faded!", b.pbThis))
+      @battle.pbDisplay(_INTL("{1} substitute faded!", b.pbOfThis))
     end
     if user.pbOwnSide.effects[PBEffects::StealthRock]
       user.pbOwnSide.effects[PBEffects::StealthRock] = false
@@ -1151,7 +1151,7 @@ class Battle::Move::RaiseTargetRandomStat2 < Battle::Move
       @statArray.push(s.id) if target.pbCanRaiseStatStage?(s.id, user, self)
     end
     if @statArray.length == 0
-      @battle.pbDisplay(_INTL("{1}'s stats won't go any higher!", target.pbThis)) if show_message
+      @battle.pbDisplay(_INTL("{1} stats won't go any higher!", target.pbOfThis)) if show_message
       return true
     end
     return false
@@ -1341,7 +1341,7 @@ class Battle::Move::LowerTargetSpAtk2IfCanAttract < Battle::Move::TargetStatDown
         if Battle::Scene::USE_ABILITY_SPLASH
           @battle.pbDisplay(_INTL("{1} is unaffected!", target.pbThis))
         else
-          @battle.pbDisplay(_INTL("{1}'s {2} prevents romance!", target.pbThis, target.abilityName))
+          @battle.pbDisplay(_INTL("{1} {2} prevents romance!", target.pbOfThis, target.abilityName))
         end
         @battle.pbHideAbilitySplash(target)
       end
@@ -1572,19 +1572,19 @@ class Battle::Move::LowerTargetEvasion1RemoveSideEffects < Battle::Move::TargetS
     end
     if target.pbOwnSide.effects[PBEffects::AuroraVeil] > 0
       target.pbOwnSide.effects[PBEffects::AuroraVeil] = 0
-      @battle.pbDisplay(_INTL("{1}'s Aurora Veil wore off!", target.pbTeam))
+      @battle.pbDisplay(_INTL("{1} Aurora Veil wore off!", target.pbOfTeam))
     end
     if target.pbOwnSide.effects[PBEffects::LightScreen] > 0
       target.pbOwnSide.effects[PBEffects::LightScreen] = 0
-      @battle.pbDisplay(_INTL("{1}'s Light Screen wore off!", target.pbTeam))
+      @battle.pbDisplay(_INTL("{1} Light Screen wore off!", target.pbOfTeam))
     end
     if target.pbOwnSide.effects[PBEffects::Reflect] > 0
       target.pbOwnSide.effects[PBEffects::Reflect] = 0
-      @battle.pbDisplay(_INTL("{1}'s Reflect wore off!", target.pbTeam))
+      @battle.pbDisplay(_INTL("{1} Reflect wore off!", target.pbOfTeam))
     end
     if target.pbOwnSide.effects[PBEffects::Mist] > 0
       target.pbOwnSide.effects[PBEffects::Mist] = 0
-      @battle.pbDisplay(_INTL("{1}'s Mist faded!", target.pbTeam))
+      @battle.pbDisplay(_INTL("{1} Mist faded!", target.pbOfTeam))
     end
     if target.pbOwnSide.effects[PBEffects::Safeguard] > 0
       target.pbOwnSide.effects[PBEffects::Safeguard] = 0
@@ -1720,7 +1720,7 @@ class Battle::Move::LowerPoisonedTargetAtkSpAtkSpd1 < Battle::Move
       if failed
         @battle.pbShowAbilitySplash(target)
         if !Battle::Scene::USE_ABILITY_SPLASH
-          @battle.pbDisplay(_INTL("{1}'s {2} activated!", target.pbThis, target.abilityName))
+          @battle.pbDisplay(_INTL("{1} {2} activated!", target.pbOfThis, target.abilityName))
         end
         user.pbCanLowerStatStage?(@statDown[0], target, self, true, false, true)   # Show fail message
         @battle.pbHideAbilitySplash(target)
@@ -1772,7 +1772,7 @@ class Battle::Move::RaiseAlliesAtkDef1 < Battle::Move
 
   def pbFailsAgainstTarget?(user, target, show_message)
     return false if @validTargets.any? { |b| b.index == target.index }
-    @battle.pbDisplay(_INTL("{1}'s stats can't be raised further!", target.pbThis)) if show_message
+    @battle.pbDisplay(_INTL("{1} stats can't be raised further!", target.pbOfThis)) if show_message
     return true
   end
 
@@ -1820,7 +1820,7 @@ class Battle::Move::RaisePlusMinusUserAndAlliesAtkSpAtk1 < Battle::Move
   def pbFailsAgainstTarget?(user, target, show_message)
     return false if @validTargets.any? { |b| b.index == target.index }
     return true if !target.hasActiveAbility?([:MINUS, :PLUS])
-    @battle.pbDisplay(_INTL("{1}'s stats can't be raised further!", target.pbThis)) if show_message
+    @battle.pbDisplay(_INTL("{1} stats can't be raised further!", target.pbOfThis)) if show_message
     return true
   end
 
@@ -1873,7 +1873,7 @@ class Battle::Move::RaisePlusMinusUserAndAlliesDefSpDef1 < Battle::Move
   def pbFailsAgainstTarget?(user, target, show_message)
     return false if @validTargets.any? { |b| b.index == target.index }
     return true if !target.hasActiveAbility?([:MINUS, :PLUS])
-    @battle.pbDisplay(_INTL("{1}'s stats can't be raised further!", target.pbThis)) if show_message
+    @battle.pbDisplay(_INTL("{1} stats can't be raised further!", target.pbOfThis)) if show_message
     return true
   end
 
@@ -1918,7 +1918,7 @@ class Battle::Move::RaiseGroundedGrassBattlersAtkSpAtk1 < Battle::Move
     return false if @validTargets.include?(target.index)
     return true if !target.pbHasType?(:GRASS)
     return true if target.airborne? || target.semiInvulnerable?
-    @battle.pbDisplay(_INTL("{1}'s stats can't be raised further!", target.pbThis)) if show_message
+    @battle.pbDisplay(_INTL("{1} stats can't be raised further!", target.pbOfThis)) if show_message
     return true
   end
 
@@ -2081,7 +2081,7 @@ class Battle::Move::UserCopyTargetStatStages < Battle::Move
       user.setCriticalHitRate(target.criticalHitRate)
       user.effects[PBEffects::LaserFocus] = target.effects[PBEffects::LaserFocus]
     end
-    @battle.pbDisplay(_INTL("{1} copied {2}'s stat changes!", user.pbThis, target.pbThis(true)))
+    @battle.pbDisplay(_INTL("{1} copied {2} stat changes!", user.pbThis, target.pbOfThis(true)))
   end
 end
 
@@ -2140,7 +2140,7 @@ class Battle::Move::InvertTargetStatStages < Battle::Move
       end
       target.stages[s.id] *= -1
     end
-    @battle.pbDisplay(_INTL("{1}'s stats were reversed!", target.pbThis))
+    @battle.pbDisplay(_INTL("{1} stats were reversed!", target.pbOfThis))
   end
 end
 
@@ -2152,7 +2152,7 @@ class Battle::Move::ResetTargetStatStages < Battle::Move
     return if target.damageState.calcDamage == 0 || target.damageState.substitute
     return if !target.hasAlteredStatStages?
     target.pbResetStatStages
-    @battle.pbDisplay(_INTL("{1}'s stat changes were removed!", target.pbThis))
+    @battle.pbDisplay(_INTL("{1} stat changes were removed!", target.pbOfThis))
   end
 end
 

@@ -121,7 +121,7 @@ class Battle::Battler
       strength = b.effects[PBEffects::Spotlight]
     end
     if newTarget
-      PBDebug.log("[Move target changed] #{newTarget.pbThis}'s Spotlight made it the target")
+      PBDebug.log("[Move target changed] #{newTarget.pbOfThis} Spotlight made it the target")
       targets = []
       pbAddTarget(targets, user, newTarget, move, nearOnly)
       return targets
@@ -140,7 +140,7 @@ class Battle::Battler
       strength = b.effects[PBEffects::FollowMe]
     end
     if newTarget
-      PBDebug.log("[Move target changed] #{newTarget.pbThis}'s Follow Me/Rage Powder made it the target")
+      PBDebug.log("[Move target changed] #{newTarget.pbOfThis} Follow Me/Rage Powder made it the target")
       targets = []
       pbAddTarget(targets, user, newTarget, move, nearOnly)
       return targets

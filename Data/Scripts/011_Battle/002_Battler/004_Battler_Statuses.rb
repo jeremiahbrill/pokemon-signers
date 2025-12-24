@@ -136,28 +136,28 @@ class Battle::Battler
         elsif immAlly
           case newStatus
           when :SLEEP
-            msg = _INTL("{1} stays awake because of {2}'s {3}!",
-                        pbThis, immAlly.pbThis(true), immAlly.abilityName)
+            msg = _INTL("{1} stays awake because of {2} {3}!",
+                        pbThis, immAlly.pbOfThis(true), immAlly.abilityName)
           when :POISON
-            msg = _INTL("{1} cannot be poisoned because of {2}'s {3}!",
-                        pbThis, immAlly.pbThis(true), immAlly.abilityName)
+            msg = _INTL("{1} cannot be poisoned because of {2} {3}!",
+                        pbThis, immAlly.pbOfThis(true), immAlly.abilityName)
           when :BURN
-            msg = _INTL("{1} cannot be burned because of {2}'s {3}!",
-                        pbThis, immAlly.pbThis(true), immAlly.abilityName)
+            msg = _INTL("{1} cannot be burned because of {2} {3}!",
+                        pbThis, immAlly.pbOfThis(true), immAlly.abilityName)
           when :PARALYSIS
-            msg = _INTL("{1} cannot be paralyzed because of {2}'s {3}!",
-                        pbThis, immAlly.pbThis(true), immAlly.abilityName)
+            msg = _INTL("{1} cannot be paralyzed because of {2} {3}!",
+                        pbThis, immAlly.pbOfThis(true), immAlly.abilityName)
           when :FROZEN
-            msg = _INTL("{1} cannot be frozen solid because of {2}'s {3}!",
-                        pbThis, immAlly.pbThis(true), immAlly.abilityName)
+            msg = _INTL("{1} cannot be frozen solid because of {2} {3}!",
+                        pbThis, immAlly.pbOfThis(true), immAlly.abilityName)
           end
         else
           case newStatus
           when :SLEEP     then msg = _INTL("{1} stays awake because of its {2}!", pbThis, abilityName)
-          when :POISON    then msg = _INTL("{1}'s {2} prevents poisoning!", pbThis, abilityName)
-          when :BURN      then msg = _INTL("{1}'s {2} prevents burns!", pbThis, abilityName)
-          when :PARALYSIS then msg = _INTL("{1}'s {2} prevents paralysis!", pbThis, abilityName)
-          when :FROZEN    then msg = _INTL("{1}'s {2} prevents freezing!", pbThis, abilityName)
+          when :POISON    then msg = _INTL("{1} {2} prevents poisoning!", pbOfThis, abilityName)
+          when :BURN      then msg = _INTL("{1} {2} prevents burns!", pbOfThis, abilityName)
+          when :PARALYSIS then msg = _INTL("{1} {2} prevents paralysis!", pbOfThis, abilityName)
+          when :FROZEN    then msg = _INTL("{1} {2} prevents freezing!", pbOfThis, abilityName)
           end
         end
         @battle.pbDisplay(msg)
@@ -168,7 +168,7 @@ class Battle::Battler
     # Safeguard immunity
     if pbOwnSide.effects[PBEffects::Safeguard] > 0 && !self_inflicted && move &&
        !(user && user.hasActiveAbility?(:INFILTRATOR))
-      @battle.pbDisplay(_INTL("{1}'s team is protected by Safeguard!", pbThis)) if showMessages
+      @battle.pbDisplay(_INTL("{1} team is protected by Safeguard!", pbOfThis)) if showMessages
       return false
     end
     return true
@@ -253,7 +253,7 @@ class Battle::Battler
         @battle.pbDisplay(_INTL("{1} was frozen solid!", pbThis))
       end
     end
-    PBDebug.log("[Status change] #{pbThis}'s sleep count is #{newStatusCount}") if newStatus == :SLEEP
+    PBDebug.log("[Status change] #{pbOfThis} sleep count is #{newStatusCount}") if newStatus == :SLEEP
     # Form change check
     pbCheckFormOnStatusChange
     # Poison Puppeteer
@@ -433,7 +433,7 @@ class Battle::Battler
     when :FROZEN
       @battle.pbDisplay(_INTL("{1} is frozen solid!", pbThis))
     end
-    PBDebug.log("[Status continues] #{pbThis}'s sleep count is #{@statusCount}") if self.status == :SLEEP
+    PBDebug.log("[Status continues] #{pbOfThis} sleep count is #{@statusCount}") if self.status == :SLEEP
   end
 
   def pbCureStatus(showMessages = true)
@@ -443,12 +443,12 @@ class Battle::Battler
       case oldStatus
       when :SLEEP     then @battle.pbDisplay(_INTL("{1} woke up!", pbThis))
       when :POISON    then @battle.pbDisplay(_INTL("{1} was cured of its poisoning.", pbThis))
-      when :BURN      then @battle.pbDisplay(_INTL("{1}'s burn was healed.", pbThis))
+      when :BURN      then @battle.pbDisplay(_INTL("{1} burn was healed.", pbOfThis))
       when :PARALYSIS then @battle.pbDisplay(_INTL("{1} was cured of paralysis.", pbThis))
       when :FROZEN    then @battle.pbDisplay(_INTL("{1} thawed out!", pbThis))
       end
     end
-    PBDebug.log("[Status change] #{pbThis}'s status was cured") if !showMessages
+    PBDebug.log("[Status change] #{pbOfThis} status was cured") if !showMessages
   end
 
   #-----------------------------------------------------------------------------
@@ -477,7 +477,7 @@ class Battle::Battler
         if Battle::Scene::USE_ABILITY_SPLASH
           @battle.pbDisplay(_INTL("{1} doesn't become confused!", pbThis))
         else
-          @battle.pbDisplay(_INTL("{1}'s {2} prevents confusion!", pbThis, abilityName))
+          @battle.pbDisplay(_INTL("{1} {2} prevents confusion!", pbOfThis, abilityName))
         end
         @battle.pbHideAbilitySplash(self)
       end
@@ -485,7 +485,7 @@ class Battle::Battler
     end
     if pbOwnSide.effects[PBEffects::Safeguard] > 0 && !selfInflicted &&
        !(user && user.hasActiveAbility?(:INFILTRATOR))
-      @battle.pbDisplay(_INTL("{1}'s team is protected by Safeguard!", pbThis)) if showMessages
+      @battle.pbDisplay(_INTL("{1} team is protected by Safeguard!", pbOfThis)) if showMessages
       return false
     end
     return true
@@ -500,7 +500,7 @@ class Battle::Battler
     @battle.pbCommonAnimation("Confusion", self)
     msg = _INTL("{1} became confused!", pbThis) if nil_or_empty?(msg)
     @battle.pbDisplay(msg)
-    PBDebug.log("[Lingering effect] #{pbThis}'s confusion count is #{@effects[PBEffects::Confusion]}")
+    PBDebug.log("[Lingering effect] #{pbOfThis} confusion count is #{@effects[PBEffects::Confusion]}")
     # Confusion cures
     pbItemStatusCureCheck
     pbAbilityStatusCureCheck
@@ -538,7 +538,7 @@ class Battle::Battler
         if Battle::Scene::USE_ABILITY_SPLASH
           @battle.pbDisplay(_INTL("{1} is unaffected!", pbThis))
         else
-          @battle.pbDisplay(_INTL("{1}'s {2} prevents romance!", pbThis, abilityName))
+          @battle.pbDisplay(_INTL("{1} {2} prevents romance!", pbOfThis, abilityName))
         end
         @battle.pbHideAbilitySplash(self)
       end
@@ -551,7 +551,7 @@ class Battle::Battler
           if Battle::Scene::USE_ABILITY_SPLASH
             @battle.pbDisplay(_INTL("{1} is unaffected!", pbThis))
           else
-            @battle.pbDisplay(_INTL("{1}'s {2} prevents romance!", b.pbThis, b.abilityName))
+            @battle.pbDisplay(_INTL("{1} {2} prevents romance!", b.pbOfThis, b.abilityName))
           end
           @battle.pbHideAbilitySplash(b)
         end

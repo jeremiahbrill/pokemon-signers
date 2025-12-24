@@ -869,7 +869,7 @@ class Battle::Move::StartWeakenPhysicalDamageAgainstUserSide < Battle::Move
   def pbEffectGeneral(user)
     user.pbOwnSide.effects[PBEffects::Reflect] = 5
     user.pbOwnSide.effects[PBEffects::Reflect] = 8 if user.hasActiveItem?(:LIGHTCLAY)
-    @battle.pbDisplay(_INTL("{1} raised {2}'s Defense!", @name, user.pbTeam(true)))
+    @battle.pbDisplay(_INTL("{1} raised {2} Defense!", @name, user.pbOfTeam(true)))
   end
 end
 
@@ -891,7 +891,7 @@ class Battle::Move::StartWeakenSpecialDamageAgainstUserSide < Battle::Move
   def pbEffectGeneral(user)
     user.pbOwnSide.effects[PBEffects::LightScreen] = 5
     user.pbOwnSide.effects[PBEffects::LightScreen] = 8 if user.hasActiveItem?(:LIGHTCLAY)
-    @battle.pbDisplay(_INTL("{1} raised {2}'s Special Defense!", @name, user.pbTeam(true)))
+    @battle.pbDisplay(_INTL("{1} raised {2} Special Defense!", @name, user.pbOfTeam(true)))
   end
 end
 
@@ -932,15 +932,15 @@ class Battle::Move::RemoveScreens < Battle::Move
   def pbEffectGeneral(user)
     if user.pbOpposingSide.effects[PBEffects::LightScreen] > 0
       user.pbOpposingSide.effects[PBEffects::LightScreen] = 0
-      @battle.pbDisplay(_INTL("{1}'s Light Screen wore off!", user.pbOpposingTeam))
+      @battle.pbDisplay(_INTL("{1} Light Screen wore off!", user.pbOfOpposingTeam))
     end
     if user.pbOpposingSide.effects[PBEffects::Reflect] > 0
       user.pbOpposingSide.effects[PBEffects::Reflect] = 0
-      @battle.pbDisplay(_INTL("{1}'s Reflect wore off!", user.pbOpposingTeam))
+      @battle.pbDisplay(_INTL("{1} Reflect wore off!", user.pbOfOpposingTeam))
     end
     if user.pbOpposingSide.effects[PBEffects::AuroraVeil] > 0
       user.pbOpposingSide.effects[PBEffects::AuroraVeil] = 0
-      @battle.pbDisplay(_INTL("{1}'s Aurora Veil wore off!", user.pbOpposingTeam))
+      @battle.pbDisplay(_INTL("{1} Aurora Veil wore off!", user.pbOfOpposingTeam))
     end
   end
 
@@ -1782,7 +1782,7 @@ class Battle::Move::TargetMovesBecomeElectric < Battle::Move
 
   def pbEffectAgainstTarget(user, target)
     target.effects[PBEffects::Electrify] = true
-    @battle.pbDisplay(_INTL("{1}'s moves have been electrified!", target.pbThis))
+    @battle.pbDisplay(_INTL("{1} moves have been electrified!", target.pbOfThis))
   end
 end
 

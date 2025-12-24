@@ -421,16 +421,16 @@ class Battle::Move::AddSpikesToFoeSide < Battle::Move
   def pbEffectGeneral(user)
     return if damagingMove?
     user.pbOpposingSide.effects[PBEffects::Spikes] += 1
-    @battle.pbDisplay(_INTL("Spikes were scattered all around {1}'s feet!",
-                            user.pbOpposingTeam(true)))
+    @battle.pbDisplay(_INTL("Spikes were scattered all around {1} feet!",
+                            user.pbOfOpposingTeam(true)))
   end
 
   def pbAdditionalEffect(user, target)
     return if user.fainted?
     return if user.pbOpposingSide.effects[PBEffects::Spikes] >= 3
     user.pbOpposingSide.effects[PBEffects::Spikes] += 1
-    @battle.pbDisplay(_INTL("Spikes were scattered all around {1}'s feet!",
-                            user.pbOpposingTeam(true)))
+    @battle.pbDisplay(_INTL("Spikes were scattered all around {1} feet!",
+                            user.pbOfOpposingTeam(true)))
   end
 end
 
@@ -453,16 +453,16 @@ class Battle::Move::AddToxicSpikesToFoeSide < Battle::Move
   def pbEffectGeneral(user)
     return if damagingMove?
     user.pbOpposingSide.effects[PBEffects::ToxicSpikes] += 1
-    @battle.pbDisplay(_INTL("Poison spikes were scattered all around {1}'s feet!",
-                            user.pbOpposingTeam(true)))
+    @battle.pbDisplay(_INTL("Poison spikes were scattered all around {1} feet!",
+                            user.pbOfOpposingTeam(true)))
   end
 
   def pbAdditionalEffect(user, target)
     return if user.fainted?
     return if user.pbOpposingSide.effects[PBEffects::ToxicSpikes] >= 2
     user.pbOpposingSide.effects[PBEffects::ToxicSpikes] += 1
-    @battle.pbDisplay(_INTL("Poison spikes were scattered all around {1}'s feet!",
-                            user.pbOpposingTeam(true)))
+    @battle.pbDisplay(_INTL("Poison spikes were scattered all around {1} feet!",
+                            user.pbOfOpposingTeam(true)))
   end
 end
 
@@ -515,16 +515,16 @@ class Battle::Move::AddStickyWebToFoeSide < Battle::Move
   def pbEffectGeneral(user)
     return false if damagingMove?
     user.pbOpposingSide.effects[PBEffects::StickyWeb] = true
-    @battle.pbDisplay(_INTL("A sticky web has been laid out beneath {1}'s feet!",
-                            user.pbOpposingTeam(true)))
+    @battle.pbDisplay(_INTL("A sticky web has been laid out beneath {1} feet!",
+                            user.pbOfOpposingTeam(true)))
   end
 
   def pbAdditionalEffect(user, target)
     return if user.fainted?
     return if user.pbOpposingSide.effects[PBEffects::StickyWeb]
     user.pbOpposingSide.effects[PBEffects::StickyWeb] = true
-    @battle.pbDisplay(_INTL("A sticky web has been laid out beneath {1}'s feet!",
-                            user.pbOpposingTeam(true)))
+    @battle.pbDisplay(_INTL("A sticky web has been laid out beneath {1} feet!",
+                            user.pbOfOpposingTeam(true)))
   end
 end
 
@@ -644,7 +644,7 @@ class Battle::Move::RemoveUserBindingAndEntryHazards < Battle::Move::StatUpMove
     if user.effects[PBEffects::Trapping] > 0
       trapMove = GameData::Move.get(user.effects[PBEffects::TrappingMove]).name
       trapUser = @battle.battlers[user.effects[PBEffects::TrappingUser]]
-      @battle.pbDisplay(_INTL("{1} got free of {2}'s {3}!", user.pbThis, trapUser.pbThis(true), trapMove))
+      @battle.pbDisplay(_INTL("{1} got free of {2} {3}!", user.pbThis, trapUser.pbOfThis(true), trapMove))
       user.effects[PBEffects::Trapping]     = 0
       user.effects[PBEffects::TrappingMove] = nil
       user.effects[PBEffects::TrappingUser] = -1

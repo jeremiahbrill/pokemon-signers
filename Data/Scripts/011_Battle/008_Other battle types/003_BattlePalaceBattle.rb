@@ -151,7 +151,7 @@ class BattlePalaceBattle < Battle
     when :CAREFUL, :RASH, :LAX, :SASSY, :MILD, :TIMID
       pbDisplay(_INTL("{1} began growling deeply!", battler.pbThis))
     when :GENTLE, :ADAMANT, :HASTY, :LONELY, :RELAXED, :NAUGHTY
-      pbDisplay(_INTL("A glint appears in {1}'s eyes!", battler.pbThis(true)))
+      pbDisplay(_INTL("A glint appears in {1} eyes!", battler.pbOfThis(true)))
     when :JOLLY, :BOLD, :BRAVE, :CALM, :IMPISH, :MODEST
       pbDisplay(_INTL("{1} is getting into position!", battler.pbThis))
     end

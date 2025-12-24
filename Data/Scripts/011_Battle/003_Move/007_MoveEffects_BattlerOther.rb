@@ -138,7 +138,7 @@ class Battle::Move::PoisonTargetRemoveUserBindingAndEntryHazards < Battle::Move:
     if user.effects[PBEffects::Trapping] > 0
       trapMove = GameData::Move.get(user.effects[PBEffects::TrappingMove]).name
       trapUser = @battle.battlers[user.effects[PBEffects::TrappingUser]]
-      @battle.pbDisplay(_INTL("{1} got free of {2}'s {3}!", user.pbThis, trapUser.pbThis(true), trapMove))
+      @battle.pbDisplay(_INTL("{1} got free of {2} {3}!", user.pbThis, trapUser.pbOfThis(true), trapMove))
       user.effects[PBEffects::Trapping]     = 0
       user.effects[PBEffects::TrappingMove] = nil
       user.effects[PBEffects::TrappingUser] = -1
@@ -446,7 +446,7 @@ class Battle::Move::GiveUserStatusToTarget < Battle::Move
       msg = _INTL("{1} was cured of its poisoning.", user.pbThis)
     when :BURN
       target.pbBurn(user)
-      msg = _INTL("{1}'s burn was healed.", user.pbThis)
+      msg = _INTL("{1} burn was healed.", user.pbOfThis)
     when :PARALYSIS
       target.pbParalyze(user)
       msg = _INTL("{1} was cured of paralysis.", user.pbThis)
@@ -517,7 +517,11 @@ class Battle::Move::CureUserPartyStatus < Battle::Move
 
   def pbAromatherapyHeal(pkmn, battler = nil)
     oldStatus = (battler) ? battler.status : pkmn.status
-    curedName = (battler) ? battler.pbThis : pkmn.name
+    if oldStatus == :BURN
+      curedName = (battler) ? battler.pbOfThis : pkmn.name
+    else
+      curedName = (battler) ? battler.pbThis : pkmn.name
+    end
     if battler
       battler.pbCureStatus(false)
     else
@@ -530,7 +534,7 @@ class Battle::Move::CureUserPartyStatus < Battle::Move
     when :POISON
       @battle.pbDisplay(_INTL("{1} was cured of its poisoning.", curedName))
     when :BURN
-      @battle.pbDisplay(_INTL("{1}'s burn was healed.", curedName))
+      @battle.pbDisplay(_INTL("{1} burn was healed.", curedName))
     when :PARALYSIS
       @battle.pbDisplay(_INTL("{1} was cured of paralysis.", curedName))
     when :FROZEN
@@ -839,7 +843,7 @@ class Battle::Move::SetUserTypesBasedOnEnvironment < Battle::Move
   def pbEffectGeneral(user)
     user.pbChangeTypes(@newType)
     typeName = GameData::Type.get(@newType).name
-    @battle.pbDisplay(_INTL("{1}'s type changed to {2}!", user.pbThis, typeName))
+    @battle.pbDisplay(_INTL("{1} type changed to {2}!", user.pbOfThis, typeName))
   end
 end
 
@@ -881,7 +885,7 @@ class Battle::Move::SetUserTypesToResistLastAttack < Battle::Move
     newType = @newTypes[@battle.pbRandom(@newTypes.length)]
     user.pbChangeTypes(newType)
     typeName = GameData::Type.get(newType).name
-    @battle.pbDisplay(_INTL("{1}'s type changed to {2}!", user.pbThis, typeName))
+    @battle.pbDisplay(_INTL("{1} type changed to {2}!", user.pbOfThis, typeName))
   end
 end
 
@@ -915,8 +919,8 @@ class Battle::Move::SetUserTypesToTargetTypes < Battle::Move
 
   def pbEffectAgainstTarget(user, target)
     user.pbChangeTypes(target)
-    @battle.pbDisplay(_INTL("{1}'s type changed to match {2}'s!",
-                            user.pbThis, target.pbThis(true)))
+    @battle.pbDisplay(_INTL("{1} type changed to match {2}!",
+                            user.pbOfThis, target.pbOfThis(true)))
   end
 end
 
@@ -952,7 +956,7 @@ class Battle::Move::SetUserTypesToUserMoveType < Battle::Move
     newType = @newTypes[@battle.pbRandom(@newTypes.length)]
     user.pbChangeTypes(newType)
     typeName = GameData::Type.get(newType).name
-    @battle.pbDisplay(_INTL("{1}'s type changed to {2}!", user.pbThis, typeName))
+    @battle.pbDisplay(_INTL("{1} type changed to {2}!", user.pbOfThis, typeName))
   end
 end
 
@@ -974,7 +978,7 @@ class Battle::Move::SetTargetTypesToPsychic < Battle::Move
   def pbEffectAgainstTarget(user, target)
     target.pbChangeTypes(:PSYCHIC)
     typeName = GameData::Type.get(:PSYCHIC).name
-    @battle.pbDisplay(_INTL("{1}'s type changed to {2}!", target.pbThis, typeName))
+    @battle.pbDisplay(_INTL("{1} type changed to {2}!", target.pbOfThis, typeName))
   end
 end
 
@@ -996,7 +1000,7 @@ class Battle::Move::SetTargetTypesToWater < Battle::Move
   def pbEffectAgainstTarget(user, target)
     target.pbChangeTypes(:WATER)
     typeName = GameData::Type.get(:WATER).name
-    @battle.pbDisplay(_INTL("{1}'s type changed to {2}!", target.pbThis, typeName))
+    @battle.pbDisplay(_INTL("{1} type changed to {2}!", target.pbOfThis, typeName))
   end
 end
 
@@ -1183,8 +1187,8 @@ class Battle::Move::SetUserAbilityToTargetAbility < Battle::Move
     oldAbil = user.ability
     user.ability = target.ability
     @battle.pbReplaceAbilitySplash(user)
-    @battle.pbDisplay(_INTL("{1} copied {2}'s {3}!",
-                            user.pbThis, target.pbThis(true), target.abilityName))
+    @battle.pbDisplay(_INTL("{1} copied {2} {3}!",
+                            user.pbThis, target.pbOfThis(true), target.abilityName))
     @battle.pbHideAbilitySplash(user)
     user.pbOnLosingAbility(oldAbil)
     user.pbTriggerAbilityOnGainingIt
@@ -1234,8 +1238,8 @@ class Battle::Move::SetUserAndAlliesAbilityToTargetAbility < Battle::Move
       @battle.pbShowAbilitySplash(battler, true, false)
       battler.ability = target.ability
       @battle.pbReplaceAbilitySplash(battler)
-      @battle.pbDisplay(_INTL("{1} copied {2}'s {3}!",
-                              battler.pbThis, target.pbThis(true), target.abilityName))
+      @battle.pbDisplay(_INTL("{1} copied {2} {3}!",
+                              battler.pbThis, target.pbOfThis(true), target.abilityName))
       @battle.pbHideAbilitySplash(battler)
     end
     # Effects after abilities were changed
@@ -1371,7 +1375,7 @@ class Battle::Move::NegateTargetAbility < Battle::Move
   def pbEffectAgainstTarget(user, target)
     target.effects[PBEffects::GastroAcid] = true
     target.effects[PBEffects::Truant]     = false
-    @battle.pbDisplay(_INTL("{1}'s Ability was suppressed!", target.pbThis))
+    @battle.pbDisplay(_INTL("{1} Ability was suppressed!", target.pbOfThis))
     target.pbOnLosingAbility(target.ability, true)
   end
 end
@@ -1389,7 +1393,7 @@ class Battle::Move::NegateTargetAbilityIfTargetActed < Battle::Move
               @battle.choices[target.index][0] == :Shift) && target.movedThisRound?)
     target.effects[PBEffects::GastroAcid] = true
     target.effects[PBEffects::Truant]     = false
-    @battle.pbDisplay(_INTL("{1}'s Ability was suppressed!", target.pbThis))
+    @battle.pbDisplay(_INTL("{1} Ability was suppressed!", target.pbOfThis))
     target.pbOnLosingAbility(target.ability, true)
   end
 end

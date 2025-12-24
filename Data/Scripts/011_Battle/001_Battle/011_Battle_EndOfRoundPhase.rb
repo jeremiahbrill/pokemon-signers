@@ -122,9 +122,9 @@ class Battle
       pos.effects[PBEffects::Wish] -= 1
       next if pos.effects[PBEffects::Wish] > 0
       next if !@battlers[idxPos] || !@battlers[idxPos].canHeal?
-      wishMaker = pbThisEx(idxPos, pos.effects[PBEffects::WishMaker])
+      wishMaker = pbOfThisEx(idxPos, pos.effects[PBEffects::WishMaker])
       @battlers[idxPos].pbRecoverHP(pos.effects[PBEffects::WishAmount])
-      pbDisplay(_INTL("{1}'s wish came true!", wishMaker))
+      pbDisplay(_INTL("{1} wish came true!", wishMaker))
     end
   end
 
@@ -159,7 +159,7 @@ class Battle
     if @field.terrain == :Grassy && battler.affectedByTerrain? && battler.canHeal?
       PBDebug.log("[Lingering effect] Grassy Terrain heals #{battler.pbThis(true)}")
       battler.pbRecoverHP(battler.totalhp / 16)
-      pbDisplay(_INTL("{1}'s HP was restored.", battler.pbThis))
+      pbDisplay(_INTL("{1} HP was restored.", battler.pbOfThis))
     end
   end
 
@@ -176,7 +176,7 @@ class Battle
       hpGain = battler.totalhp / 16
       hpGain = (hpGain * 1.3).floor if battler.hasActiveItem?(:BIGROOT)
       battler.pbRecoverHP(hpGain)
-      pbDisplay(_INTL("Aqua Ring restored {1}'s HP!", battler.pbThis(true)))
+      pbDisplay(_INTL("Aqua Ring restored {1} HP!", battler.pbOfThis(true)))
     end
     # Ingrain
     priority.each do |battler|
@@ -197,7 +197,7 @@ class Battle
       pbCommonAnimation("LeechSeed", recipient, battler)
       battler.pbTakeEffectDamage(battler.totalhp / 8) do |hp_lost|
         recipient.pbRecoverHPFromDrain(hp_lost, battler,
-                                       _INTL("{1}'s health is sapped by Leech Seed!", battler.pbThis))
+                                       _INTL("{1} health is sapped by Leech Seed!", battler.pbOfThis))
         recipient.pbAbilitiesOnDamageTaken
       end
       recipient.pbFaint if recipient.fainted?
@@ -224,9 +224,9 @@ class Battle
           pbShowAbilitySplash(battler)
           battler.pbRecoverHP(battler.totalhp / 8)
           if Scene::USE_ABILITY_SPLASH
-            pbDisplay(_INTL("{1}'s HP was restored.", battler.pbThis))
+            pbDisplay(_INTL("{1} HP was restored.", battler.pbOfThis))
           else
-            pbDisplay(_INTL("{1}'s {2} restored its HP.", battler.pbThis, battler.abilityName))
+            pbDisplay(_INTL("{1} {2} restored its HP.", battler.pbOfThis, battler.abilityName))
           end
           pbHideAbilitySplash(battler)
         end
@@ -368,7 +368,7 @@ class Battle
     end
     # Taunt
     pbEORCountDownBattlerEffect(priority, PBEffects::Taunt) do |battler|
-      pbDisplay(_INTL("{1}'s taunt wore off!", battler.pbThis))
+      pbDisplay(_INTL("{1} taunt wore off!", battler.pbOfThis))
     end
     # Encore
     priority.each do |battler|
@@ -378,10 +378,10 @@ class Battle
         battler.effects[PBEffects::Encore] -= 1
         if battler.effects[PBEffects::Encore] == 0 || battler.moves[idxEncoreMove].pp == 0
           battler.effects[PBEffects::Encore] = 0
-          pbDisplay(_INTL("{1}'s encore ended!", battler.pbThis))
+          pbDisplay(_INTL("{1} encore ended!", battler.pbOfThis))
         end
       else
-        PBDebug.log("[End of effect] #{battler.pbThis}'s encore ended (encored move no longer known)")
+        PBDebug.log("[End of effect] #{battler.pbOfThis} encore ended (encored move no longer known)")
         battler.effects[PBEffects::Encore]     = 0
         battler.effects[PBEffects::EncoreMove] = nil
       end
@@ -393,7 +393,7 @@ class Battle
     end
     # Magnet Rise
     pbEORCountDownBattlerEffect(priority, PBEffects::MagnetRise) do |battler|
-      pbDisplay(_INTL("{1}'s electromagnetism wore off!", battler.pbThis))
+      pbDisplay(_INTL("{1} electromagnetism wore off!", battler.pbOfThis))
     end
     # Telekinesis
     pbEORCountDownBattlerEffect(priority, PBEffects::Telekinesis) do |battler|
@@ -421,7 +421,7 @@ class Battle
     priority.each do |battler|
       next if battler.fainted? || battler.effects[PBEffects::PerishSong] == 0
       battler.effects[PBEffects::PerishSong] -= 1
-      pbDisplay(_INTL("{1}'s perish count fell to {2}!", battler.pbThis, battler.effects[PBEffects::PerishSong]))
+      pbDisplay(_INTL("{1} perish count fell to {2}!", battler.pbOfThis, battler.effects[PBEffects::PerishSong]))
       if battler.effects[PBEffects::PerishSong] == 0
         perishSongUsers.push(battler.effects[PBEffects::PerishSongUser])
         battler.pbReduceHP(battler.hp)
@@ -450,10 +450,10 @@ class Battle
   def pbEOREndSideEffects(side, priority)
     # Reflect
     pbEORCountDownSideEffect(side, PBEffects::Reflect,
-                             _INTL("{1}'s Reflect wore off!", @battlers[side].pbTeam))
+                             _INTL("{1} Reflect wore off!", @battlers[side].pbOfTeam))
     # Light Screen
     pbEORCountDownSideEffect(side, PBEffects::LightScreen,
-                             _INTL("{1}'s Light Screen wore off!", @battlers[side].pbTeam))
+                             _INTL("{1} Light Screen wore off!", @battlers[side].pbOfTeam))
     # Safeguard
     pbEORCountDownSideEffect(side, PBEffects::Safeguard,
                              _INTL("{1} is no longer protected by Safeguard!", @battlers[side].pbTeam))
@@ -462,13 +462,13 @@ class Battle
                              _INTL("{1} is no longer protected by mist!", @battlers[side].pbTeam))
     # Tailwind
     pbEORCountDownSideEffect(side, PBEffects::Tailwind,
-                             _INTL("{1}'s Tailwind petered out!", @battlers[side].pbTeam))
+                             _INTL("{1} Tailwind petered out!", @battlers[side].pbOfTeam))
     # Lucky Chant
     pbEORCountDownSideEffect(side, PBEffects::LuckyChant,
-                             _INTL("{1}'s Lucky Chant wore off!", @battlers[side].pbTeam))
+                             _INTL("{1} Lucky Chant wore off!", @battlers[side].pbOfTeam))
     # Pledge Rainbow
     pbEORCountDownSideEffect(side, PBEffects::Rainbow,
-                             _INTL("The rainbow on {1}'s side disappeared!", @battlers[side].pbTeam(true)))
+                             _INTL("The rainbow on {1} side disappeared!", @battlers[side].pbOfTeam(true)))
     # Pledge Sea of Fire
     pbEORCountDownSideEffect(side, PBEffects::SeaOfFire,
                              _INTL("The sea of fire around {1} disappeared!", @battlers[side].pbTeam(true)))
@@ -477,7 +477,7 @@ class Battle
                              _INTL("The swamp around {1} disappeared!", @battlers[side].pbTeam(true)))
     # Aurora Veil
     pbEORCountDownSideEffect(side, PBEffects::AuroraVeil,
-                             _INTL("{1}'s Aurora Veil wore off!", @battlers[side].pbTeam))
+                             _INTL("{1} Aurora Veil wore off!", @battlers[side].pbOfTeam))
   end
 
   #-----------------------------------------------------------------------------

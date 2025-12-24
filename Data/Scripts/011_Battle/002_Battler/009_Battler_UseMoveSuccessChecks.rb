@@ -12,7 +12,7 @@ class Battle::Battler
     # Disable
     if @effects[PBEffects::DisableMove] == move.id && !specialUsage
       if showMessages
-        msg = _INTL("{1}'s {2} is disabled!", pbThis, move.name)
+        msg = _INTL("{1} {2} is disabled!", pbOfThis, move.name)
         (commandPhase) ? @battle.pbDisplayPaused(msg) : @battle.pbDisplay(msg)
       end
       return false
@@ -501,7 +501,7 @@ class Battle::Battler
     return false if move.pbImmunityByAbility(user, target, show_message)
     # Type immunity
     if move.pbDamagingMove? && Effectiveness.ineffective?(typeMod)
-      PBDebug.log("[Target immune] #{target.pbThis}'s type immunity")
+      PBDebug.log("[Target immune] #{target.pbOfThis} type immunity")
       @battle.pbDisplay(_INTL("It doesn't affect {1}...", target.pbThis(true))) if show_message
       return false
     end
@@ -528,7 +528,7 @@ class Battle::Battler
         return false
       end
       if target.hasActiveItem?(:AIRBALLOON)
-        @battle.pbDisplay(_INTL("{1}'s {2} makes Ground moves miss!", target.pbThis, target.itemName)) if show_message
+        @battle.pbDisplay(_INTL("{1} {2} makes Ground moves miss!", target.pbOfThis, target.itemName)) if show_message
         return false
       end
       if target.effects[PBEffects::MagnetRise] > 0
@@ -647,7 +647,7 @@ class Battle::Battler
     elsif move.pbTarget(user).num_targets > 1 || target.effects[PBEffects::TwoTurnAttack]
       @battle.pbDisplay(_INTL("{1} avoided the attack!", target.pbThis))
     elsif !move.pbMissMessage(user, target)
-      @battle.pbDisplay(_INTL("{1}'s attack missed!", user.pbThis))
+      @battle.pbDisplay(_INTL("{1} attack missed!", user.pbOfThis))
     end
   end
 end

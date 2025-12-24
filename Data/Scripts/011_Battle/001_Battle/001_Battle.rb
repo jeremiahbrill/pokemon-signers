@@ -681,7 +681,6 @@ class Battle
     return nil
   end
 
-  # Only used for Wish, as the Wishing Pokémon will no longer be in battle.
   def pbThisEx(idxBattler, idxParty)
     party = pbParty(idxBattler)
     if opposes?(idxBattler)
@@ -690,6 +689,17 @@ class Battle
     end
     return _INTL("The ally {1}", party[idxParty].name) if !pbOwnedByPlayer?(idxBattler)
     return party[idxParty].name
+  end
+
+  # Only used for Wish, as the Wishing Pokémon will no longer be in battle.
+  def pbOfThisEx(idxBattler, idxParty)
+    party = pbParty(idxBattler)
+    if opposes?(idxBattler)
+      return _INTL("The opposing {1}'s", party[idxParty].name) if trainerBattle?
+      return _INTL("The wild {1}'s", party[idxParty].name)
+    end
+    return _INTL("The ally {1}'s", party[idxParty].name) if !pbOwnedByPlayer?(idxBattler)
+    return _INTL("{1}'s", party[idxParty].name)
   end
 
   def pbSetSeen(battler)
@@ -900,7 +910,7 @@ class Battle
     return if !pbCanStartWeather?(newWeather, ignore_primal)
     pbShowAbilitySplash(battler)
     if !Scene::USE_ABILITY_SPLASH
-      pbDisplay(_INTL("{1}'s {2} activated!", battler.pbThis, battler.abilityName))
+      pbDisplay(_INTL("{1} {2} activated!", battler.pbOfThis, battler.abilityName))
     end
     fixed_duration = false
     fixed_duration = true if Settings::FIXED_DURATION_WEATHER_FROM_ABILITY &&
@@ -976,7 +986,7 @@ class Battle
     return if !pbCanStartTerrain?(new_terrain)
     pbShowAbilitySplash(battler)
     if !Scene::USE_ABILITY_SPLASH
-      pbDisplay(_INTL("{1}'s {2} activated!", battler.pbThis, battler.abilityName))
+      pbDisplay(_INTL("{1} {2} activated!", battler.pbOfThis, battler.abilityName))
     end
     fixed_duration = true
     pbStartTerrain(battler, new_terrain, fixed_duration, message)
@@ -1018,7 +1028,7 @@ class Battle
   end
 
   def pbShowAbilitySplash(battler, delay = false, logTrigger = true)
-    PBDebug.log("[Ability triggered] #{battler.pbThis}'s #{battler.abilityName}") if logTrigger
+    PBDebug.log("[Ability triggered] #{battler.pbOfThis} #{battler.abilityName}") if logTrigger
     return if !Scene::USE_ABILITY_SPLASH
     @scene.pbShowAbilitySplash(battler)
     if delay

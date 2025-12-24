@@ -119,7 +119,7 @@ class Battle::Battler
         choice = choices[@battle.pbRandom(choices.length)]
         @battle.pbShowAbilitySplash(self)
         self.ability = choice.ability
-        @battle.pbDisplay(_INTL("{1} traced {2}'s {3}!", pbThis, choice.pbThis(true), choice.abilityName))
+        @battle.pbDisplay(_INTL("{1} traced {2} {3}!", pbThis, choice.pbOfThis(true), choice.abilityName))
         @battle.pbHideAbilitySplash(self)
         if !onSwitchIn && (unstoppableAbility? || abilityActive?)
           Battle::AbilityEffects.triggerOnSwitchIn(self.ability, self, @battle)
@@ -140,7 +140,7 @@ class Battle::Battler
       if ally
         @battle.pbShowAbilitySplash(self)
         @battle.pbCommonAnimation("Commander", self, ally)
-        @battle.pbDisplay(_INTL("{1} was swallowed by {2} and became {2}'s commander!", pbThis, ally.pbThis(true)))
+        @battle.pbDisplay(_INTL("{1} was swallowed by {2} and became {2} commander!", pbThis, ally.pbOfThis(true)))
         @effects[PBEffects::Commanding] = ally.index
         ally.effects[PBEffects::CommandedBy] = @index
         # Reset various values
@@ -207,7 +207,7 @@ class Battle::Battler
       elsif Battle::Scene::USE_ABILITY_SPLASH
         @battle.pbDisplay(_INTL("It doesn't affect {1}...", pbThis(true)))
       else
-        @battle.pbDisplay(_INTL("{1}'s {2} made {3} ineffective!", pbThis, abilityName, move.name))
+        @battle.pbDisplay(_INTL("{1} {2} made {3} ineffective!", pbOfThis, abilityName, move.name))
       end
       @battle.pbHideAbilitySplash(self)
     end
@@ -227,14 +227,14 @@ class Battle::Battler
       @battle.pbShowAbilitySplash(self)
       if canHeal? && pbRecoverHP(@totalhp / 4) > 0
         if Battle::Scene::USE_ABILITY_SPLASH
-          @battle.pbDisplay(_INTL("{1}'s HP was restored.", pbThis))
+          @battle.pbDisplay(_INTL("{1} HP was restored.", pbOfThis))
         else
-          @battle.pbDisplay(_INTL("{1}'s {2} restored its HP.", pbThis, abilityName))
+          @battle.pbDisplay(_INTL("{1} {2} restored its HP.", pbOfThis, abilityName))
         end
       elsif Battle::Scene::USE_ABILITY_SPLASH
         @battle.pbDisplay(_INTL("It doesn't affect {1}...", pbThis(true)))
       else
-        @battle.pbDisplay(_INTL("{1}'s {2} made {3} ineffective!", pbThis, abilityName, move.name))
+        @battle.pbDisplay(_INTL("{1} {2} made {3} ineffective!", pbOfThis, abilityName, move.name))
       end
       @battle.pbHideAbilitySplash(self)
     end
@@ -255,7 +255,7 @@ class Battle::Battler
       @effects[PBEffects::Illusion] = nil
       if !@effects[PBEffects::Transform]
         @battle.scene.pbChangePokemon(self, @pokemon)
-        @battle.pbDisplay(_INTL("{1}'s {2} wore off!", pbThis, GameData::Ability.get(oldAbil).name))
+        @battle.pbDisplay(_INTL("{1} {2} wore off!", pbOfThis, GameData::Ability.get(oldAbil).name))
         @battle.pbSetSeen(self)
       end
     end
@@ -343,8 +343,8 @@ class Battle::Battler
         @battle.pbDisplay(_INTL("{1} shared its {2} with {3}!",
                                 b.pbThis, b.itemName, pbThis(true)))
       else
-        @battle.pbDisplay(_INTL("{1}'s {2} let it share its {3} with {4}!",
-                                b.pbThis, b.abilityName, b.itemName, pbThis(true)))
+        @battle.pbDisplay(_INTL("{1} {2} let it share its {3} with {4}!",
+                                b.pbOfThis, b.abilityName, b.itemName, pbThis(true)))
       end
       self.item = b.item
       b.item = nil
@@ -363,9 +363,9 @@ class Battle::Battler
       @battle.pbShowAbilitySplash(self)
       pbRecoverHP(@totalhp / 3)
       if Battle::Scene::USE_ABILITY_SPLASH
-        @battle.pbDisplay(_INTL("{1}'s HP was restored.", pbThis))
+        @battle.pbDisplay(_INTL("{1} HP was restored.", pbOfThis))
       else
-        @battle.pbDisplay(_INTL("{1}'s {2} restored its HP.", pbThis, abilityName))
+        @battle.pbDisplay(_INTL("{1} {2} restored its HP.", pbOfThis, abilityName))
       end
       @battle.pbHideAbilitySplash(self)
     end
@@ -519,7 +519,7 @@ class Battle::Battler
     if amt > 0
       if forced
         PBDebug.log("[Item triggered] Forced consuming of #{used_item_name}")
-        @battle.pbDisplay(_INTL("{1}'s HP was restored.", pbThis))
+        @battle.pbDisplay(_INTL("{1} HP was restored.", pbOfThis))
       else
         @battle.pbDisplay(_INTL("{1} restored its health using its {2}!", pbThis, used_item_name))
       end

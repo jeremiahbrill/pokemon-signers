@@ -544,7 +544,7 @@ class Battle::Move::UsedAfterUserTakesPhysicalDamage < Battle::Move
       return true
     end
     if !user.tookPhysicalHit
-      @battle.pbDisplay(_INTL("{1}'s shell trap didn't work!", user.pbThis))
+      @battle.pbDisplay(_INTL("{1} shell trap didn't work!", user.pbOfThis))
       return true
     end
     return false
@@ -641,7 +641,7 @@ class Battle::Move::TargetActsLast < Battle::Move
     end
     target.effects[PBEffects::Quash]    = highestQuash + 1
     target.effects[PBEffects::MoveNext] = false
-    @battle.pbDisplay(_INTL("{1}'s move was postponed!", target.pbThis))
+    @battle.pbDisplay(_INTL("{1} move was postponed!", target.pbOfThis))
   end
 end
 
@@ -777,8 +777,8 @@ class Battle::Move::LowerPPOfTargetLastMoveBy3 < Battle::Move
     return if !last_move || last_move.pp == 0 || last_move.total_pp <= 0
     reduction = [3, last_move.pp].min
     target.pbSetPP(last_move, last_move.pp - reduction)
-    @battle.pbDisplay(_INTL("It reduced the PP of {1}'s {2} by {3}!",
-                            target.pbThis(true), last_move.name, reduction))
+    @battle.pbDisplay(_INTL("It reduced the PP of {1} {2} by {3}!",
+                            target.pbOfThis(true), last_move.name, reduction))
   end
 end
 
@@ -802,8 +802,8 @@ class Battle::Move::LowerPPOfTargetLastMoveBy4 < Battle::Move
     last_move = target.pbGetMoveWithID(target.lastRegularMoveUsed)
     reduction = [4, last_move.pp].min
     target.pbSetPP(last_move, last_move.pp - reduction)
-    @battle.pbDisplay(_INTL("It reduced the PP of {1}'s {2} by {3}!",
-                            target.pbThis(true), last_move.name, reduction))
+    @battle.pbDisplay(_INTL("It reduced the PP of {1} {2} by {3}!",
+                            target.pbOfThis(true), last_move.name, reduction))
   end
 end
 
@@ -837,7 +837,7 @@ class Battle::Move::DisableTargetLastMoveUsed < Battle::Move
   def pbEffectAgainstTarget(user, target)
     target.effects[PBEffects::Disable]     = 5
     target.effects[PBEffects::DisableMove] = target.lastRegularMoveUsed
-    @battle.pbDisplay(_INTL("{1}'s {2} was disabled!", target.pbThis,
+    @battle.pbDisplay(_INTL("{1} {2} was disabled!", target.pbOfThis,
                             GameData::Move.get(target.lastRegularMoveUsed).name))
     target.pbItemStatusCureCheck
   end
@@ -963,8 +963,8 @@ class Battle::Move::DisableTargetStatusMoves < Battle::Move
         if Battle::Scene::USE_ABILITY_SPLASH
           @battle.pbDisplay(_INTL("But it failed!"))
         else
-          @battle.pbDisplay(_INTL("But it failed because of {1}'s {2}!",
-                                  target.pbThis(true), target.abilityName))
+          @battle.pbDisplay(_INTL("But it failed because of {1} {2}!",
+                                  target.pbOfThis(true), target.abilityName))
         end
         @battle.pbHideAbilitySplash(target)
       end
