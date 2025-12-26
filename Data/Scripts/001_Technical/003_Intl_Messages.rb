@@ -511,7 +511,20 @@ class Translation
   end
 
   def self.more_possessive_messages?
+    return false if !Settings::LANGUAGES[$PokemonSystem.language]
     return ["Français"].include?(Settings::LANGUAGES[$PokemonSystem.language][0])
+  end
+
+  def self.whitespace_separates_words?
+    return true if !Settings::LANGUAGES[$PokemonSystem.language]
+    return false if [
+      "中文",       # Chinese
+      "简体中文",   # Simplified Chinese
+      "繁體中文",   # Traditional Chinese
+      "日本語",     # Japanese
+      "한국어"      # Korean
+    ].include?(Settings::LANGUAGES[$PokemonSystem.language][0])
+    return true
   end
 
   def initialize(filename = nil, delay_load = false)
