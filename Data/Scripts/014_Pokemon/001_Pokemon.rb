@@ -915,6 +915,10 @@ class Pokemon
     return @name && !@name.empty?
   end
 
+  def can_change_nickname?
+    return !egg? && !foreign? && !shadowPokemon?
+  end
+
   # @return [String] the species name of this Pokémon
   def speciesName
     return species_data.name

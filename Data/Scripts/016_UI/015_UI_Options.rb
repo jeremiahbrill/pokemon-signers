@@ -420,7 +420,11 @@ class UI::OptionsVisualsList < Window_DrawableCommand
   #-----------------------------------------------------------------------------
 
   def update
-    return if @index < 0
+    if @index < 0
+      @uparrow.visible = false
+      @downarrow.visible = false
+      return
+    end
     old_index = self.index
     @value_changed = false
     super

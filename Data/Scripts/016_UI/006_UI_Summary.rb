@@ -1678,7 +1678,7 @@ MenuHandlers.add(:summary_screen_interact, :take_item, {
 MenuHandlers.add(:summary_screen_interact, :change_nickname, {
   "name"      => _INTL("Change nickname"),
   "order"     => 30,
-  "condition" => proc { |screen| next Settings::ALLOW_RENAMING_POKEMON_IN_SUMMARY_SCREEN }
+  "condition" => proc { |screen| next Settings::ALLOW_RENAMING_POKEMON_IN_SUMMARY_SCREEN && screen.pokemon.can_change_nickname? }
 })
 
 MenuHandlers.add(:summary_screen_interact, :pokedex, {
