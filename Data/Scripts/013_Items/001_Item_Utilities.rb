@@ -930,7 +930,7 @@ def pbLearnMove(pkmn, move, ignore_if_known = false, by_machine = false, screen 
     return false
   elsif pkmn.numMoves < Pokemon::MAX_MOVES
     pkmn.learn_move(move)
-    pbMessage("\\se[]" + _INTL("{1} learned {2}!", pkmn_name, move_name) + "\\se[Pkmn move learnt]", &block)
+    pbMessage("\\se[]" + _INTL("{1} learned {2}!", pkmn_name, move_name) + "\\se[Pkmn move learnt]\\wtnp[30]", &block)
     return true
   end
   # Pokémon needs to forget a move to learn this one
@@ -946,9 +946,9 @@ def pbLearnMove(pkmn, move, ignore_if_known = false, by_machine = false, screen 
         if by_machine && Settings::TAUGHT_MACHINES_KEEP_OLD_PP
           pkmn.moves[move_index].pp = [old_move_pp, pkmn.moves[move_index].total_pp].min
         end
-        pbMessage(_INTL("1, 2, and...\\wt[16] ...\\wt[16] ...\\wt[16] Ta-da!") + "\\se[Battle ball drop]\1", &block)
+        pbMessage(_INTL("1, 2, and...\\wt[16] ...\\wt[16] ...\\wt[16] Ta-da!") + "\\se[Battle ball drop]\\wtnp[10]\1", &block)
         pbMessage(_INTL("{1} forgot how to use {2}.\nAnd...", pkmn_name, old_move_name) + "\1", &block)
-        pbMessage("\\se[]" + _INTL("{1} learned {2}!", pkmn_name, move_name) + "\\se[Pkmn move learnt]", &block)
+        pbMessage("\\se[]" + _INTL("{1} learned {2}!", pkmn_name, move_name) + "\\se[Pkmn move learnt]\\wtnp[30]", &block)
         pkmn.changeHappiness("machine") if by_machine
         return true
       elsif pbConfirmMessage(_INTL("Give up on learning {1}?", move_name), &block)

@@ -218,10 +218,10 @@ class VoltorbFlip
       $player.coins = Settings::MAX_COINS   # As a precaution
       @quit = true
     else
-      loop do 
+      loop do
         case pbMessage(_INTL("Play Voltorb Flip Lv. {1}?", @level), [_INTL("Play"), _INTL("Game Info"), _INTL("Quit")], 3)
         when 0 # Play
-          break 
+          break
         when 1 # Game Info
           display_game_info
         else # Quit
@@ -453,7 +453,7 @@ class VoltorbFlip
                 newLevel = newLevel.clamp(1, @level)
                 if newLevel < @level
                   @level = newLevel
-                  pbMessage("\\se[Voltorb Flip level down]" + _INTL("Dropped to Game Lv. {1}!", @level.to_s))
+                  pbMessage("\\se[Voltorb Flip level down]" + _INTL("Dropped to Game Lv. {1}!", @level.to_s) + "\\wtnp[20]")
                 end
               end
               # Update level text
@@ -502,7 +502,7 @@ class VoltorbFlip
         pbMessage("\\me[Voltorb Flip win]" + _INTL("Game clear!") + "\\wtnp[40]")
 #        pbMessage(_INTL("You've found all of the hidden x2 and x3 cards."))
 #        pbMessage(_INTL("This means you've found all the Coins in this game, so the game is now over."))
-        pbMessage("\\se[Voltorb Flip gain coins]" + _INTL("{1} received {2} Coins!", $player.name, @points.to_s_formatted))
+        pbMessage("\\se[Voltorb Flip gain coins]" + _INTL("{1} received {2} Coins!", $player.name, @points.to_s_formatted) + "\\wtnp[10]")
         # Update level text
         @sprites["level"].bitmap.clear
         pbDrawShadowText(@sprites["level"].bitmap, 8, 154, 118, 28, _INTL("Level {1}", @level.to_s),
@@ -521,7 +521,7 @@ class VoltorbFlip
         @sprites["curtain"].opacity = 100
         if @level < 8
           @level += 1
-          pbMessage("\\se[Voltorb Flip level up]" + _INTL("Advanced to Game Lv. {1}!", @level.to_s))
+          pbMessage("\\se[Voltorb Flip level up]" + _INTL("Advanced to Game Lv. {1}!", @level.to_s) + "\\wtnp[10]")
           if @firstRound
 #            pbMessage(_INTL("Congratulations!"))
 #            pbMessage(_INTL("You can receive even more Coins in the next game!"))

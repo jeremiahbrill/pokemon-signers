@@ -729,8 +729,8 @@ def pbShowCommands(msgwindow, commands = nil, cmdIfCancel = 0, defaultCmd = 0)
   loop do
     Graphics.update
     Input.update
-    cmdwindow.update
     msgwindow&.update
+    cmdwindow.update
     yield if block_given?
     if Input.trigger?(Input::BACK)
       if cmdIfCancel > 0
