@@ -170,7 +170,7 @@ class Battle::AI::AIMove
       end
     end
     # Type effectiveness
-    typemod = target.effectiveness_of_type_against_battler(calc_type, user, @move)
+    typeMod = target.effectiveness_of_type_against_battler(calc_type, user, @move)
     if target.battler.isSpecies?(:TERAPAGOS) && target.battler.form == 1 &&
        target.has_active_ability?(:TERASHELL) && !target.being_mold_broken? &&
        target.hp == target.totalhp &&
@@ -178,7 +178,7 @@ class Battle::AI::AIMove
        !Effectiveness.not_very_effective?(typeMod) && !Effectiveness.ineffective?(typeMod)
       typeMod = Effectiveness::NOT_VERY_EFFECTIVE_MULTIPLIER
     end
-    multipliers[:final_damage_multiplier] *= typemod
+    multipliers[:final_damage_multiplier] *= typeMod
   end
 
   # Global ability effects that alter damage.

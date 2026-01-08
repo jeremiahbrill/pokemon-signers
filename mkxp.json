@@ -32,20 +32,6 @@
     //
     "enableSettings": false,
 
-    // The names of each input, as seen in the F1 keybinding menu. The names
-    // have no other use.
-    //
-    "bindingNames": {
-      "c": "Use",
-      "b": "Back",
-      "a": "Action",
-      "x": "JumpUp",
-      "y": "JumpDown",
-      "z": "Special",
-      "l": "(unused)",
-      "r": "(unused)"
-    },
-
     // The name of this game's save folder. If undefined, the save folder's name
     // will be the "Game Title" as defined in RPG Maker XP. It should not
     // contain any accented characters.
