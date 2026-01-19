@@ -183,7 +183,7 @@ module Compiler
         particle.keys.each do |property|
           next if [:name, :se, :user_cry, :target_cry].include?(property)
           raise _INTL("Particle \"{1}\" has a command that isn't a \"Play\"-type command.",
-            particle[:name]) + "\n" + FileLineData.linereport
+                      particle[:name]) + "\n" + FileLineData.linereport
         end
       else
         if particle[:se]
@@ -272,9 +272,9 @@ module Compiler
       # Ensure that a particle with a user's/target's graphic doesn't have any
       # :frame commands
       if !["User", "Target", "SE"].include?(particle[:name]) &&
-        ["USER", "USER_OPP", "USER_FRONT", "USER_BACK",
+         ["USER", "USER_OPP", "USER_FRONT", "USER_BACK",
           "TARGET", "TARGET_OPP", "TARGET_FRONT", "TARGET_BACK"].include?(particle[:graphic]) &&
-        particle[:frame] && !particle[:frame].empty?
+         particle[:frame] && !particle[:frame].empty?
         raise _INTL("Particle \"{1}\" can't have any \"Frame\" commands if its graphic is a Pokémon's sprite.",
                     particle[:name]) + "\n" + FileLineData.linereport
       end

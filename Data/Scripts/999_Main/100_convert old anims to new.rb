@@ -4,6 +4,9 @@ module AnimationConverter
     "Rainbow", "RainbowOpp", "SeaOfFire", "SeaOfFireOpp", "Swamp", "SwampOpp"
   ]
   HAS_TARGET_COMMON_ANIMATIONS = ["LeechSeed", "ParentalBond"]
+  PBS_EXTRACT_FOLDER     = "Example anims/"
+  GRAPHIC_EXTRACT_FOLDER = "Examples/"
+  INTERPOLATE_EVERYTHING = false
 
   module_function
 
@@ -19,7 +22,7 @@ module AnimationConverter
       next if !anim.name || anim.name == "" || anim.length <= 1
 
       # Get folder and filename for new PBS file
-      folder = "Example anims/"
+      folder = PBS_EXTRACT_FOLDER.clone
       folder += (anim.name[/^Common:/]) ? "Common/" :  "Move/"
       filename = anim.name.gsub(/^Common:/, "")
       filename.gsub!(/^Move:/, "")
@@ -117,11 +120,13 @@ module AnimationConverter
 
     default_frame[AnimFrame::FOCUS]      = 4   # 1=target, 2=user, 3=user and target, 4=screen
 
-    default_frame[99]                    = "Examples/" + anim.graphic
+    default_frame[99]                    = GRAPHIC_EXTRACT_FOLDER.clone + anim.graphic
 
     last_frame_values = []
 
     anim_graphic = anim.graphic
+    anim_graphic.gsub!(".png", "")
+    anim_graphic.gsub!(".PNG", "")
     anim_graphic.gsub!(".", " ")
     anim_graphic.gsub!("  ", " ")
     # Go through each frame
@@ -137,7 +142,7 @@ module AnimationConverter
         # focus, start a new particle.
         if i > 1 && frame_num > 0 && index_lookup[i] && index_lookup[i] >= 0 &&
            last_frame_values[index_lookup[i]]
-          this_graphic = (cel[AnimFrame::PATTERN] == -1) ? "USER" : (cel[AnimFrame::PATTERN] == -2) ? "TARGET" : "Examples/" + anim_graphic
+          this_graphic = (cel[AnimFrame::PATTERN] == -1) ? "USER" : (cel[AnimFrame::PATTERN] == -2) ? "TARGET" : GRAPHIC_EXTRACT_FOLDER.clone + anim_graphic
           this_graphic.gsub!(".", " ")
           this_graphic.gsub!("  ", "")
           focus = cel[AnimFrame::FOCUS]
@@ -174,8 +179,8 @@ module AnimationConverter
             particle[:graphic] = "TARGET"
             last_frame[99] = "TARGET"
           else
-            particle[:graphic] = "Examples/" + anim_graphic
-            last_frame[99] = "Examples/" + anim_graphic
+            particle[:graphic] = GRAPHIC_EXTRACT_FOLDER.clone + anim_graphic
+            last_frame[99] = GRAPHIC_EXTRACT_FOLDER.clone + anim_graphic
           end
         end
         # Set focus for non-User/non-Target
@@ -188,6 +193,9 @@ module AnimationConverter
         end
 
         # Copy commands across
+        # NOTE: COLORRED/COLORGREEN/COLORBLUE/COLORALPHA and TONERED/TONEGREEN/
+        #       TONEBLUE/TONEGRAY are done below because they are combined into
+        #       one property.
         [
           [AnimFrame::X, :x],
           [AnimFrame::Y, :y],
@@ -196,14 +204,6 @@ module AnimationConverter
           [AnimFrame::BLENDTYPE, :blending],
           [AnimFrame::ANGLE, :angle],
           [AnimFrame::OPACITY, :opacity],
-          [AnimFrame::COLORRED, :color_red],
-          [AnimFrame::COLORGREEN, :color_green],
-          [AnimFrame::COLORBLUE, :color_blue],
-          [AnimFrame::COLORALPHA, :color_alpha],
-          [AnimFrame::TONERED, :tone_red],
-          [AnimFrame::TONEGREEN, :tone_green],
-          [AnimFrame::TONEBLUE, :tone_blue],
-          [AnimFrame::TONEGRAY, :tone_gray],
           [AnimFrame::PATTERN, :frame],
           [AnimFrame::PRIORITY, :z],
           [AnimFrame::VISIBLE, :visible],   # Boolean
@@ -276,6 +276,30 @@ module AnimationConverter
           last_frame[property[0]] = cel[property[0]]
           changed_particles.push(idx) if !changed_particles.include?(idx)
         end
+        # Color
+        this_color = Color.new(
+          cel[AnimFrame::COLORRED].to_i, cel[AnimFrame::COLORGREEN].to_i,
+          cel[AnimFrame::COLORBLUE].to_i, cel[AnimFrame::COLORALPHA].to_i
+        )
+        val = this_color.to_rgb32(true)
+        if val != last_frame[AnimFrame::COLOR]
+          particle[:color] ||= []
+          particle[:color].push([frame_num, 0, val])
+          last_frame[AnimFrame::COLOR] = val
+          changed_particles.push(idx) if !changed_particles.include?(idx)
+        end
+        # Tone
+        this_tone = Tone.new(
+          cel[AnimFrame::TONERED].to_i, cel[AnimFrame::TONEGREEN].to_i,
+          cel[AnimFrame::TONEBLUE].to_i, cel[AnimFrame::TONEGRAY].to_i
+        )
+        val = this_tone.to_rgb32
+        if val != last_frame[AnimFrame::TONE]
+          particle[:tone] ||= []
+          particle[:tone].push([frame_num, 0, val])
+          last_frame[AnimFrame::TONE] = val
+          changed_particles.push(idx) if !changed_particles.include?(idx)
+        end
         # Remember this cel's values at this frame
         last_frame_values[idx] = last_frame
       end
@@ -306,6 +330,26 @@ module AnimationConverter
       end
     end
 
+    # Turn all possible commands into interpolated commands
+    if INTERPOLATE_EVERYTHING
+      hash[:particles].each do |particle|
+        [:x, :y,
+         :zoom_x, :zoom_y,
+         :angle,
+         :opacity,
+         :color,
+         :tone].each do |property|
+          next if !particle[property] || particle[property].empty?
+          command_frames = particle[property].map { |val| val[0] }
+          particle[property].each_with_index do |command, i|
+            next if i == 0   # First command must be a Set, not a Move
+            command[0] -= 1   # Start 1 frame earlier
+            command[1] = 1   # Move over 1 frame
+          end
+        end
+      end
+    end
+
     if hash[:particles].any? { |particle| particle[:name] == "User" }
       user_particle = hash[:particles].select { |particle| particle[:name] == "User" }[0]
       user_particle[:focus] = :user
@@ -325,7 +369,7 @@ module AnimationConverter
     first_fg_frame = 999
     anim.timing.each do |cmd|
       case cmd.timingType
-      when 1, 2, 3, 4   # BG graphic (set, move/recolour), FG graphic (set, move/recolour)
+      when 1, 2, 3, 4   # BG graphic (set, move/recolor), FG graphic (set, move/recolor)
         is_bg = (cmd.timingType <= 2)
         particle = (is_bg) ? bg_particle : fg_particle
         duration = (cmd.timingType == 2) ? cmd.duration : 0
@@ -335,24 +379,14 @@ module AnimationConverter
           particle[:graphic].push([cmd.frame, duration, cmd.name])
           added = true
         end
-        if cmd.colorRed
-          particle[:color_red] ||= []
-          particle[:color_red].push([cmd.frame, duration, cmd.colorRed])
-          added = true
-        end
-        if cmd.colorGreen
-          particle[:color_green] ||= []
-          particle[:color_green].push([cmd.frame, duration, cmd.colorGreen])
-          added = true
-        end
-        if cmd.colorBlue
-          particle[:color_blue] ||= []
-          particle[:color_blue].push([cmd.frame, duration, cmd.colorBlue])
-          added = true
-        end
-        if cmd.colorAlpha
-          particle[:color_alpha] ||= []
-          particle[:color_alpha].push([cmd.frame, duration, cmd.colorAlpha])
+        if cmd.colorRed || cmd.colorGreen || cmd.colorBlue || cmd.colorAlpha
+          particle[:color] ||= []
+          this_color = Color.new(
+            cmd.colorRed || 255, cmd.colorGreen || 255,
+            cmd.colorBlue || 255, cmd.colorAlpha || 255
+          )
+          val = this_color.to_rgb32(true)
+          particle[:color].push([cmd.frame, duration, val])
           added = true
         end
         if cmd.opacity
@@ -405,8 +439,13 @@ module AnimationConverter
       end
       # Add command
       if cmd.name && cmd.name != ""
+        audio_name = cmd.name
+        audio_name.gsub!(".wav", "")
+        audio_name.gsub!(".WAV", "")
+        audio_name.gsub!(".mp3", "")
+        audio_name.gsub!(".ogg", "")
         particle[:se] ||= []
-        particle[:se].push([cmd.frame, 0, cmd.name, cmd.volume, cmd.pitch])
+        particle[:se].push([cmd.frame, 0, audio_name, cmd.volume, cmd.pitch])
       else   # Play user's cry
         particle[:user_cry] ||= []
         particle[:user_cry].push([cmd.frame, 0, cmd.volume, cmd.pitch])
@@ -419,7 +458,7 @@ end
 # Add to Debug menu.
 #===============================================================================
 # MenuHandlers.add(:debug_menu, :convert_anims, {
-#   "name"        => "Convert old animation to PBS files",
+#   "name"        => "Convert old animations to PBS files",
 #   "parent"      => :main,
 #   "description" => "This is just for the sake of having lots of example animation PBS files.",
 #   "effect"      => proc {
