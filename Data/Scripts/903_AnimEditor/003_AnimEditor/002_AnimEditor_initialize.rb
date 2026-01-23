@@ -169,6 +169,9 @@ class AnimationEditor
     editor_settings.add_labelled_dropdown_list(:target_sprite_name, _INTL("Target graphic"), {}, "")
     ctrl = editor_settings.get_control(:target_sprite_name)
     ctrl.max_rows = 20
+    interps = {}
+    GameData::Animation::INTERPOLATION_TYPES.each_pair { |name, id| interps[id] = name }
+    editor_settings.add_labelled_dropdown_list(:default_interpolation, _INTL("Default interpolation"), interps, :linear)
     editor_settings.add_fitted_button(:close, _INTL("Close"))
     editor_settings.visible = false
   end
