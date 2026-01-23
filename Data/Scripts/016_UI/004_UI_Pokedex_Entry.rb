@@ -71,7 +71,7 @@ class UI::PokedexEntryVisuals < UI::BaseVisuals
     get_unlocked_regions
     @region = region
     if @region < 0 || !@unlocked_regions.include?(@reigon)
-      @region = $game_map.metadata&.town_map_position[0] || 0   # Current region
+      @region = ($game_map.metadata&.town_map_position || [0])[0]   # Current region
       @region = @unlocked_regions.first if !@unlocked_regions.include?(@region)
     end
     @town_map_data = GameData::TownMap.get(@region)
