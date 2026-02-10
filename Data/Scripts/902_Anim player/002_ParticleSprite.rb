@@ -6,20 +6,18 @@ class AnimationPlayer::ParticleSprite
   attr_reader   :sprite
   attr_accessor :focus_xy, :offset_xy, :focus_z
   attr_reader   :property_offsets
-  attr_accessor :angle_override
+  attr_accessor :angle_override, :random_invert_angle, :random_invert_flip
   attr_accessor :foe_invert_x, :foe_invert_y, :foe_flip
   attr_accessor :slowdown
   # Used by particles from emitter
-  attr_accessor :movement_type, :emit_time
-  attr_accessor :speed_x, :speed_y, :gravity
+  attr_reader   :emitter_params
 
   def initialize
     @property_offsets = {}
     @processes = []
     @sprite = nil
     @is_battler_sprite = false
-    @movement_type = :none
-    @emit_time = 0
+    @emitter_params = {:type => :none, :start_time => 0}
     @slowdown = 1
     initialize_values
   end
@@ -144,23 +142,23 @@ class AnimationPlayer::ParticleSprite
 
   # Usually only :x and :y.
   def update_emitter_type_properties(elapsed_time, changed_properties)
-    case @movement_type || :none
+    case @emitter_params[:type] || :none
     when :no_movement
       # NOTE: This doesn't change any properties.
     when :straight
-      delta_t = (elapsed_time - @emit_time) / @slowdown.to_f
-      new_x = (@speed_x * delta_t).round
+      delta_t = (elapsed_time - @emitter_params[:start_time]) / @slowdown.to_f
+      new_x = (@emitter_params[:speed_x] * delta_t).round
       @values[:x] = new_x
       changed_properties.push(:x)
-      new_y = (@speed_y * delta_t).round
+      new_y = (@emitter_params[:speed_y] * delta_t).round
       @values[:y] = new_y
       changed_properties.push(:y)
     when :projectile
-      delta_t = (elapsed_time - @emit_time) / @slowdown.to_f
-      new_x = (@speed_x * delta_t).round
+      delta_t = (elapsed_time - @emitter_params[:start_time]) / @slowdown.to_f
+      new_x = (@emitter_params[:speed_x] * delta_t).round
       @values[:x] = new_x
       changed_properties.push(:x)
-      new_y = ((@speed_y * delta_t) + (@gravity * delta_t * delta_t / 2)).round   # s = ut + 1/2 at^2
+      new_y = ((@emitter_params[:speed_y] * delta_t) + (@emitter_params[:gravity] * delta_t * delta_t / 2)).round   # s = ut + 1/2 at^2
       @values[:y] = new_y
       changed_properties.push(:y)
     end
@@ -187,6 +185,7 @@ class AnimationPlayer::ParticleSprite
     when :flip
       @sprite.mirror = value
       @sprite.mirror = !@sprite.mirror if @foe_flip
+      @sprite.mirror = !@sprite.mirror if @random_invert_flip
     when :x
       value = value.round + (@property_offsets[property] || 0)
       value *= -1 if @foe_invert_x
@@ -215,6 +214,7 @@ class AnimationPlayer::ParticleSprite
       else
         @sprite.angle = value + (@property_offsets[property] || 0)
       end
+      @sprite.angle *= -1 if @random_invert_angle
     when :visible
       @sprite.visible = value
     when :opacity

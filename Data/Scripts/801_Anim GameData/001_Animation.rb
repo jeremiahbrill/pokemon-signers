@@ -75,16 +75,19 @@ module GameData
       # These properties cannot be changed partway through the animation.
       # NOTE: "Name" isn't a property here, because the particle's name comes
       #       from the "Particle" property above.
-      "Graphic"              => [:graphic,            "s"],
-      "Focus"                => [:focus,              "e", FOCUS_TYPES],
-      "FoeInvertX"           => [:foe_invert_x,       "b"],
-      "FoeInvertY"           => [:foe_invert_y,       "b"],
-      "FoeFlip"              => [:foe_flip,           "b"],
-      "Emitter"              => [:emitter_type,       "e", EMITTER_TYPES],
-      "EmitterRate"          => [:emitter_rate,       "v"],   # Emissions/second
-      "EmitterIntensity"     => [:emitter_intensity,  "v"],   # Sprites/emission
-      "RandomFrameMax"       => [:random_frame_max,   "u"],
-      "AngleOverride"        => [:angle_override,     "e", ANGLE_OVERRIDES],
+      "Graphic"              => [:graphic,             "s"],
+      "Focus"                => [:focus,               "e", FOCUS_TYPES],
+      "FoeInvertX"           => [:foe_invert_x,        "b"],
+      "FoeInvertY"           => [:foe_invert_y,        "b"],
+      "FoeFlip"              => [:foe_flip,            "b"],
+      "Emitter"              => [:emitter_type,        "e", EMITTER_TYPES],
+      "EmitterRate"          => [:emitter_rate,        "v"],   # Emissions/second
+      "EmitterIntensity"     => [:emitter_intensity,   "v"],   # Sprites/emission
+      "AngleOverride"        => [:angle_override,      "e", ANGLE_OVERRIDES],
+      "RandomFrameMax"       => [:random_frame_max,    "u"],
+      "RandomAngleRange"     => [:random_angle_range,  "u"],
+      "RandomInvertAngle"    => [:random_invert_angle, "b"],
+      "RandomInvertFlip"     => [:random_invert_flip,  "b"],
       # All properties below are "SetXYZ" or "MoveXYZ". "SetXYZ" has the
       # keyframe and the value, and "MoveXYZ" has the keyframe, duration and the
       # value. All have "^" in their schema. "SetXYZ" is turned into "MoveXYZ"
@@ -114,6 +117,10 @@ module GameData
       "MoveTone"             => [:tone,               "^uusE", nil, nil, nil, INTERPOLATION_TYPES],
       # These properties are specifically for emitter particles.
       "SetEmitting"          => [:emitting,           "^ub"],
+      "SetEmitXRange"        => [:emit_x_range,       "^uu"],
+      "MoveEmitXRange"       => [:emit_x_range,       "^uuuE", nil, nil, nil, INTERPOLATION_TYPES],
+      "SetEmitYRange"        => [:emit_y_range,       "^uu"],
+      "MoveEmitYRange"       => [:emit_y_range,       "^uuuE", nil, nil, nil, INTERPOLATION_TYPES],
       "SetEmitSpeed"         => [:emit_speed,         "^uu"],
       "MoveEmitSpeed"        => [:emit_speed,         "^uuuE", nil, nil, nil, INTERPOLATION_TYPES],
       "SetEmitSpeedRange"    => [:emit_speed_range,   "^uu"],
@@ -132,17 +139,20 @@ module GameData
       "PlayTargetCry"        => [:target_cry,         "^uUU"]   # Volume, pitch
     }
     PARTICLE_DEFAULT_VALUES = {
-      :name              => "",
-      :graphic           => "",
-      :focus             => :foreground,
-      :foe_invert_x      => false,
-      :foe_invert_y      => false,
-      :foe_flip          => false,
-      :random_frame_max  => 0,
-      :angle_override    => :none,
-      :emitter_type      => :none,
-      :emitter_rate      => 1,
-      :emitter_intensity => 1
+      :name                => "",
+      :graphic             => "",
+      :focus               => :foreground,
+      :foe_invert_x        => false,
+      :foe_invert_y        => false,
+      :foe_flip            => false,
+      :angle_override      => :none,
+      :random_frame_max    => 0,
+      :random_angle_range  => 0,
+      :random_invert_angle => false,
+      :random_invert_flip  => false,
+      :emitter_type        => :none,
+      :emitter_rate        => 1,
+      :emitter_intensity   => 1
     }
     # NOTE: Particles are invisible until their first command, and automatically
     #       become visible then. "User" and "Target" are visible from the start,
@@ -163,6 +173,8 @@ module GameData
       :tone               => "+00+00+00+00",
       # These properties are specifically for emitter particles.
       :emitting           => false,
+      :emit_x_range       => 0,
+      :emit_y_range       => 0,
       :emit_speed         => 0,
       :emit_speed_range   => 0,
       :emit_angle         => 0,
@@ -192,6 +204,8 @@ module GameData
         :tone               => _INTL("Tone"),
         # These properties are specifically for emitter particles
         :emitting           => _INTL("Emitting"),
+        :emit_x_range       => _INTL("X ±"),
+        :emit_y_range       => _INTL("Y ±"),
         :emit_speed         => _INTL("Speed"),
         :emit_speed_range   => _INTL("Speed ±"),
         :emit_angle         => _INTL("Angle"),

@@ -135,7 +135,11 @@ module AnimationEditor::ParticleDataHelper
       duration.times do |i|
         end_emit = i if value == 1 && ret[i] == 0
         value = ret[i] if !ret[i].nil?
-        value = 2 if value == 0 && end_emit >= 0 && i < end_emit + particle_dur
+        if end_emit >= 0 && i < end_emit + particle_dur
+          value = 2 if value == 0
+        else
+          value = 0 if value == 2
+        end
         ret[i] = value
       end
     end

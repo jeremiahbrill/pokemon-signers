@@ -20,12 +20,14 @@ class AnimationEditor
     :angle              => [-9999, 9999],
     :opacity            => [    0,  255],
     :frame              => [    0,   99],
-    :emit_speed         => [    0,  999],
-    :emit_speed_range   => [    0,  999],
+    :emit_x_range       => [    0,  999],
+    :emit_y_range       => [    0,  999],
+    :emit_speed         => [    0, 9999],
+    :emit_speed_range   => [    0, 9999],
     :emit_angle         => [-9999, 9999],
     :emit_angle_range   => [    0,  180],
-    :emit_gravity       => [ -999,  999],
-    :emit_gravity_range => [    0,  999]
+    :emit_gravity       => [-9999, 9999],
+    :emit_gravity_range => [    0, 9999]
   }
 
   #-----------------------------------------------------------------------------

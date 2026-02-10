@@ -434,6 +434,8 @@ class AnimationEditor
                 # when :random_frame_max
                 # when :emitter_type
                 # when :angle_override
+                # when :random_invert_angle
+                # when :random_invert_flip
                 # when :foe_invert_x
                 # when :foe_invert_y
                 # when :foe_flip

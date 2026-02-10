@@ -13,7 +13,6 @@ class AnimationPlayer::Emitter
     @viewport = viewport
     @particle = particle
     @fps = fps
-
     @processes = []
     @emitter_processes = []
     @particle_sprites = []
@@ -105,29 +104,6 @@ class AnimationPlayer::Emitter
 
   #-----------------------------------------------------------------------------
 
-  # NOTE: This will only be used to get a value at a time between the last
-  #       update cycle and this one, so we can just remember the @values and
-  #       elapsed_time of the previous cycle and interpolate between then and
-  #       now.
-  # NOTE: The interpolation is linear which may not produce the exact correct
-  #       value if the property is using a different interpolation type at the
-  #       time. However, it'll be close enough.
-  def get_value(property, time)
-    ret = @values[property]
-    if @last_values && @last_elapsed_time
-      if ret.is_a?(Numeric)
-        ret = lerp(@last_values[property], @values[property],
-                   @elapsed_time - @last_elapsed_time,
-                   @last_elapsed_time, time)
-      else
-        ret = @last_values[property] if time < @elapsed_time
-      end
-    end
-    return ret
-  end
-
-  #-----------------------------------------------------------------------------
-
   def emit_new_particles(elapsed_time)
     return if @next_emission < 0
     loop do
@@ -171,8 +147,8 @@ class AnimationPlayer::Emitter
   def create_particle_sprite(target_idx = -1)
     particle_sprite = AnimationPlayer::ParticleSprite.new
     particle_sprite.slowdown = @slowdown
-    particle_sprite.movement_type = @particle[:emitter_type]
-    particle_sprite.emit_time = @next_emission
+    particle_sprite.emitter_params[:type] = @particle[:emitter_type]
+    particle_sprite.emitter_params[:start_time] = @next_emission
     @particle_sprites.push(particle_sprite)
     create_particle_sprite_assign_sprite(particle_sprite, target_idx)
     create_particle_sprite_set_coordinates(particle_sprite, target_idx)
@@ -235,26 +211,32 @@ class AnimationPlayer::Emitter
   end
 
   def create_particle_sprite_set_movement_values(particle_sprite, target_idx = -1)
-    speed = get_value(:emit_speed, @next_emission)
-    speed_range = get_value(:emit_speed_range, @next_emission)
+    speed = @values[:emit_speed]
+    speed_range = @values[:emit_speed_range]
     speed += rand(-speed_range, speed_range) if speed_range > 0
-    angle = get_value(:emit_angle, @next_emission)
-    angle_range = get_value(:emit_angle_range, @next_emission)
+    angle = @values[:emit_angle]
+    angle_range = @values[:emit_angle_range]
     angle += rand(-angle_range, angle_range) if angle_range > 0
-    gravity = get_value(:emit_gravity, @next_emission)
-    gravity_range = get_value(:emit_gravity_range, @next_emission)
+    gravity = @values[:emit_gravity]
+    gravity_range = @values[:emit_gravity_range]
     gravity += rand(-gravity_range, gravity_range) if gravity_range > 0
     speed_x = speed * Math.cos(angle * Math::PI / 180)
     speed_y = -speed * Math.sin(angle * Math::PI / 180)
-    particle_sprite.speed_x = speed_x
-    particle_sprite.speed_y = speed_y
-    particle_sprite.gravity = gravity
+    particle_sprite.emitter_params[:speed_x] = speed_x
+    particle_sprite.emitter_params[:speed_y] = speed_y
+    particle_sprite.emitter_params[:gravity] = gravity
   end
 
   def create_particle_sprite_set_base_property_offsets(particle_sprite, target_idx = -1)
     # X, Y
-    particle_sprite.set_base_property_offset(:x, get_value(:x, @next_emission))
-    particle_sprite.set_base_property_offset(:y, get_value(:y, @next_emission))
+    start_x = @values[:x]
+    start_x_range = @values[:emit_x_range]
+    start_x += rand(-start_x_range, start_x_range) if start_x_range > 0
+    particle_sprite.set_base_property_offset(:x, start_x)
+    start_y = @values[:y]
+    start_y_range = @values[:emit_y_range]
+    start_y += rand(-start_y_range, start_y_range) if start_y_range > 0
+    particle_sprite.set_base_property_offset(:y, start_y)
     # Angle
     relative_to_index = index_of_particle_focus(target_idx)
     if relative_to_index >= 0
@@ -267,6 +249,13 @@ class AnimationPlayer::Emitter
         particle_sprite.set_base_property_offset(:angle, @particle[:angle_override])
       end
     end
+    # Randomization of properties
+    if (@particle[:random_angle_range] || 0) > 0
+      ang = rand(-@particle[:random_angle_range], @particle[:random_angle_range])
+      particle_sprite.property_offsets[:angle] = ang
+    end
+    particle_sprite.random_invert_angle = true if @particle[:random_invert_angle] && rand(2) == 0
+    particle_sprite.random_invert_flip = true if @particle[:random_invert_flip] && rand(2) == 0
   end
 
   # NOTE: @processes assume the first keyframe is 0.
@@ -283,7 +272,7 @@ class AnimationPlayer::Emitter
     end
     # Add all commands
     @processes.each do |cmd|
-      if cmd[1] > 0
+      if cmd[2] > 0
         particle_sprite.add_move_process(cmd[0], @next_emission + cmd[1], cmd[2], cmd[3], cmd[4] || :linear)
       elsif particle_sprite.sprite
         particle_sprite.add_set_process(cmd[0], @next_emission + cmd[1], cmd[3])
@@ -346,10 +335,6 @@ class AnimationPlayer::Emitter
 
   # elapsed_time is in seconds since the start of the animation.
   def update(elapsed_time)
-    # Record last frame's update time and values
-    @last_elapsed_time = @elapsed_time
-    @elapsed_time = elapsed_time
-    @last_values = @values.clone
     # Update emitter property values
     changed_properties = []
     @emitter_processes.each do |process|

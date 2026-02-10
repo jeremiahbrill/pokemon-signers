@@ -230,14 +230,21 @@ class AnimationPlayer
 
   def create_particle_sprite_set_base_property_offsets(particle_sprite, particle, target_idx = -1)
     relative_to_index = index_of_particle_focus(particle, target_idx)
-    return if relative_to_index < 0
-    if (particle[:angle_override] || :none) == :initial_angle_to_focus
-      particle_sprite.property_offsets[:angle] = AnimationPlayer::Helper.initial_angle_between(
-        particle, particle_sprite.focus_xy, particle_sprite.offset_xy
-      )
-    else
-      particle_sprite.set_base_property_offset(:angle, particle[:angle_override])
+    if relative_to_index >= 0
+      if (particle[:angle_override] || :none) == :initial_angle_to_focus
+        particle_sprite.property_offsets[:angle] = AnimationPlayer::Helper.initial_angle_between(
+          particle, particle_sprite.focus_xy, particle_sprite.offset_xy
+        )
+      else
+        particle_sprite.set_base_property_offset(:angle, particle[:angle_override])
+      end
     end
+    if (particle[:random_angle_range] || 0) > 0
+      ang = rand(-particle[:random_angle_range], particle[:random_angle_range])
+      particle_sprite.property_offsets[:angle] = ang
+    end
+    particle_sprite.random_invert_angle = particle[:random_invert_angle]
+    particle_sprite.random_invert_flip = particle[:random_invert_flip]
   end
 
   def create_particle_sprite_add_commands(particle_sprite, particle, target_idx = -1)

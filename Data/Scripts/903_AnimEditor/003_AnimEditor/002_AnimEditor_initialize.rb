@@ -262,11 +262,16 @@ class AnimationEditor
     part_properties.add_labelled_checkbox(:foe_flip, _INTL("Flip sprite"), false)
 
     part_properties.add_underlined_label(:property_override_label, _INTL("Override properties"))
-    part_properties.add_labelled_number_text_box(:random_frame_max, _INTL("Random frame (max)"), 0, 99, 0)
     angle_overrides = {}
     # TODO: Is this okay using the in-PBS name of the override type?
     GameData::Animation::ANGLE_OVERRIDES.each_pair { |name, key| angle_overrides[key] = name }
     part_properties.add_labelled_dropdown_list(:angle_override, _INTL("Angle override"), angle_overrides, :none)
+
+    part_properties.add_underlined_label(:property_override_label, _INTL("Randomization of properties"))
+    part_properties.add_labelled_number_text_box(:random_frame_max, _INTL("Random frame (max)"), 0, 99, 0)
+    part_properties.add_labelled_number_text_box(:random_angle_range, _INTL("Random angle offset"), 0, 180, 0)
+    part_properties.add_labelled_checkbox(:random_invert_angle, _INTL("Randomly invert angle"), false)
+    part_properties.add_labelled_checkbox(:random_invert_flip, _INTL("Randomly invert flip"), false)
 
     part_properties.add_underlined_label(:emitter_label, _INTL("Emitter properties"))
     emitter_types = {}

@@ -3,11 +3,6 @@
 # particle. Includes the particle list and its property controls, and the
 # command diamonds/visibility boxes.
 # Also remembers which particle groups are expanded for that particle.
-# TODO: Hide rows for properties that are disabled? e.g. :focus if the graphic
-#       isn't a spritesheet (determined elsewhere). Also for mask if the masking
-#       graphic is defined per particle rather than per keyframe, and there
-#       isn't a masking graphic. I don't think any other properties would need
-#       this.
 #===============================================================================
 class AnimationEditor::ListedParticle < UIControls::BaseContainer
   attr_reader   :particle
@@ -21,10 +16,18 @@ class AnimationEditor::ListedParticle < UIControls::BaseContainer
   }
   EMITTER_PROPERTY_GROUPS = {
     :emitter_group         => [:x, :y, :emitting],
-    :emit_parameters_group => [:emit_speed, :emit_speed_range, :emit_angle, :emit_angle_range, :emit_gravity, :emit_gravity_range],
+    :emit_parameters_group => [:emit_x_range, :emit_y_range, :emit_speed, :emit_speed_range,
+                               :emit_angle, :emit_angle_range, :emit_gravity, :emit_gravity_range],
     :position_group        => [:z],
     :transformation_group  => [:zoom_x, :zoom_y, :angle, :flip],
     :appearance_group      => [:visible, :opacity, :color, :tone, :frame, :blending]
+  }
+  USED_EMIT_PARAMETERS = {
+    :no_movement          => [:emit_x_range, :emit_y_range],
+    :straight             => [:emit_x_range, :emit_y_range, :emit_speed, :emit_speed_range,
+                              :emit_angle, :emit_angle_range],
+    :projectile           => [:emit_x_range, :emit_y_range, :emit_speed, :emit_speed_range,
+                              :emit_angle, :emit_angle_range, :emit_gravity, :emit_gravity_range]
   }
 
   ROW_HEIGHT      = 24
@@ -244,6 +247,21 @@ class AnimationEditor::ListedParticle < UIControls::BaseContainer
     return this_row, this_keyframe
   end
 
+  # TODO: Hide rows for properties that are disabled? e.g. :focus if the graphic
+  #       isn't a spritesheet (determined elsewhere). Also for mask if the
+  #       masking graphic is defined per particle rather than per keyframe, and
+  #       there isn't a masking graphic. I don't think any other properties
+  #       would need this.
+  def row_always_hidden?(row)
+    if (@particle[:emitter_type] || :none) != :none &&
+       EMITTER_PROPERTY_GROUPS[:emit_parameters_group].include?(row) &&
+       USED_EMIT_PARAMETERS[@particle[:emitter_type]] &&
+       !USED_EMIT_PARAMETERS[@particle[:emitter_type]].include?(row)
+      return true
+    end
+    return false
+  end
+
   # This method yields every possible group/row, to ensure that changing the
   # emitter type doesn't result in certain groups/rows lingering without being
   # hidden.
@@ -260,7 +278,7 @@ class AnimationEditor::ListedParticle < UIControls::BaseContainer
       end
       group_visible = @groups_expanded[key]
       properties.each do |property|
-        yield property, groups_visible && group_visible
+        yield property, !row_always_hidden?(property) && groups_visible && group_visible
         yielded.push(property)
       end
     end
