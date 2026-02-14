@@ -278,7 +278,7 @@ class AnimationEditor
     # TODO: Is this okay using the in-PBS name of the emitter type?
     GameData::Animation::EMITTER_TYPES.each_pair { |name, key| emitter_types[key] = name }
     part_properties.add_labelled_dropdown_list(:emitter_type, _INTL("Emitter type"), emitter_types, :none)
-    part_properties.add_labelled_number_text_box(:emitter_rate, _INTL("Emissions/second"), 1, 100, 20)
+    part_properties.add_labelled_number_text_box(:emitter_rate, _INTL("Emissions/second"), 1, 500, 20)
     part_properties.add_labelled_number_text_box(:emitter_intensity, _INTL("Sprites/emission"), 1, 20, 1)
 
     part_properties.add_fitted_button(:duplicate, _INTL("Duplicate this particle"))
