@@ -8,6 +8,7 @@ module GameData
     attr_reader :no_target    # Whether there is no "Target" particle (false by default)
     attr_reader :ignore       # Whether the animation can't be played in battle
     attr_reader :fps          # Frames per second, 20 by default
+    attr_reader :credit
     attr_reader :flags
     attr_reader :pbs_path     # Whole path minus "PBS/Animations/" at start and ".txt" at end
     attr_reader :particles
@@ -68,6 +69,7 @@ module GameData
       "NoTarget"    => [:no_target, "b"],
       "Ignore"      => [:ignore,    "b"],
       "FPS"         => [:fps,       "v"],
+      "Credit"      => [:credit,    "s"],
       "Particle"    => [:particles, "s"]   # Is a subheader line like <text>
     }
     # For individual particles. Any property whose schema begins with "^" can
@@ -277,6 +279,7 @@ module GameData
       ret[:no_target] = false
       ret[:ignore]    = false
       ret[:fps]       = 20
+      ret[:credit]    = "Anon"
       ret[:particles] = [
         {:name => "User", :focus => :user, :graphic => "USER"},
         {:name => "Target", :focus => :target, :graphic => "TARGET"},
@@ -297,6 +300,7 @@ module GameData
       @no_target  = hash[:no_target] || false
       @ignore     = hash[:ignore]    || false
       @fps        = hash[:fps]       || 20
+      @credit     = hash[:credit]    || "Anon"
       @particles  = hash[:particles] || []
       @flags      = hash[:flags]     || []
       @pbs_path   = hash[:pbs_path]  || @move
@@ -314,6 +318,7 @@ module GameData
       ret[:no_target] = @no_target
       ret[:ignore] = @ignore
       ret[:fps] = @fps
+      ret[:credit] = @credit
       ret[:particles] = []   # Clone the @particles array, which is nested hashes and arrays
       @particles.each do |particle|
         new_p = {}
@@ -376,6 +381,8 @@ module GameData
         ret.push(@version) if @version > 0
       when "FPS"
         ret = nil if ret == 20
+      when "Credit"
+        ret = "Anon" if !ret || ret == ""
       end
       return ret
     end

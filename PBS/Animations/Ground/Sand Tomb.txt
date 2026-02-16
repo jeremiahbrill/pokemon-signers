@@ -3,6 +3,7 @@
 [Move,SANDTOMB]
 Name = Essentials
 NoUser = true
+Credit = Maruno
 <Target>
     FoeInvertX = true
     MoveX = 6,1,-4

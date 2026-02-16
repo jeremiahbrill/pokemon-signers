@@ -3,6 +3,7 @@
 [Move,ROCKTHROW]
 Name = Essentials
 NoUser = true
+Credit = Maruno
 <Target>
     SetY = 5,2
     MoveY = 5,1,-2

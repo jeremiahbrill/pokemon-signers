@@ -2,6 +2,7 @@
 #-------------------------------
 [Move,POUND]
 Name = Essentials
+Credit = Maruno
 <User>
 <Target>
     FoeInvertX = true
@@ -38,8 +39,8 @@ Name = Essentials
     SetEmitAngle = 0,90
     SetEmitAngleRange = 0,120
     SetEmitGravity = 0,500
-    SetEmitting = 2,false
     MoveOpacity = 0,1,255
+    SetEmitting = 2,false
     MoveZoomX = 4,9,0
     MoveZoomY = 4,9,0
     MoveOpacity = 4,9,0

@@ -81,6 +81,7 @@ class AnimationEditor
     ctrls.get_control(:has_target).value = !@anim[:no_target]
     ctrls.get_control(:usable).value = !(@anim[:ignore] || false)
     ctrls.get_control(:fps).value = @anim[:fps] || 20
+    ctrls.get_control(:credit).value = @anim[:credit] || "Anon"
   end
 
   def refresh_particle_property_options(idx_particle = nil)

@@ -3,6 +3,7 @@
 [Move,CRABHAMMER]
 Name = Essentials
 NoUser = true
+Credit = Maruno
 <Target>
 <Background>
     Graphic = white_screen

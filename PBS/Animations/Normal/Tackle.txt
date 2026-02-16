@@ -2,6 +2,7 @@
 #-------------------------------
 [Move,TACKLE]
 Name = Essentials
+Credit = Maruno
 <User>
     FoeInvertX = true
     FoeInvertY = true
@@ -48,14 +49,14 @@ Name = Essentials
     SetEmitAngle = 0,90
     SetEmitAngleRange = 0,120
     SetEmitGravity = 0,500
-    SetEmitting = 4,true
-    SetEmitting = 6,false
     SetZ = 4,5
     SetZoomX = 4,50
     SetZoomY = 4,50
     SetOpacity = 4,0
     SetColor = 4,F8F880FF
+    SetEmitting = 4,true
     MoveOpacity = 4,1,255
+    SetEmitting = 6,false
     MoveZoomX = 8,9,0
     MoveZoomY = 8,9,0
     MoveOpacity = 8,9,0

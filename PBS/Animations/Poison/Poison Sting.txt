@@ -2,6 +2,7 @@
 #-------------------------------
 [Move,POISONSTING]
 Name = Essentials
+Credit = Maruno
 <User>
     FoeInvertX = true
     FoeInvertY = true

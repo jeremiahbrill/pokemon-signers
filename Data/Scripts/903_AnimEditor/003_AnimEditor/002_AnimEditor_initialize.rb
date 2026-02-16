@@ -241,6 +241,7 @@ class AnimationEditor
 
     anim_properties.add_underlined_label(:other_label, _INTL("Other"))
     anim_properties.add_labelled_number_text_box(:fps, _INTL("FPS"), 1, 100, 20)
+    anim_properties.add_labelled_text_box(:credit, _INTL("Credit"), "")
 
     anim_properties.add_fitted_button(:close, _INTL("Close"))
     anim_properties.visible = false
