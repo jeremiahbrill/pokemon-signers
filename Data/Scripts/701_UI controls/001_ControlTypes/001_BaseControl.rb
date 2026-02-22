@@ -129,8 +129,7 @@ class UIControls::BaseControl < BitmapSprite
     draw_area_highlight
   end
 
-  def draw_background
-  end
+  def draw_background; end
 
   def draw_area_highlight
     return if !@interactions || @interactions.empty?

@@ -81,6 +81,10 @@ class UIControls::Button < UIControls::BaseControl
                           get_color_of(bg_color))
   end
 
+  def draw_area_highlight
+    super if !highlighted?
+  end
+
   def refresh
     super
     # Draw button outline
