@@ -125,7 +125,11 @@ class UIControls::BaseControl < BitmapSprite
 
   def refresh
     self.bitmap.clear
+    draw_background
     draw_area_highlight
+  end
+
+  def draw_background
   end
 
   def draw_area_highlight

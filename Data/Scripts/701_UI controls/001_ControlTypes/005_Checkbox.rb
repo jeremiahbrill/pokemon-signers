@@ -34,14 +34,15 @@ class UIControls::Checkbox < UIControls::BaseControl
 
   #-----------------------------------------------------------------------------
 
+  def draw_background
+    bg_color = (disabled?) ? :disabled_fill : :control_background
+    self.bitmap.fill_rect(@checkbox_rect.x, @checkbox_rect.y,
+                          @checkbox_rect.width, @checkbox_rect.height,
+                          get_color_of(bg_color))
+  end
+
   def refresh
     super
-    # Draw disabled color
-    if disabled?
-      self.bitmap.fill_rect(@checkbox_rect.x, @checkbox_rect.y,
-                            @checkbox_rect.width, @checkbox_rect.height,
-                            get_color_of(:disabled_fill))
-    end
     # Draw checkbox outline
     self.bitmap.outline_rect(@checkbox_rect.x, @checkbox_rect.y,
                              @checkbox_rect.width, @checkbox_rect.height,

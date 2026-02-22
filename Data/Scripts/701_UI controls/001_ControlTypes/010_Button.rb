@@ -16,6 +16,10 @@ class UIControls::Button < UIControls::BaseControl
 
   #-----------------------------------------------------------------------------
 
+  def real_width
+    return @button_rect&.width || self.width
+  end
+
   def set_text(val)
     return if @text == val
     @text = val
@@ -69,19 +73,16 @@ class UIControls::Button < UIControls::BaseControl
 
   #-----------------------------------------------------------------------------
 
+  def draw_background
+    bg_color = (disabled?) ? :disabled_fill : :control_background
+    bg_color = :highlight if highlighted?
+    self.bitmap.fill_rect(@button_rect.x, @button_rect.y,
+                          @button_rect.width, @button_rect.height,
+                          get_color_of(bg_color))
+  end
+
   def refresh
     super
-    if highlighted?
-      # Draw highligted color
-      self.bitmap.fill_rect(@button_rect.x, @button_rect.y,
-                            @button_rect.width, @button_rect.height,
-                            get_color_of(:highlight))
-    elsif disabled?
-      # Draw disabled color
-      self.bitmap.fill_rect(@button_rect.x, @button_rect.y,
-                            @button_rect.width, @button_rect.height,
-                            get_color_of(:disabled_fill))
-    end
     # Draw button outline
     self.bitmap.outline_rect(@button_rect.x, @button_rect.y,
                              @button_rect.width, @button_rect.height,
@@ -89,7 +90,7 @@ class UIControls::Button < UIControls::BaseControl
     # Draw inner grey ring that shows this is a button rather than a text box
     if !disabled?
       shade = get_color_of(:line).clone
-      shade.alpha = (shade.red > 128) ? 160 : 64
+      shade.alpha = (shade.red > 128) ? 160 : 64   # Dark : light
       self.bitmap.outline_rect(@button_rect.x + 2, @button_rect.y + 2,
                                @button_rect.width - 4, @button_rect.height - 4,
                                shade, 1)

@@ -154,6 +154,13 @@ class UIControls::TextBox < UIControls::BaseControl
 
   #-----------------------------------------------------------------------------
 
+  def draw_background
+    bg_color = (disabled?) ? :disabled_fill : :control_background
+    self.bitmap.fill_rect(@text_box_rect.x, @text_box_rect.y,
+                          @text_box_rect.width, @text_box_rect.height,
+                          get_color_of(bg_color))
+  end
+
   def draw_area_highlight
     return if @captured_area == :text_box && (@hover_area == @captured_area || !Input.press?(Input::MOUSELEFT))
     super
@@ -168,12 +175,6 @@ class UIControls::TextBox < UIControls::BaseControl
 
   def refresh
     super
-    # Draw disabled color
-    if disabled?
-      self.bitmap.fill_rect(@text_box_rect.x, @text_box_rect.y,
-                            @text_box_rect.width, @text_box_rect.height,
-                            get_color_of(:disabled_fill))
-    end
     # Draw text box outline
     self.bitmap.outline_rect(@text_box_rect.x, @text_box_rect.y,
                              @text_box_rect.width, @text_box_rect.height,

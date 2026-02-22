@@ -81,11 +81,15 @@ class UIControls::Scrollbar < UIControls::BaseControl
 
   #-----------------------------------------------------------------------------
 
+  def draw_background
+    self.bitmap.fill_rect(@slider_tray.x, @slider_tray.y,
+                          @slider_tray.width, @slider_tray.height,
+                          get_color_of(:control_background))
+  end
+
   def refresh
     super
     return if !self.visible
-    # Draw the tray
-    self.bitmap.fill_rect(@slider_tray.x, @slider_tray.y, @slider_tray.width, @slider_tray.height, get_color_of(:background))
     # Draw the slider
     if @slider_size < @tray_size && !disabled?
       bar_color = get_color_of(:text)
