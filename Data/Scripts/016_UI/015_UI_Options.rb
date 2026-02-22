@@ -195,7 +195,7 @@ class UI::OptionsVisualsList < Window_DrawableCommand
       end
       raise _INTL("Option {1} has invalid parameters.", option[:name])
     when :number_slider
-      if option[:parameters].is_a?(Array) && option[:parameters][1]
+      if option[:parameters].is_a?(Array) && option[:parameters][0]
         return option[:parameters][0]   # Parameter is [lowest, highest, interval]
       end
       raise _INTL("Option {1} has invalid parameters.", option[:name])
@@ -235,24 +235,21 @@ class UI::OptionsVisualsList < Window_DrawableCommand
         ret = highest_value(option) - lowest_value(option) if ret < 0   # Wrap around
         return ret
       when Array
-        highest = highest_value(option)
-        lowest = lowest_value(option)
-        interval = option[:parameters][2]
         if @values[this_index] > 0
-          ret = @values[this_index] - interval
+          ret = @values[this_index] - option[:parameters][2]
           ret = 0 if ret < 0
         else
+          lowest = lowest_value(option)
+          highest = highest_value(option)
           ret = highest - lowest   # Wrap around
         end
         return ret
       end
     when :number_slider
-      highest = highest_value(option)
       lowest = lowest_value(option)
-      interval = option[:parameters][2]
-      if @values[this_index] > 0
-        ret = @values[this_index] - interval
-        ret = 0 if ret < 0
+      if @values[this_index] > lowest
+        ret = @values[this_index] - option[:parameters][2]
+        ret = lowest if ret < lowest
         return ret
       end
     end
@@ -284,11 +281,10 @@ class UI::OptionsVisualsList < Window_DrawableCommand
       end
     when :number_slider
       highest = highest_value(option)
-      lowest = lowest_value(option)
-      interval = option[:parameters][2]
-      if @values[this_index] < highest - lowest
+      if @values[this_index] < highest
+        interval = option[:parameters][2]
         ret = @values[this_index] + interval
-        ret = highest - lowest if ret > highest - lowest
+        ret = highest if ret > highest
         return ret
       end
     end
@@ -381,7 +377,7 @@ class UI::OptionsVisualsList < Window_DrawableCommand
         8, 16, self.selectedColor
       )
       # Draw text
-      value = (lowest + @values[this_index]).to_s
+      value = @values[this_index].to_s
       pbDrawShadowText(self.contents, x_pos - rect.x, rect.y, option_width, rect.height,
                        value, self.selectedColor, self.selectedShadowColor, 2)
     when :control
