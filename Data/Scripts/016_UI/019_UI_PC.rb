@@ -186,6 +186,7 @@ module UI::PC
                                        commands.values.map { |val| val[1] }, -1, command)
       break if command < 0
       case commands.keys[command]
+      when :organize
       when :withdraw
         if $PokemonStorage.party_full?
           pbMessage(_INTL("Your party is full!"))
