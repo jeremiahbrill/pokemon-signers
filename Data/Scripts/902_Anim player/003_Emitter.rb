@@ -64,6 +64,10 @@ class AnimationPlayer::Emitter
     @target_coords = target_coords
   end
 
+  def set_side_sizes(side_sizes)
+    @side_sizes = side_sizes
+  end
+
   #-----------------------------------------------------------------------------
 
   # start_time is in seconds.
@@ -190,7 +194,7 @@ class AnimationPlayer::Emitter
   # to particle_sprite.
   def create_particle_sprite_set_coordinates(particle_sprite, target_idx = -1)
     focus_xy = AnimationPlayer::Helper.get_xy_focus(
-      @particle, @user&.index, target_idx, @user_coords, @target_coords[target_idx]
+      @particle, @user&.index, target_idx, @user_coords, @target_coords[target_idx], @side_sizes
     )
     offset_xy = AnimationPlayer::Helper.get_xy_offset(@particle, particle_sprite.sprite)
     focus_z = AnimationPlayer::Helper.get_z_focus(@particle, @user&.index, target_idx)
@@ -204,7 +208,7 @@ class AnimationPlayer::Emitter
   def create_particle_sprite_set_flips(particle_sprite, target_idx = -1)
     relative_to_index = index_of_particle_focus(target_idx)
     return if relative_to_index < 0 || relative_to_index.even?   # No focus/focus on player's side
-    return if @particle[:focus] == :user_and_target
+    return if GameData::Animation::FOCUS_TYPES_WITH_USER_AND_TARGET.include?(@particle[:focus])
     particle_sprite.foe_invert_x = @particle[:foe_invert_x]
     particle_sprite.foe_invert_y = @particle[:foe_invert_y]
     particle_sprite.foe_flip     = @particle[:foe_flip]

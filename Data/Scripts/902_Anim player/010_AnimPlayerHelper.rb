@@ -60,16 +60,29 @@ module AnimationPlayer::Helper
 
   #-----------------------------------------------------------------------------
 
-  def get_xy_focus(particle, user_index, target_index, user_coords, target_coords)
+  def get_xy_focus(particle, user_index, target_index, user_coords, target_coords, side_sizes)
     ret = nil
     case particle[:focus]
     when :foreground, :midground, :background
     when :user
       ret = [user_coords.clone]
+    when :user_position
+      ret = [[user_coords[0], Battle::Scene.pbBattlerPosition(user_index, side_sizes[user_index % 2])[1]]]
     when :target
       ret = [target_coords.clone]
+    when :target_position
+      ret = [[target_coords[0], Battle::Scene.pbBattlerPosition(target_index, side_sizes[target_index % 2])[1]]]
     when :user_and_target
       ret = [user_coords.clone, target_coords.clone]
+    when :user_position_and_target
+      ret = [[user_coords[0], Battle::Scene.pbBattlerPosition(user_index, side_sizes[user_index % 2])[1]],
+             target_coords.clone]
+    when :user_and_target_position
+      ret = [user_coords.clone,
+             [target_coords[0], Battle::Scene.pbBattlerPosition(target_index, side_sizes[target_index % 2])[1]]]
+    when :user_position_and_target_position
+      ret = [[user_coords[0], Battle::Scene.pbBattlerPosition(user_index, side_sizes[user_index % 2])[1]],
+             [target_coords[0], Battle::Scene.pbBattlerPosition(target_index, side_sizes[target_index % 2])[1]]]
     when :user_side_foreground, :user_side_background
       ret = [Battle::Scene.pbBattlerPosition(user_index)]
     when :target_side_foreground, :target_side_background
@@ -118,11 +131,12 @@ module AnimationPlayer::Helper
       ret = 1000
     when :background
       # NOTE: No change.
-    when :user
+    when :user, :user_position
       ret = 1000 + ((100 * ((user_index / 2) + 1)) * (user_index.even? ? 1 : -1))
-    when :target
+    when :target, :target_position
       ret = 1000 + ((100 * ((target_index / 2) + 1)) * (target_index.even? ? 1 : -1))
-    when :user_and_target
+    when :user_and_target, :user_position_and_target, :user_and_target_position,
+         :user_position_and_target_position
       user_pos = 1000 + ((100 * ((user_index / 2) + 1)) * (user_index.even? ? 1 : -1))
       target_pos = 1000 + ((100 * ((target_index / 2) + 1)) * (target_index.even? ? 1 : -1))
       ret = [user_pos, target_pos]

@@ -476,7 +476,7 @@ class AnimationEditor
         next if ctrl.value == 0
         vals = AnimationEditor::PROPERTY_RANGES[property] || [0, 0]
         @anim[:particles].each_with_index do |particle, i|
-          next if !target_particles[i]
+          next if !target_particles[i] || !particle[property]
           particle[property].each do |cmd|
             next if cmd[0] + cmd[1] < start_frame || cmd[0] + cmd[1] > end_frame
             cmd[2] += ctrl.value

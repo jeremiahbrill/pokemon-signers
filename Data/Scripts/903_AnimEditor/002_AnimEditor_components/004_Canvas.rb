@@ -500,7 +500,7 @@ class AnimationEditor::Canvas < Sprite
     particle = @anim[:particles][index]
     return if !show_particle_sprite?(index)
     relative_to_index = -1
-    if particle[:focus] != :user_and_target
+    if !GameData::Animation::FOCUS_TYPES_WITH_USER_AND_TARGET.include?(particle[:focus])
       if GameData::Animation::FOCUS_TYPES_WITH_USER.include?(particle[:focus])
         relative_to_index = user_index
       elsif GameData::Animation::FOCUS_TYPES_WITH_TARGET.include?(particle[:focus])
@@ -533,7 +533,8 @@ class AnimationEditor::Canvas < Sprite
       base_y *= -1 if particle[:foe_invert_y]
     end
     focus_xy = AnimationPlayer::Helper.get_xy_focus(particle, user_index, target_idx,
-                                                    @user_coords, @target_coords[target_idx])
+                                                    @user_coords, @target_coords[target_idx],
+                                                    [side_size(0), side_size(1)])
     AnimationPlayer::Helper.apply_xy_focus_to_sprite(spr, :x, base_x, focus_xy)
     AnimationPlayer::Helper.apply_xy_focus_to_sprite(spr, :y, base_y, focus_xy)
     # Set graphic and ox/oy (may also alter y coordinate)
@@ -669,7 +670,7 @@ class AnimationEditor::Canvas < Sprite
     nearest_index = -1
     nearest_distance = -1
     @battler_frame_sprites.each_with_index do |sprite, index|
-      next if !sprite || !sprite.visible
+      next if !sprite || sprite.disposed? || !sprite.visible
       next if !mouse_in_sprite?(sprite, mouse_x, mouse_y)
       dist = (sprite.x - mouse_x) ** 2 + (sprite.y - mouse_y) ** 2
       next if nearest_distance >= 0 && nearest_distance < dist
@@ -683,7 +684,7 @@ class AnimationEditor::Canvas < Sprite
     @frame_sprites.each_with_index do |sprite, index|
       sprites = (sprite.is_a?(Array)) ? sprite : [sprite]
       sprites.each do |spr|
-        next if !spr || !spr.visible
+        next if !spr || spr.disposed? || !spr.visible
         next if !mouse_in_sprite?(spr, mouse_x, mouse_y)
         dist = (spr.x - mouse_x) ** 2 + (spr.y - mouse_y) ** 2
         next if nearest_distance >= 0 && nearest_distance < dist
@@ -767,11 +768,12 @@ class AnimationEditor::Canvas < Sprite
       new_pos = new_canvas_x
       case particle[:focus]
       when :foreground, :midground, :background
-      when :user
+      when :user, :user_position
         new_pos -= @user_coords[0]
-      when :target
+      when :target, :target_position
         new_pos -= @target_coords[first_target_index][0]
-      when :user_and_target
+      when :user_and_target, :user_position_and_target, :user_and_target_position,
+           :user_position_and_target_position
         user_pos = @user_coords
         target_pos = @target_coords[first_target_index]
         distance = GameData::Animation::USER_AND_TARGET_SEPARATION
@@ -786,7 +788,7 @@ class AnimationEditor::Canvas < Sprite
         new_pos -= base_coords[0]
       end
       relative_to_index = -1
-      if particle[:focus] != :user_and_target
+      if !GameData::Animation::FOCUS_TYPES_WITH_USER_AND_TARGET.include?(particle[:focus])
         if GameData::Animation::FOCUS_TYPES_WITH_USER.include?(particle[:focus])
           relative_to_index = user_index
         elsif GameData::Animation::FOCUS_TYPES_WITH_TARGET.include?(particle[:focus])
@@ -806,11 +808,24 @@ class AnimationEditor::Canvas < Sprite
       when :foreground, :midground, :background
       when :user
         new_pos -= @user_coords[1]
+      when :user_position
+        base_coords = Battle::Scene.pbBattlerPosition(user_index, side_size(user_index))
+        new_pos -= base_coords[1]
       when :target
         new_pos -= @target_coords[first_target_index][1]
-      when :user_and_target
+      when :target_position
+        base_coords = Battle::Scene.pbBattlerPosition(first_target_index, side_size(first_target_index))
+        new_pos -= base_coords[1]
+      when :user_and_target, :user_position_and_target, :user_and_target_position,
+           :user_position_and_target_position
         user_pos = @user_coords
+        if [:user_position_and_target, :user_position_and_target_position].include?(particle[:focus])
+          user_pos = [0, Battle::Scene.pbBattlerPosition(user_index, side_size(user_index))[1]]
+        end
         target_pos = @target_coords[first_target_index]
+        if [:user_and_target_position, :user_position_and_target_position].include?(particle[:focus])
+          target_pos = [0, Battle::Scene.pbBattlerPosition(first_target_index, side_size(first_target_index))[1]]
+        end
         distance = GameData::Animation::USER_AND_TARGET_SEPARATION
         new_pos -= user_pos[1]
         new_pos *= distance[1]
@@ -823,7 +838,7 @@ class AnimationEditor::Canvas < Sprite
         new_pos -= base_coords[1]
       end
       relative_to_index = -1
-      if particle[:focus] != :user_and_target
+      if !GameData::Animation::FOCUS_TYPES_WITH_USER_AND_TARGET.include?(particle[:focus])
         if GameData::Animation::FOCUS_TYPES_WITH_USER.include?(particle[:focus])
           relative_to_index = user_index
         elsif GameData::Animation::FOCUS_TYPES_WITH_TARGET.include?(particle[:focus])

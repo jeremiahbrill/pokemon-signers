@@ -21,22 +21,35 @@ module GameData
     #       :user_and_target, plus there's :foreground in PARTICLE_DEFAULT_VALUES
     #       below.
     FOCUS_TYPES = {
-      "Foreground"           => :foreground,
-      "Midground"            => :midground,
-      "Background"           => :background,
-      "User"                 => :user,
-      "Target"               => :target,
-      "UserAndTarget"        => :user_and_target,
-      "UserSideForeground"   => :user_side_foreground,
-      "UserSideBackground"   => :user_side_background,
-      "TargetSideForeground" => :target_side_foreground,
-      "TargetSideBackground" => :target_side_background
+      "Foreground"                    => :foreground,
+      "Midground"                     => :midground,
+      "Background"                    => :background,
+      "User"                          => :user,
+      "UserPosition"                  => :user_position,
+      "Target"                        => :target,
+      "TargetPosition"                => :target_position,
+      "UserAndTarget"                 => :user_and_target,
+      "UserPositionAndTarget"         => :user_position_and_target,
+      "UserAndTargetPosition"         => :user_and_target_position,
+      "UserPositionAndTargetPosition" => :user_position_and_target_position,
+      "UserSideForeground"            => :user_side_foreground,
+      "UserSideBackground"            => :user_side_background,
+      "TargetSideForeground"          => :target_side_foreground,
+      "TargetSideBackground"          => :target_side_background
     }
     FOCUS_TYPES_WITH_USER = [
-      :user, :user_and_target, :user_side_foreground, :user_side_background
+      :user, :user_position, :user_and_target, :user_position_and_target,
+      :user_and_target_position, :user_position_and_target_position,
+      :user_side_foreground, :user_side_background
     ]
     FOCUS_TYPES_WITH_TARGET = [
-      :target, :user_and_target, :target_side_foreground, :target_side_background
+      :target, :target_position, :user_and_target, :user_position_and_target,
+      :user_and_target_position, :user_position_and_target_position,
+      :target_side_foreground, :target_side_background
+    ]
+    FOCUS_TYPES_WITH_USER_AND_TARGET = [
+      :user_and_target, :user_position_and_target, :user_and_target_position,
+      :user_position_and_target_position
     ]
     INTERPOLATION_TYPES = {
       "None"     => :none,

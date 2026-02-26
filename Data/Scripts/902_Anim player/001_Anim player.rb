@@ -8,11 +8,20 @@ class AnimationPlayer
   # animation is either a GameData::Animation or a hash made from one.
   # user is a Battler, or nil.
   # targets is an array of Battlers, or nil.
+  # scene is either Battle::Scene or AnimationEditor::Canvas.
   def initialize(animation, user, targets, scene)
     @animation = animation
     @user = user
     @targets = targets
     @scene = scene
+    @side_sizes = [1, 1]
+    if @scene.is_a?(Battle::Scene)
+      @side_sizes[0] = @scene.battle.pbSideSize(0)
+      @side_sizes[1] = @scene.battle.pbSideSize(1)
+    elsif @scene.is_a?(AnimationEditor::Canvas)
+      @side_sizes[0] = @scene.side_size(0)
+      @side_sizes[1] = @scene.side_size(1)
+    end
     @viewport = @scene.viewport
     @sprites = @scene.sprites
     initialize_battler_sprite_names
@@ -208,7 +217,7 @@ class AnimationPlayer
   # to particle_sprite.
   def create_particle_sprite_set_coordinates(particle_sprite, particle, target_idx = -1)
     focus_xy = AnimationPlayer::Helper.get_xy_focus(
-      particle, @user&.index, target_idx, @user_coords, @target_coords[target_idx]
+      particle, @user&.index, target_idx, @user_coords, @target_coords[target_idx], @side_sizes
     )
     offset_xy = AnimationPlayer::Helper.get_xy_offset(particle, particle_sprite.sprite)
     focus_z = AnimationPlayer::Helper.get_z_focus(particle, @user&.index, target_idx)
@@ -222,7 +231,7 @@ class AnimationPlayer
   def create_particle_sprite_set_flips(particle_sprite, particle, target_idx = -1)
     relative_to_index = index_of_particle_focus(particle, target_idx)
     return if relative_to_index < 0 || relative_to_index.even?   # No focus/focus on player's side
-    return if particle[:focus] == :user_and_target
+    return if GameData::Animation::FOCUS_TYPES_WITH_USER_AND_TARGET.include?(particle[:focus])
     particle_sprite.foe_invert_x = particle[:foe_invert_x]
     particle_sprite.foe_invert_y = particle[:foe_invert_y]
     particle_sprite.foe_flip     = particle[:foe_flip]
@@ -297,6 +306,7 @@ class AnimationPlayer
     emitter.set_sprites(@sprites)
     emitter.set_battler_filenames(@battler_filenames)
     emitter.set_focus_coords(@user_coords, @target_coords)
+    emitter.set_side_sizes(@side_sizes)
     add_emitter_commands(emitter, particle)
   end
 

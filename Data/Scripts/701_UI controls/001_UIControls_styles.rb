@@ -38,16 +38,21 @@ module UIControls::StyleMixin
       :property_background => Color.new(224, 224, 224),
       # ListedParticle and Canvas
       :focus_colors        => {
-        :foreground             => Color.new(128, 160, 248),   # Blue
-        :midground              => Color.new(128, 160, 248),   # Blue
-        :background             => Color.new(128, 160, 248),   # Blue
-        :user                   => Color.new(64, 224, 64),     # Green
-        :target                 => Color.new(224, 64, 64),     # Red
-        :user_and_target        => Color.new(224, 224, 64),    # Yellow
-        :user_side_foreground   => Color.new(128, 224, 224),   # Cyan
-        :user_side_background   => Color.new(128, 224, 224),   # Cyan
-        :target_side_foreground => Color.new(128, 224, 224),   # Cyan
-        :target_side_background => Color.new(128, 224, 224)    # Cyan
+        :foreground                        => Color.new(128, 160, 248),   # Blue
+        :midground                         => Color.new(128, 160, 248),   # Blue
+        :background                        => Color.new(128, 160, 248),   # Blue
+        :user                              => Color.new(64, 224, 64),     # Green
+        :user_position                     => Color.new(64, 224, 64),     # Green
+        :target                            => Color.new(224, 64, 64),     # Red
+        :target_position                   => Color.new(224, 64, 64),     # Red
+        :user_and_target                   => Color.new(224, 224, 64),    # Yellow
+        :user_position_and_target          => Color.new(224, 224, 64),    # Yellow
+        :user_and_target_position          => Color.new(224, 224, 64),    # Yellow
+        :user_position_and_target_position => Color.new(224, 224, 64),    # Yellow
+        :user_side_foreground              => Color.new(128, 224, 224),   # Cyan
+        :user_side_background              => Color.new(128, 224, 224),   # Cyan
+        :target_side_foreground            => Color.new(128, 224, 224),   # Cyan
+        :target_side_background            => Color.new(128, 224, 224)    # Cyan
       }
     },
     :dark => {
@@ -79,16 +84,21 @@ module UIControls::StyleMixin
       :property_background => Color.new(96, 96, 96),
       # ListedParticle and Canvas
       :focus_colors        => {
-        :foreground             => Color.new(80, 112, 248),   # Blue
-        :midground              => Color.new(80, 112, 248),   # Blue
-        :background             => Color.new(80, 112, 248),   # Blue
-        :user                   => Color.new(32, 192, 32),    # Green
-        :target                 => Color.new(192, 32, 32),    # Red
-        :user_and_target        => Color.new(192, 192, 32),   # Yellow
-        :user_side_foreground   => Color.new(80, 208, 208),   # Cyan
-        :user_side_background   => Color.new(80, 208, 208),   # Cyan
-        :target_side_foreground => Color.new(80, 208, 208),   # Cyan
-        :target_side_background => Color.new(80, 208, 208)    # Cyan
+        :foreground                        => Color.new(80, 112, 248),   # Blue
+        :midground                         => Color.new(80, 112, 248),   # Blue
+        :background                        => Color.new(80, 112, 248),   # Blue
+        :user                              => Color.new(32, 192, 32),    # Green
+        :user_position                     => Color.new(32, 192, 32),    # Green
+        :target                            => Color.new(192, 32, 32),    # Red
+        :target_position                   => Color.new(192, 32, 32),    # Red
+        :user_and_target                   => Color.new(192, 192, 32),   # Yellow
+        :user_position_and_target          => Color.new(192, 192, 32),   # Yellow
+        :user_and_target_position          => Color.new(192, 192, 32),   # Yellow
+        :user_position_and_target_position => Color.new(192, 192, 32),   # Yellow
+        :user_side_foreground              => Color.new(80, 208, 208),   # Cyan
+        :user_side_background              => Color.new(80, 208, 208),   # Cyan
+        :target_side_foreground            => Color.new(80, 208, 208),   # Cyan
+        :target_side_background            => Color.new(80, 208, 208)    # Cyan
       }
     }
   }

@@ -3,6 +3,7 @@
 #===============================================================================
 class Battle::Scene
   attr_accessor :abortable   # For non-interactive battles, can quit immediately
+  attr_reader   :battle
   attr_reader   :viewport
   attr_reader   :sprites
 

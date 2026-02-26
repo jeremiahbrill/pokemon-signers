@@ -110,16 +110,21 @@ class AnimationEditor
       ctrls.get_control(:focus).enable
     end
     focus_values = {
-      :foreground             => _INTL("Foreground"),
-      :midground              => _INTL("Midground"),
-      :background             => _INTL("Background"),
-      :user                   => _INTL("User"),
-      :target                 => _INTL("Target"),
-      :user_and_target        => _INTL("User and target"),
-      :user_side_foreground   => _INTL("In front of user's side"),
-      :user_side_background   => _INTL("Behind user's side"),
-      :target_side_foreground => _INTL("In front of target's side"),
-      :target_side_background => _INTL("Behind target's side")
+      :foreground                        => _INTL("Foreground"),
+      :midground                         => _INTL("Midground"),
+      :background                        => _INTL("Background"),
+      :user                              => _INTL("User"),
+      :user_position                     => _INTL("User's position"),
+      :target                            => _INTL("Target"),
+      :target_position                   => _INTL("Target's position"),
+      :user_and_target                   => _INTL("User and target"),
+      :user_position_and_target          => _INTL("User pos and target"),
+      :user_and_target_position          => _INTL("User and target pos"),
+      :user_position_and_target_position => _INTL("User pos and target pos"),
+      :user_side_foreground              => _INTL("In front of user's side"),
+      :user_side_background              => _INTL("Behind user's side"),
+      :target_side_foreground            => _INTL("In front of target's side"),
+      :target_side_background            => _INTL("Behind target's side")
     }
     if @anim[:no_user]
       GameData::Animation::FOCUS_TYPES_WITH_USER.each { |f| focus_values.delete(f) }

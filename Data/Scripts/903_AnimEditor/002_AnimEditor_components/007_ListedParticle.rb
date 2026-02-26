@@ -522,7 +522,7 @@ class AnimationEditor::ListedParticle < UIControls::BaseContainer
       next if !objs[LIST_CONTROL] || !row_is_property?(row)
       if row == :z
         objs[LIST_CONTROL].min_value = AnimationEditor::PROPERTY_RANGES[:z][0]
-        if @particle[:focus] == :user_and_target
+        if GameData::Animation::FOCUS_TYPES_WITH_USER_AND_TARGET.include?(@particle[:focus])
           objs[LIST_CONTROL].min_value += GameData::Animation::USER_AND_TARGET_SEPARATION[2]
         end
       end
