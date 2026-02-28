@@ -133,8 +133,12 @@ module GameData
       "MoveTone"             => [:tone,                "^uusE", nil, nil, nil, INTERPOLATION_TYPES],
       # These properties are specifically for emitter particles.
       "SetEmitting"          => [:emitting,            "^ub"],
+      "SetEmitX"             => [:emit_x,              "^ui"],
+      "MoveEmitX"            => [:emit_x,              "^uuiE", nil, nil, nil, INTERPOLATION_TYPES],
       "SetEmitXRange"        => [:emit_x_range,        "^uu"],
       "MoveEmitXRange"       => [:emit_x_range,        "^uuuE", nil, nil, nil, INTERPOLATION_TYPES],
+      "SetEmitY"             => [:emit_y,              "^ui"],
+      "MoveEmitY"            => [:emit_y,              "^uuiE", nil, nil, nil, INTERPOLATION_TYPES],
       "SetEmitYRange"        => [:emit_y_range,        "^uu"],
       "MoveEmitYRange"       => [:emit_y_range,        "^uuuE", nil, nil, nil, INTERPOLATION_TYPES],
       "SetEmitSpeed"         => [:emit_speed,          "^ui"],
@@ -201,7 +205,9 @@ module GameData
       :tone                => "+00+00+00+00",
       # These properties are specifically for emitter particles.
       :emitting            => false,
+      :emit_x              => 0,
       :emit_x_range        => 0,
+      :emit_y              => 0,
       :emit_y_range        => 0,
       :emit_speed          => 0,
       :emit_speed_range    => 0,
@@ -238,7 +244,9 @@ module GameData
         :tone                => _INTL("Tone"),
         # These properties are specifically for emitter particles
         :emitting            => _INTL("Emitting"),
+        :emit_x              => _INTL("X"),
         :emit_x_range        => _INTL("X ±"),
+        :emit_y              => _INTL("Y"),
         :emit_y_range        => _INTL("Y ±"),
         :emit_speed          => _INTL("Speed"),
         :emit_speed_range    => _INTL("Speed ±"),
@@ -414,12 +422,12 @@ module GameData
       when "EmitterRate", "EmitterIntensity"
         ret = nil if @particles[index][:emitter_type].nil? || @particles[index][:emitter_type] == :none
         ret = nil if ret == PARTICLE_DEFAULT_VALUES[SUB_SCHEMA[key][0]]
-      when "RandomFrameMax"
-        ret = nil if ret == 0
       when "AngleOverride"
         ret = nil if ret == :none
         ret = nil if !FOCUS_TYPES_WITH_USER.include?(@particles[index][:focus]) &&
                      !FOCUS_TYPES_WITH_TARGET.include?(@particles[index][:focus])
+      when "RandomFrameMax", "RandomAngleRange"
+        ret = nil if ret == PARTICLE_DEFAULT_VALUES[SUB_SCHEMA[key][0]]
       when "AllCommands"
         # Get translations of all properties to their names as seen in PBS
         # animation files

@@ -20,7 +20,6 @@ Credit = Maruno
 <Hit>
     Graphic = Steel/Iron Head hit
     Focus = Target
-    RandomAngleRange = 0
     SetZ = 4,10
     SetZoomX = 4,200
     SetZoomY = 4,200

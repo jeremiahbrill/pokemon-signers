@@ -181,6 +181,7 @@ module Compiler
       if !particle[:emitter_type] || particle[:emitter_type] == :none
         particle.keys.each do |property|
           next if ![:emitting,
+                    :emit_x, :emit_y,
                     :emit_x_range, :emit_y_range,
                     :emit_speed, :emit_speed_range,
                     :emit_angle, :emit_angle_range,

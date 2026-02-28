@@ -176,9 +176,9 @@ class AnimationEditor
     help_window.add_underlined_label(:section_keyboard, _INTL("Keyboard controls"))
     help_window.add_label(:text_esc, _INTL("Esc - Close any pop-up window (such as this one)."))
     help_window.add_label(:text_space, _INTL("Space - Play the animation, or stop it if it is playing."))
-    help_window.add_label(:text_wasd, _INTL("W/A/S/D - Change which keyframe and row is selected."))
-    help_window.add_label(:text_arrows, _INTL("Up/Down/Left/Right - Move the selected particle in the canvas."))
-    help_window.add_label(:text_shift_arrows, _INTL("Shift + Up/Down/Left/Right - Move the selected particle in the canvas faster."))
+    help_window.add_label(:text_arrows, _INTL("Up/Down/Left/Right - Change which keyframe and row is selected."))
+    help_window.add_label(:text_wasd, _INTL("W/A/S/D - Move the selected particle in the canvas."))
+    help_window.add_label(:text_shift_arrows, _INTL("Shift + W/A/S/D - Move the selected particle in the canvas faster."))
     help_window.add_label(:text_delete, _INTL("Delete - Remove the command selected in the timeline."))
     help_window.add_label(:text_insert, _INTL("Insert - Add a command at the selected point in the timeline."))
     help_window.add_label(:text_undo, _INTL("Ctrl + Z - Undo."))
@@ -265,29 +265,40 @@ class AnimationEditor
     part_properties.add_labelled_dropdown_list(:focus, _INTL("Focus"), {}, :undefined)
     # OppMove replacements
     part_properties.add_underlined_label(:opposing_label, _INTL("If on opposing side..."))
-    part_properties.add_labelled_checkbox(:foe_invert_x, _INTL("Invert X"), false)
-    part_properties.add_labelled_checkbox(:foe_invert_y, _INTL("Invert Y"), false)
-    part_properties.add_labelled_checkbox(:foe_flip, _INTL("Flip sprite"), false)
+    part_properties.add_labelled_checkbox(:foe_invert_x, _INTL("Invert X"),
+      GameData::Animation::PARTICLE_KEYFRAME_DEFAULT_VALUES[:foe_invert_x])
+    part_properties.add_labelled_checkbox(:foe_invert_y, _INTL("Invert Y"),
+      GameData::Animation::PARTICLE_KEYFRAME_DEFAULT_VALUES[:foe_invert_y])
+    part_properties.add_labelled_checkbox(:foe_flip, _INTL("Flip sprite"),
+      GameData::Animation::PARTICLE_KEYFRAME_DEFAULT_VALUES[:foe_flip])
     # Property overrides
     part_properties.add_underlined_label(:property_override_label, _INTL("Property overrides"))
     angle_overrides = {}
     # TODO: Is this okay using the in-PBS name of the override type?
     GameData::Animation::ANGLE_OVERRIDES.each_pair { |name, key| angle_overrides[key] = name }
-    part_properties.add_labelled_dropdown_list(:angle_override, _INTL("Angle override"), angle_overrides, :none)
+    part_properties.add_labelled_dropdown_list(:angle_override, _INTL("Angle override"), angle_overrides,
+      GameData::Animation::PARTICLE_KEYFRAME_DEFAULT_VALUES[:angle_override])
     # Randomization
     part_properties.add_underlined_label(:property_randomize_label, _INTL("Randomization of properties"))
-    part_properties.add_labelled_number_text_box(:random_frame_max, _INTL("Random frame (max)"), 0, 99, 0)
-    part_properties.add_labelled_number_text_box(:random_angle_range, _INTL("Random angle offset"), 0, 180, 0)
-    part_properties.add_labelled_checkbox(:random_invert_angle, _INTL("Randomly invert angle"), false)
-    part_properties.add_labelled_checkbox(:random_invert_flip, _INTL("Randomly invert flip"), false)
+    part_properties.add_labelled_number_text_box(:random_frame_max, _INTL("Random frame (max)"), 0, 99,
+      GameData::Animation::PARTICLE_KEYFRAME_DEFAULT_VALUES[:random_frame_max])
+    part_properties.add_labelled_number_text_box(:random_angle_range, _INTL("Random angle offset"), 0, 180,
+      GameData::Animation::PARTICLE_KEYFRAME_DEFAULT_VALUES[:random_angle_range])
+    part_properties.add_labelled_checkbox(:random_invert_angle, _INTL("Randomly invert angle"),
+      GameData::Animation::PARTICLE_KEYFRAME_DEFAULT_VALUES[:random_invert_angle])
+    part_properties.add_labelled_checkbox(:random_invert_flip, _INTL("Randomly invert flip"),
+      GameData::Animation::PARTICLE_KEYFRAME_DEFAULT_VALUES[:random_invert_flip])
     # Emitter
     part_properties.add_underlined_label(:emitter_label, _INTL("Emitter properties"))
     emitter_types = {}
     # TODO: Is this okay using the in-PBS name of the emitter type?
     GameData::Animation::EMITTER_TYPES.each_pair { |name, key| emitter_types[key] = name }
-    part_properties.add_labelled_dropdown_list(:emitter_type, _INTL("Emitter type"), emitter_types, :none)
-    part_properties.add_labelled_number_text_box(:emitter_rate, _INTL("Emissions/second"), 1, 500, 20)
-    part_properties.add_labelled_number_text_box(:emitter_intensity, _INTL("Sprites/emission"), 1, 20, 1)
+    part_properties.add_labelled_dropdown_list(:emitter_type, _INTL("Emitter type"), emitter_types,
+      GameData::Animation::PARTICLE_KEYFRAME_DEFAULT_VALUES[:emitter_type])
+    part_properties.add_labelled_number_text_box(:emitter_rate, _INTL("Emissions/second"), 1, 500,
+      GameData::Animation::PARTICLE_KEYFRAME_DEFAULT_VALUES[:emitter_rate])
+    part_properties.add_labelled_number_text_box(:emitter_intensity, _INTL("Sprites/emission"), 1, 20,
+      GameData::Animation::PARTICLE_KEYFRAME_DEFAULT_VALUES[:emitter_intensity])
     # Particle existence
     part_properties.add_fitted_button(:duplicate, _INTL("Duplicate this particle"))
     part_properties.add_fitted_button(:delete, _INTL("Delete this particle"))

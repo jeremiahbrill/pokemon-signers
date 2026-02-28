@@ -149,25 +149,25 @@ class AnimationPlayer::ParticleSprite
       # NOTE: This doesn't change any properties.
     when :straight
       new_x = (@emitter_params[:speed_x] * delta_t).round
-      @values[:x] = new_x
+      @values[:base_x] = new_x
       changed_properties.push(:x)
       new_y = (@emitter_params[:speed_y] * delta_t).round
-      @values[:y] = new_y
+      @values[:base_y] = new_y
       changed_properties.push(:y)
     when :projectile
       new_x = (@emitter_params[:speed_x] * delta_t).round
-      @values[:x] = new_x
+      @values[:base_x] = new_x
       changed_properties.push(:x)
       new_y = ((@emitter_params[:speed_y] * delta_t) + (@emitter_params[:gravity] * delta_t * delta_t / 2)).round   # s = ut + 1/2 at^2
-      @values[:y] = new_y
+      @values[:base_y] = new_y
       changed_properties.push(:y)
     when :helix
       new_angle = @emitter_params[:angle] + (360 * delta_t / @emitter_params[:period])
       new_x = @emitter_params[:radius] * Math.sin(new_angle * Math::PI / 180)
-      @values[:x] = new_x
+      @values[:base_x] = new_x
       changed_properties.push(:x)
       new_y = (@emitter_params[:speed] * delta_t).round
-      @values[:y] = new_y
+      @values[:base_y] = new_y
       changed_properties.push(:y)
       new_z = @emitter_params[:radius_z] * Math.cos(new_angle * Math::PI / 180)
       @values[:z] = new_z
@@ -199,12 +199,14 @@ class AnimationPlayer::ParticleSprite
       @sprite.mirror = !@sprite.mirror if @random_invert_flip
     when :x
       value = value.round + (@property_offsets[property] || 0)
+      value += @values[:base_x] || 0   # Used by emitters
       value *= -1 if @foe_invert_x
       AnimationPlayer::Helper.apply_xy_focus_to_sprite(@sprite, :x, value, @focus_xy)
       @sprite.x += @offset_xy[0]
       apply_sprite_property_override(:angle)
     when :y
       value = value.round + (@property_offsets[property] || 0)
+      value += @values[:base_y] || 0   # Used by emitters
       value *= -1 if @foe_invert_y
       AnimationPlayer::Helper.apply_xy_focus_to_sprite(@sprite, :y, value, @focus_xy)
       @sprite.y += @offset_xy[1]

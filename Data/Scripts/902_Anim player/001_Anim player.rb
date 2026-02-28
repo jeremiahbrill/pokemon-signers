@@ -248,7 +248,7 @@ class AnimationPlayer
         particle_sprite.set_base_property_offset(:angle, particle[:angle_override])
       end
     end
-    if (particle[:random_angle_range] || 0) > 0
+    if particle[:random_angle_range] && particle[:random_angle_range] != GameData::Animation::PARTICLE_KEYFRAME_DEFAULT_VALUES[:random_angle_range]
       ang = rand(-particle[:random_angle_range], particle[:random_angle_range])
       particle_sprite.property_offsets[:angle] = ang
     end

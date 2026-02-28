@@ -15,15 +15,17 @@ class AnimationEditor::ListedParticle < UIControls::BaseContainer
     :appearance_group     => [:visible, :opacity, :color, :tone, :frame, :blending]
   }
   EMITTER_PROPERTY_GROUPS = {
-    :emitter_group         => [:x, :y, :emitting],
+    :emitter_group         => [:emit_x, :emit_y, :emitting],
     :emit_parameters_group => [:emit_x_range, :emit_y_range, :emit_speed, :emit_speed_range,
                                :emit_angle, :emit_angle_range, :emit_gravity, :emit_gravity_range,
                                :emit_period, :emit_period_range, :emit_radius, :emit_radius_range,
                                :emit_radius_z, :emit_radius_z_range],
-    :position_group        => [:z],
+    :position_group        => [:x, :y, :z],
     :transformation_group  => [:zoom_x, :zoom_y, :angle, :flip],
     :appearance_group      => [:visible, :opacity, :color, :tone, :frame, :blending]
   }
+  # The parameters in :emit_parameters_group (see above) that are used for each
+  # emitter type.
   USED_EMIT_PARAMETERS = {
     :no_movement          => [:emit_x_range, :emit_y_range],
     :straight             => [:emit_x_range, :emit_y_range, :emit_speed, :emit_speed_range,
@@ -486,8 +488,6 @@ class AnimationEditor::ListedParticle < UIControls::BaseContainer
     end
   end
 
-  # TODO: We may only want to refresh sprites that are on-screen, i.e.
-  #       have a def each_visible_row.
   def refresh
     calculate_all_commands
     @rows.each_pair do |row, objs|
@@ -503,8 +503,6 @@ class AnimationEditor::ListedParticle < UIControls::BaseContainer
     draw_timeline_bg_sprite(row)
   end
 
-  # TODO: We may only want to refresh sprites that are on-screen, i.e.
-  #       have a def each_visible_row.
   def refresh_values
     if @particle[:name] == "SE"
       vals = AnimationEditor::ParticleDataHelper.get_all_particle_se_at_frame(@particle, @selected_keyframe)
@@ -531,8 +529,6 @@ class AnimationEditor::ListedParticle < UIControls::BaseContainer
     end
   end
 
-  # TODO: We may only want to refresh timeline sprites that are on-screen, i.e.
-  #       have a def each_visible_row.
   def refresh_timeline
     @rows.each_pair do |row, objs|
       next if !objs || !objs[COMMAND_SPRITE] || !objs[COMMAND_SPRITE].visible

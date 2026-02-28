@@ -701,15 +701,15 @@ class AnimationEditor::Timeline < UIControls::BaseContainer
 
   def update_input_navigation
     # A/D to change selected keyframe
-    if Input.triggerex?(:A) || Input.repeatex?(:A)
+    if Input.triggerex?(:LEFT) || Input.repeatex?(:LEFT)
       self.selected_keyframe -= 1
-    elsif Input.triggerex?(:D) || Input.repeatex?(:D)
+    elsif Input.triggerex?(:RIGHT) || Input.repeatex?(:RIGHT)
       self.selected_keyframe += 1
     end
     # W/S to change selected row
-    if Input.triggerex?(:W) || Input.repeatex?(:W)
+    if Input.triggerex?(:UP) || Input.repeatex?(:UP)
       self.selected_row -= 1
-    elsif Input.triggerex?(:S) || Input.repeatex?(:S)
+    elsif Input.triggerex?(:DOWN) || Input.repeatex?(:DOWN)
       self.selected_row += 1
     end
   end

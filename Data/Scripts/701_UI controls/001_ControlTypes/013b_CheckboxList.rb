@@ -102,7 +102,6 @@ class UIControls::CheckboxList < UIControls::List
         CHECKBOX_SIZE, CHECKBOX_SIZE, get_color_of(:line)
       )
       # Draw checkbox tick
-      # TODO: Make this a tick rather than a green box?
       if @selected[i]
         self.bitmap.fill_rect(
           @interactions[i].x + CHECKBOX_X + 2,

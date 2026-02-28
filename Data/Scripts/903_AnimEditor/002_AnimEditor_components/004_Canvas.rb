@@ -526,8 +526,10 @@ class AnimationEditor::Canvas < Sprite
     frame.visible = spr.visible
     return if !spr.visible
     # Set coordinates
-    base_x = values[:x]
-    base_y = values[:y]
+    x_property = ((particle[:emitter_type] || :none) == :none) ? :x : :emit_x
+    y_property = ((particle[:emitter_type] || :none) == :none) ? :y : :emit_y
+    base_x = values[x_property]
+    base_y = values[y_property]
     if relative_to_index >= 0 && relative_to_index.odd?
       base_x *= -1 if particle[:foe_invert_x]
       base_y *= -1 if particle[:foe_invert_y]
@@ -543,13 +545,12 @@ class AnimationEditor::Canvas < Sprite
                                                     [@user_bitmap_front_name, @user_bitmap_back_name],
                                                     [@target_bitmap_front_name, @target_bitmap_back_name])
     else
-      if (particle[:emitter_type] || :none) != :none
-        spr.z = 99997
-        spr.bitmap = @emitter_bitmap
-        spr.ox = spr.bitmap.width / 2
-        spr.oy = spr.bitmap.height / 2
-        return
-      end
+      # Emitter
+      spr.z = 99997
+      spr.bitmap = @emitter_bitmap
+      spr.ox = spr.bitmap.width / 2
+      spr.oy = spr.bitmap.height / 2
+      return
     end
     offset_xy = AnimationPlayer::Helper.get_xy_offset(particle, spr)
     spr.x += offset_xy[0]
@@ -693,7 +694,7 @@ class AnimationEditor::Canvas < Sprite
       end
     end
     return if nearest_index < 0
-    @changed_controls = { :particle_index => nearest_index }
+    @changed_controls = {:particle_index => nearest_index}
   end
 
   def on_mouse_release
@@ -708,9 +709,9 @@ class AnimationEditor::Canvas < Sprite
     increment = (Input.pressex?(:LSHIFT) || Input.pressex?(:RSHIFT)) ? 10 : 1
     # Move selected particle left/right
     x_move = 0
-    if Input.triggerex?(:LEFT) || Input.repeatex?(:LEFT)
+    if Input.triggerex?(:A) || Input.repeatex?(:A)
       x_move = -increment
-    elsif Input.triggerex?(:RIGHT) || Input.repeatex?(:RIGHT)
+    elsif Input.triggerex?(:D) || Input.repeatex?(:D)
       x_move = increment
     end
     if x_move != 0
@@ -720,15 +721,16 @@ class AnimationEditor::Canvas < Sprite
       else
         sprite, frame = get_sprite_and_frame(@selected_particle)
       end
-      new_pos = AnimationEditor::ParticleDataHelper.get_keyframe_particle_value(particle, :x, @display_keyframe)[0] + x_move
+      property = ((particle[:emitter_type] || :none) == :none) ? :x : :emit_x
+      new_pos = AnimationEditor::ParticleDataHelper.get_keyframe_particle_value(particle, property, @display_keyframe)[0] + x_move
       @changed_controls ||= {}
-      @changed_controls[:x] = new_pos
+      @changed_controls[property] = new_pos
     end
     # Move selected particle up/down
     y_move = 0
-    if Input.triggerex?(:UP) || Input.repeatex?(:UP)
+    if Input.triggerex?(:W) || Input.repeatex?(:W)
       y_move = -increment
-    elsif Input.triggerex?(:DOWN) || Input.repeatex?(:DOWN)
+    elsif Input.triggerex?(:S) || Input.repeatex?(:S)
       y_move = increment
     end
     if y_move != 0
@@ -738,9 +740,10 @@ class AnimationEditor::Canvas < Sprite
       else
         sprite, frame = get_sprite_and_frame(@selected_particle)
       end
-      new_pos = AnimationEditor::ParticleDataHelper.get_keyframe_particle_value(particle, :y, @display_keyframe)[0] + y_move
+      property = ((particle[:emitter_type] || :none) == :none) ? :y : :emit_y
+      new_pos = AnimationEditor::ParticleDataHelper.get_keyframe_particle_value(particle, property, @display_keyframe)[0] + y_move
       @changed_controls ||= {}
-      @changed_controls[:y] = new_pos
+      @changed_controls[property] = new_pos
     end
     # Mouse clicks
     if Input.trigger?(Input::MOUSELEFT)
@@ -797,7 +800,8 @@ class AnimationEditor::Canvas < Sprite
       end
       new_pos *= -1 if relative_to_index >= 0 && relative_to_index.odd? && particle[:foe_invert_x]
       @changed_controls ||= {}
-      @changed_controls[:x] = new_pos
+      property = ((particle[:emitter_type] || :none) == :none) ? :x : :emit_x
+      @changed_controls[property] = new_pos
       @captured[0] = new_canvas_x
       sprite.x = new_canvas_x
     end
@@ -847,7 +851,8 @@ class AnimationEditor::Canvas < Sprite
       end
       new_pos *= -1 if relative_to_index >= 0 && relative_to_index.odd? && particle[:foe_invert_y]
       @changed_controls ||= {}
-      @changed_controls[:y] = new_pos
+      property = ((particle[:emitter_type] || :none) == :none) ? :y : :emit_y
+      @changed_controls[property] = new_pos
       @captured[1] = new_canvas_y
       sprite.y = new_canvas_y
     end

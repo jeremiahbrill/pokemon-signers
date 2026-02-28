@@ -6,7 +6,7 @@ class AnimationPlayer::Emitter
 
   # These properties are used by individual ParticleSprites spawned by this
   # emitter, and aren't used by the emitter itself so don't need updating here.
-  PARTICLE_PROPERTIES = [:frame, :blending, :flip, :z, :zoom_x, :zoom_y,
+  PARTICLE_PROPERTIES = [:frame, :blending, :flip, :x, :y, :z, :zoom_x, :zoom_y,
                          :angle, :visible, :opacity, :color, :tone]
 
   def initialize(viewport, particle, fps)
@@ -241,11 +241,11 @@ class AnimationPlayer::Emitter
 
   def create_particle_sprite_set_base_property_offsets(particle_sprite, target_idx = -1)
     # X, Y
-    start_x = @values[:x]
+    start_x = @values[:emit_x]
     start_x_range = @values[:emit_x_range]
     start_x += rand(-start_x_range, start_x_range) if start_x_range > 0
     particle_sprite.set_base_property_offset(:x, start_x)
-    start_y = @values[:y]
+    start_y = @values[:emit_y]
     start_y_range = @values[:emit_y_range]
     start_y += rand(-start_y_range, start_y_range) if start_y_range > 0
     particle_sprite.set_base_property_offset(:y, start_y)
@@ -262,7 +262,7 @@ class AnimationPlayer::Emitter
       end
     end
     # Randomization of properties
-    if (@particle[:random_angle_range] || 0) > 0
+    if @particle[:random_angle_range] && @particle[:random_angle_range] != GameData::Animation::PARTICLE_KEYFRAME_DEFAULT_VALUES[:random_angle_range]
       ang = rand(-@particle[:random_angle_range], @particle[:random_angle_range])
       particle_sprite.property_offsets[:angle] = ang
     end
