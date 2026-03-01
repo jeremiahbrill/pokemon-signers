@@ -430,7 +430,13 @@ ItemHandlers::UseOnPokemon.addIf(:evolution_stones,
         evo_screen.pbEvolution(false)
         evo_screen.pbEndScreen
         if screen.is_a?(UI::Party)
-          screen.set_able_annotation_proc(proc { |pkmn| !pkmn.check_evolution_on_use_item(item).nil? })
+          use_proc = proc { |pk| next (pk.check_evolution_on_use_item(item)) ? :can_use : :cannot_use }
+          valid_values = [:can_use]
+          use_annotations = {
+            :can_use    => _INTL("Can Use"),
+            :cannot_use => _INTL("Cannot Use")
+          }
+          screen.set_able_annotation_proc(use_proc, valid_values, use_annotations)
           screen.refresh
         end
       end
@@ -463,7 +469,13 @@ ItemHandlers::UseOnPokemon.add(:SCROLLOFWATERS, proc { |item, qty, pkmn, screen|
       evo_screen.pbEvolution(false)
       evo_screen.pbEndScreen
       if screen.is_a?(UI::Party)
-        screen.set_able_annotation_proc(proc { |p| !p.check_evolution_on_use_item(item).nil? })
+        use_proc = proc { |pk| next (pk.check_evolution_on_use_item(item)) ? :can_use : :cannot_use }
+        valid_values = [:can_use]
+        use_annotations = {
+          :can_use    => _INTL("Can Use"),
+          :cannot_use => _INTL("Cannot Use")
+        }
+        screen.set_able_annotation_proc(use_proc, valid_values, use_annotations)
         screen.refresh
       end
     end
@@ -490,7 +502,13 @@ ItemHandlers::UseOnPokemon.add(:SCROLLOFDARKNESS, proc { |item, qty, pkmn, scree
       evo_screen.pbEvolution(false)
       evo_screen.pbEndScreen
       if screen.is_a?(UI::Party)
-        screen.set_able_annotation_proc(proc { |pkmn| !pkmn.check_evolution_on_use_item(item).nil? })
+        use_proc = proc { |pk| next (pk.check_evolution_on_use_item(item)) ? :can_use : :cannot_use }
+        valid_values = [:can_use]
+        use_annotations = {
+          :can_use    => _INTL("Can Use"),
+          :cannot_use => _INTL("Cannot Use")
+        }
+        screen.set_able_annotation_proc(use_proc, valid_values, use_annotations)
         screen.refresh
       end
     end

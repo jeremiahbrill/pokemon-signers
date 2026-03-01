@@ -399,14 +399,18 @@ class UI::PartyVisuals < UI::BaseVisuals
     end
   end
 
-  def set_able_annotation_proc(able_proc)
-    @able_proc = able_proc
+  def set_able_annotation_proc(use_proc, valid_values, use_annotations)
+    @use_proc = use_proc
+    @valid_values = valid_values
+    @use_annotations = use_annotations
     refresh_able_annotations
   end
 
   # Used for extra restrictions on Pokémon when choosing one to trade.
-  def set_able_annotation_proc2(able_proc)
-    @able_proc2 = able_proc
+  def set_able_annotation_proc2(use_proc, valid_values, use_annotations)
+    @use_proc2 = use_proc
+    @valid_values2 = valid_values
+    @use_annotations2 = use_annotations
     refresh_able_annotations
   end
 
@@ -561,14 +565,19 @@ class UI::PartyVisuals < UI::BaseVisuals
   def refresh_able_annotations
     Settings::MAX_PARTY_SIZE.times do |i|
       next if @sprites["pokemon#{i}"].blank?
-      if !@able_proc && !@able_proc2
+      if !@use_proc && !@use_proc2
         @sprites["pokemon#{i}"].text = nil
         next
       end
-      is_able = true
-      is_able = false if @able_proc && !@able_proc.call(@party[i])
-      is_able = false if @able_proc2 && !@able_proc2.call(@party[i])
-      @sprites["pokemon#{i}"].text = (is_able) ? _INTL("ABLE") : _INTL("NOT ABLE")
+      usability = @use_proc&.call(@party[i])
+      if @use_proc2
+        usability2 = @use_proc2.call(@party[i])
+        usability = usability2 if usability.nil? || !@valid_values2.include?(usability2)
+      end
+      annot = _INTL("Cannot Choose")
+      annot = @use_annotations[usability] if @use_annotations && @use_annotations[usability]
+      annot = @use_annotations2[usability] if @use_annotations2 && @use_annotations2[usability]
+      @sprites["pokemon#{i}"].text = annot
     end
   end
 
@@ -770,15 +779,17 @@ class UI::Party < UI::BaseScreen
     @visuals.set_help_text(text)
   end
 
-  def set_able_annotation_proc(able_proc)
-    @able_proc = able_proc
-    @visuals.set_able_annotation_proc(able_proc)
+  def set_able_annotation_proc(use_proc, valid_values, use_annotations)
+    @use_proc = use_proc
+    @valid_values = valid_values
+    @visuals.set_able_annotation_proc(use_proc, valid_values, use_annotations)
   end
 
   # Used for extra restrictions on Pokémon when choosing one to trade.
-  def set_able_annotation_proc2(able_proc)
-    @able_proc2 = able_proc
-    @visuals.set_able_annotation_proc2(able_proc)
+  def set_able_annotation_proc2(use_proc, valid_values, use_annotations)
+    @use_proc2 = use_proc
+    @valid_values2 = valid_values
+    @visuals.set_able_annotation_proc2(use_proc, valid_values, use_annotations)
   end
 
   def set_annotations(annot)
@@ -1191,14 +1202,26 @@ class UI::Party < UI::BaseScreen
         ret = -1
         break
       end
-      if (@able_proc && !@able_proc.call(pokemon)) ||
-         (@able_proc2 && !@able_proc2.call(pokemon))
-        if pokemon.egg?
-          show_message(_INTL("This egg can't be chosen."))
-        else
-          show_message(_INTL("This Pokémon can't be chosen."))
+      if @use_proc2 || @use_proc22
+        usability = @use_proc&.call(pokemon)
+        echoln pokemon.name
+        echoln usability
+        if @use_proc2
+          usability2 = @use_proc2.call(pokemon)
+          echoln usability2
+          usability = usability2 if usability.nil? || !@valid_values2.include?(usability2)
+          echoln usability
         end
-        next
+        echoln @valid_values
+        echoln @valid_values2
+        if !(@valid_values&.include?(usability) || @valid_values2&.include?(usability))
+          if pokemon.egg?
+            show_message(_INTL("This egg can't be chosen."))
+          else
+            show_message(_INTL("This Pokémon can't be chosen."))
+          end
+          next
+        end
       end
       ret = index
       break
@@ -1212,10 +1235,10 @@ class UI::Party < UI::BaseScreen
     # Setup party panel annotations
     annot = []
     statuses = []
-    ordinals = [_INTL("INELIGIBLE"), _INTL("NOT ENTERED"), _INTL("BANNED")]
-    positions = [_INTL("FIRST"), _INTL("SECOND"), _INTL("THIRD"), _INTL("FOURTH"),
-                 _INTL("FIFTH"), _INTL("SIXTH"), _INTL("SEVENTH"), _INTL("EIGHTH"),
-                 _INTL("NINTH"), _INTL("TENTH"), _INTL("ELEVENTH"), _INTL("TWELFTH")]
+    ordinals = [_INTL("INELIGIBLE"), _INTL("Not Entered"), _INTL("BANNED")]
+    positions = [_INTL("First"), _INTL("Second"), _INTL("Third"), _INTL("Fourth"),
+                 _INTL("Fifth"), _INTL("Sixth"), _INTL("Seventh"), _INTL("Eighth"),
+                 _INTL("Ninth"), _INTL("Tenth"), _INTL("Eleventh"), _INTL("Twelfth")]
     Settings::MAX_PARTY_SIZE.times do |i|
       ordinals.push(positions[i] || "#{i + 1}th")
     end
@@ -1444,7 +1467,14 @@ def pbChoosePokemon(index_game_var, name_game_var, able_proc = nil, _allow_ineli
   chosen = -1
   pbFadeOutIn do
     screen = UI::Party.new($player.party, mode: :choose_pokemon)
-    screen.set_able_annotation_proc(able_proc) if able_proc
+    if able_proc
+      valid_values = [true]
+      use_annotations = {
+        true  => _INTL("Can Choose"),
+        false => _INTL("Cannot Choose")
+      }
+      screen.set_able_annotation_proc(able_proc, valid_values, use_annotations)
+    end
     chosen = screen.choose_pokemon
   end
   pbSet(index_game_var, chosen)
@@ -1465,8 +1495,14 @@ def pbChooseTradablePokemon(index_game_var, name_game_var, able_proc = nil, _all
   chosen = 0
   pbFadeOutIn do
     screen = UI::Party.new($player.party, mode: :choose_pokemon)
-    screen.set_able_annotation_proc(able_proc) if able_proc
-    screen.set_able_annotation_proc2(proc { |pkmn| next !pkmn.egg? && !pkmn.shadowPokemon? && !pkmn.cannot_trade })
+    valid_values = [true]
+    use_annotations = {
+      true  => _INTL("Can Choose"),
+      false => _INTL("Cannot Choose")
+    }
+    screen.set_able_annotation_proc(able_proc, valid_values, use_annotations) if able_proc
+    able_proc2 = proc { |pkmn| next !pkmn.egg? && !pkmn.shadowPokemon? && !pkmn.cannot_trade }
+    screen.set_able_annotation_proc2(able_proc2, valid_values, use_annotations)
     chosen = screen.choose_pokemon
   end
   pbSet(index_game_var, chosen)

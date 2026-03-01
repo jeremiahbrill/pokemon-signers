@@ -219,18 +219,16 @@ def pbUseItem(bag, item, bag_screen = nil)
       return 0
     end
     ret = false
-    annot = nil
-    if item_data.is_evolution_stone?
-      annot = []
-      $player.party.each do |pkmn|
-        elig = pkmn.check_evolution_on_use_item(item)
-        annot.push((elig) ? _INTL("ABLE") : _INTL("NOT ABLE"))
-      end
-    end
     pbFadeOutIn do
       party_screen = UI::Party.new($player.party, mode: :use_item)
       if item_data.is_evolution_stone?
-        party_screen.set_able_annotation_proc(proc { |pkmn| next pkmn.check_evolution_on_use_item(item) })
+        use_proc = proc { |pkmn| next (pkmn.check_evolution_on_use_item(item)) ? :can_use : :cannot_use }
+        valid_values = [:can_use]
+        use_annotations = {
+          :can_use    => _INTL("Can Use"),
+          :cannot_use => _INTL("Cannot Use")
+        }
+        party_screen.set_able_annotation_proc(use_proc, valid_values, use_annotations)
       end
       party_screen.choose_pokemon do |pkmn, party_index|
         next true if party_index < 0

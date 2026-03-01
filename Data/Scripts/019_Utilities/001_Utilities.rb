@@ -433,19 +433,19 @@ def pbMoveTutorAnnotations(move, movelist = nil)
   ret = []
   $player.party.each_with_index do |pkmn, i|
     if pkmn.egg?
-      ret[i] = _INTL("NOT ABLE")
+      ret[i] = _INTL("Cannot Learn")
     elsif pkmn.hasMove?(move)
-      ret[i] = _INTL("LEARNED")
+      ret[i] = _INTL("Already Known")
     else
       species = pkmn.species
       if movelist&.any? { |j| j == species }
         # Checked data from movelist given in parameter
-        ret[i] = _INTL("ABLE")
+        ret[i] = _INTL("Can Learn")
       elsif pkmn.compatible_with_move?(move)
         # Checked data from Pokémon's tutor moves in pokemon.txt
-        ret[i] = _INTL("ABLE")
+        ret[i] = _INTL("Can Learn")
       else
-        ret[i] = _INTL("NOT ABLE")
+        ret[i] = _INTL("Cannot Learn")
       end
     end
   end
