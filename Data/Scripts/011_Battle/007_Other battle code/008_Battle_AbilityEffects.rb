@@ -3650,11 +3650,11 @@ Battle::AbilityEffects::OnBattlerFainting.add(:SOULHEART,
 Battle::AbilityEffects::OnWeatherChange.add(:PROTOSYNTHESIS,
   proc { |ability, battler, battle, old_weather, ability_changed|
     next if battler.effects[PBEffects::BoosterEnergy]
-    if [:Sun, :HarshSun].include?(battle.field.pbWeather) && !battler.effects[PBEffects::Transform]
+    if [:Sun, :HarshSun].include?(battle.pbWeather) && !battler.effects[PBEffects::Transform]
       best = nil
       [:ATTACK, :DEFENSE, :SPECIAL_ATTACK, :SPECIAL_DEFENSE, :SPEED].each do |stat|
         value = battler.stat_with_stages(stat)
-        best = [stat, value] if !value || value > stat[1]
+        best = [stat, value] if !best || value > best[1]
       end
       battler.effects[PBEffects::ProtosynthesisStat] = best[0]
       battle.pbShowAbilitySplash(battler)
@@ -3711,7 +3711,7 @@ Battle::AbilityEffects::OnTerrainChange.add(:QUARKDRIVE,
       best = nil
       [:ATTACK, :DEFENSE, :SPECIAL_ATTACK, :SPECIAL_DEFENSE, :SPEED].each do |stat|
         value = battler.stat_with_stages(stat)
-        best = [stat, value] if !value || value > stat[1]
+        best = [stat, value] if !best || value > best[1]
       end
       battler.effects[PBEffects::ProtosynthesisStat] = best[0]
       battle.pbShowAbilitySplash(battler)
