@@ -662,8 +662,10 @@ class AnimationEditor::Timeline < UIControls::BaseContainer
     ctrl = get_control(:time_bar)
     if ctrl == @captured
       time_pos = ctrl.mouse_pos
-      this_keyframe = ((time_pos[0] + @timeline_ox - TIME_BAR_LEFT_BUFFER) / KEYFRAME_SPACING.to_f).round
-      self.selected_keyframe = this_keyframe
+      if time_pos && time_pos[0]
+        this_keyframe = ((time_pos[0] + @timeline_ox - TIME_BAR_LEFT_BUFFER) / KEYFRAME_SPACING.to_f).round
+        self.selected_keyframe = this_keyframe
+      end
     end
     ctrl.clear_changed
   end

@@ -745,6 +745,12 @@ class AnimationEditor::Canvas < Sprite
       @changed_controls ||= {}
       @changed_controls[property] = new_pos
     end
+    if Input.releaseex?(:W) || Input.releaseex?(:A) || Input.releaseex?(:S) || Input.releaseex?(:D)
+      if !Input.pressex?(:W) && !Input.pressex?(:A) && !Input.pressex?(:S) && !Input.pressex?(:D)
+        @changed_controls ||= {}
+        @changed_controls[:on_dir_keys_release] = true
+      end
+    end
     # Mouse clicks
     if Input.trigger?(Input::MOUSELEFT)
       on_mouse_press

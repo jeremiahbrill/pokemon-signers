@@ -447,6 +447,7 @@ module GameData
         ret = []
         @particles[index].each_pair do |key, val|
           next if !val.is_a?(Array)
+          next if key.to_s[0, 4] == "emit" && (@particles[index][:emitter_type] || :none) == :none
           val.each do |cmd|
             new_cmd = cmd.clone
             if @particles[index][:name] != "SE" && new_cmd[1] > 0

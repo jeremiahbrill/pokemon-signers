@@ -99,8 +99,7 @@ class AnimationEditor
       @components[:timeline].change_particle_commands(particle_index)
       refresh_component(:timeline)
       refresh_component(:canvas)
-      add_to_change_history
-    when :on_mouse_release
+    when :on_mouse_release, :on_dir_keys_release
       add_to_change_history
     end
   end
