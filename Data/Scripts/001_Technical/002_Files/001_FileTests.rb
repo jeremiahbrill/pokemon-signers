@@ -171,7 +171,7 @@ module RTP
   def self.exists?(filename, extensions = [])
     return false if nil_or_empty?(filename)
     eachPathFor(filename) do |path|
-      return true if FileTest.exist?(path)
+      return true if FileTest.exist?(path) && (!extensions || extensions.empty?)
       extensions.each do |ext|
         return true if FileTest.exist?(path + ext)
       end
