@@ -3,6 +3,8 @@
 #       replaced with something similar elsewhere too?
 #===============================================================================
 class UIControls::List < UIControls::BaseControl
+  attr_reader :options
+
   LIST_FRAME_THICKNESS = 2
   ROW_HEIGHT           = 24
   TEXT_PADDING_X       = 4

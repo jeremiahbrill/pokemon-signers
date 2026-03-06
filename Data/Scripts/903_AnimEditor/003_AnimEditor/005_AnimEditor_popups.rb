@@ -267,12 +267,12 @@ class AnimationEditor
     bg_bitmap.z += graphic_chooser.z
     # Get a list of files
     list = graphic_chooser.get_control(:list)
-    files = get_all_files_in_folder(
+    all_files = get_all_files_in_folder(
       sprite_folder, [".png", ".jpg", ".jpeg"],
       ["USER", "USER_OPP", "USER_FRONT", "USER_BACK", "TARGET", "TARGET_OPP", "TARGET_FRONT", "TARGET_BACK"]
     )
     if !@anim[:no_target]
-      files.prepend(
+      all_files.prepend(
         ["TARGET",       _INTL("[[Target's sprite]]")],
         ["TARGET_OPP",   _INTL("[[Target's other side sprite]]")],
         ["TARGET_FRONT", _INTL("[[Target's front sprite]]")],
@@ -280,7 +280,7 @@ class AnimationEditor
       )
     end
     if !@anim[:no_user]
-      files.prepend(
+      all_files.prepend(
         ["USER",         _INTL("[[User's sprite]]")],
         ["USER_OPP",     _INTL("[[User's other side sprite]]")],
         ["USER_FRONT",   _INTL("[[User's front sprite]]")],
@@ -288,14 +288,16 @@ class AnimationEditor
       )
     end
     idx = 0
-    files.each_with_index do |f, i|
+    all_files.each_with_index do |f, i|
       next if f[0] != selected
       idx = i
       break
     end
     # Set control values
-    list.options = files
+    list.options = all_files
     list.selected = idx
+    graphic_chooser.get_control(:filter).value = ""
+    graphic_chooser.get_control(:ok).enable
     # Create sprite preview
     bg_bitmap.bitmap.outline_rect(CONTAINER_BORDER - graphic_chooser.x + list.x + list.width + 4,
                                   CONTAINER_BORDER - graphic_chooser.y + list.y,
@@ -309,6 +311,12 @@ class AnimationEditor
     preview_bitmap = nil
     set_preview_graphic = lambda do |sprite, filename|
       preview_bitmap&.dispose
+      sprite.visible = false
+      bg_bitmap.bitmap.fill_rect(CONTAINER_BORDER - graphic_chooser.x + list.x + list.width + 4 + GRAPHIC_CHOOSER_PREVIEW_BORDER,
+                                 CONTAINER_BORDER - graphic_chooser.y + list.y + GRAPHIC_CHOOSER_PREVIEW_BORDER,
+                                 GRAPHIC_CHOOSER_PREVIEW_SIZE, GRAPHIC_CHOOSER_PREVIEW_SIZE,
+                                 get_color_of(:background))
+      next if filename.nil? || filename == ""
       folder = sprite_folder + "/"
       fname = filename
       if ["USER", "USER_BACK", "USER_FRONT", "USER_OPP",
@@ -329,11 +337,8 @@ class AnimationEditor
         end
       end
       preview_bitmap = AnimatedBitmap.new(folder + fname)
-      bg_bitmap.bitmap.fill_rect(CONTAINER_BORDER - graphic_chooser.x + list.x + list.width + 4 + GRAPHIC_CHOOSER_PREVIEW_BORDER,
-                                 CONTAINER_BORDER - graphic_chooser.y + list.y + GRAPHIC_CHOOSER_PREVIEW_BORDER,
-                                 GRAPHIC_CHOOSER_PREVIEW_SIZE, GRAPHIC_CHOOSER_PREVIEW_SIZE,
-                                 get_color_of(:background))
       next if !preview_bitmap
+      sprite.visible = true
       sprite.bitmap = preview_bitmap.bitmap
       zoom = [[GRAPHIC_CHOOSER_PREVIEW_SIZE.to_f / preview_bitmap.width,
               GRAPHIC_CHOOSER_PREVIEW_SIZE.to_f / preview_bitmap.height].min, 1.0].min
@@ -347,11 +352,24 @@ class AnimationEditor
     end
     set_preview_graphic.call(preview_sprite, list.value)
     # Interaction loop
+    filter_text = ""
     ret = nil
     loop do
       Graphics.update
       Input.update
       graphic_chooser.update
+      if graphic_chooser.get_control(:filter).value != filter_text
+        filter_text = graphic_chooser.get_control(:filter).value
+        old_val = list.value
+        if filter_text == ""
+          list.options = all_files
+        else
+          files = all_files.filter { |val| val[0].downcase.include?(filter_text.downcase) }
+          list.options = files
+        end
+        list.selected = list.options.index { |val| val && val[0] == old_val } || -1
+        set_preview_graphic.call(preview_sprite, list.value)
+      end
       if graphic_chooser.changed?
         graphic_chooser.changed_controls.each_pair do |ctrl, value|
           case ctrl
@@ -361,12 +379,20 @@ class AnimationEditor
             ret = selected
           when :list
             set_preview_graphic.call(preview_sprite, list.value)
+          when :filter_clear
+            old_val = list.value
+            filter_text = ""
+            graphic_chooser.get_control(:filter).value = ""
+            list.options = all_files
+            list.selected = list.options.index { |val| val && val[0] == old_val } || -1
+            set_preview_graphic.call(preview_sprite, list.value)
           end
           graphic_chooser.clear_changed
         end
         break if ret
         graphic_chooser.repaint
       end
+      graphic_chooser.get_control(:ok).enabled = !list.value.nil?
       if !graphic_chooser.busy? && Input.triggerex?(:ESCAPE)
         ret = selected
         break
@@ -395,27 +421,42 @@ class AnimationEditor
     bg_bitmap.z += audio_chooser.z
     # Get a list of files
     list = audio_chooser.get_control(:list)
-    files = get_all_files_in_folder(audio_folder, [".wav", ".ogg", ".mp3", ".wma"], ["USER", "TARGET"])
-    files.prepend(["TARGET", _INTL("[[Target's cry]]")]) if !@anim[:no_target]
-    files.prepend(["USER",  _INTL("[[User's cry]]")]) if !@anim[:no_user]
+    all_files = get_all_files_in_folder(audio_folder, [".wav", ".ogg", ".mp3", ".wma"], ["USER", "TARGET"])
+    all_files.prepend(["TARGET", _INTL("[[Target's cry]]")]) if !@anim[:no_target]
+    all_files.prepend(["USER",  _INTL("[[User's cry]]")]) if !@anim[:no_user]
     idx = 0
-    files.each_with_index do |f, i|
+    all_files.each_with_index do |f, i|
       next if f[0] != selected
       idx = i
       break
     end
     # Set control values
-    list.options = files
+    list.options = all_files
     list.selected = idx
+    audio_chooser.get_control(:filter).value = ""
     audio_chooser.get_control(:volume).value = volume
     audio_chooser.get_control(:pitch).value = pitch
+    audio_chooser.get_control(:play).enable
+    audio_chooser.get_control(:ok).enable
     # Interaction loop
+    filter_text = ""
     ret = nil
     cancel = false
     loop do
       Graphics.update
       Input.update
       audio_chooser.update
+      if audio_chooser.get_control(:filter).value != filter_text
+        filter_text = audio_chooser.get_control(:filter).value
+        old_val = list.value
+        if filter_text == ""
+          list.options = all_files
+        else
+          files = all_files.filter { |val| val[0].downcase.include?(filter_text.downcase) }
+          list.options = files
+        end
+        list.selected = list.options.index { |val| val && val[0] == old_val } || -1
+      end
       if audio_chooser.changed?
         audio_chooser.changed_controls.each_pair do |ctrl, value|
           case ctrl
@@ -424,6 +465,12 @@ class AnimationEditor
           when :cancel
             ret = selected
             cancel = true
+          when :filter_clear
+            old_val = list.value
+            filter_text = ""
+            audio_chooser.get_control(:filter).value = ""
+            list.options = all_files
+            list.selected = list.options.index { |val| val && val[0] == old_val } || -1
           when :play
             vol = audio_chooser.get_control(:volume).value
             ptch = audio_chooser.get_control(:pitch).value
@@ -433,7 +480,7 @@ class AnimationEditor
             when "TARGET"
               Pokemon.play_cry(@settings[:target_sprite_name])
             else
-              pbSEPlay(RPG::AudioFile.new("Anim/" + list.value, vol, ptch))
+              pbSEPlay(RPG::AudioFile.new("Anim/" + list.value, vol, ptch)) if list.value
             end
           when :stop
             pbSEStop
@@ -443,6 +490,7 @@ class AnimationEditor
         break if ret
         audio_chooser.repaint
       end
+      [:play, :ok].each { |ctrl| audio_chooser.get_control(ctrl).enabled = !list.value.nil? }
       if !audio_chooser.busy? && Input.triggerex?(:ESCAPE)
         ret = selected
         cancel = true

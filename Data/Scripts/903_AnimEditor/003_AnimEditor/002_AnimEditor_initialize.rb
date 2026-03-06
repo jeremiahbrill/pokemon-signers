@@ -419,12 +419,29 @@ class AnimationEditor
                                    graphic_chooser.x + CHOOSER_FILE_LIST_X,
                                    graphic_chooser.y + CHOOSER_FILE_LIST_Y,
                                    list)
+    # Filter
+    filter_y = graphic_chooser.y + CHOOSER_FILE_LIST_Y + CHOOSER_FILE_LIST_HEIGHT + 2
+    graphic_chooser.add_control_at(:filter_label,
+      graphic_chooser.x + CHOOSER_FILE_LIST_X,
+      filter_y,
+      UIControls::Label.new(CHOOSER_FILE_LIST_WIDTH, CHOOSER_ROW_HEIGHT, graphic_chooser.viewport, _INTL("Filter:"))
+    )
+    graphic_chooser.add_control_at(:filter,
+      graphic_chooser.x + CHOOSER_FILE_LIST_X + 60,
+      filter_y,
+      UIControls::TextBox.new(CHOOSER_FILE_LIST_WIDTH - 60 - 60 - 4, CHOOSER_ROW_HEIGHT, graphic_chooser.viewport, "")
+    )
+    graphic_chooser.add_control_at(:filter_clear,
+      graphic_chooser.x + CHOOSER_FILE_LIST_X + CHOOSER_FILE_LIST_WIDTH - 60,
+      filter_y + 2,
+      UIControls::Button.new(60, 20, graphic_chooser.viewport, _INTL("Clear"))
+    )
     # Buttons
     [[:ok, _INTL("OK")], [:cancel, _INTL("Cancel")]].each_with_index do |option, i|
       btn = UIControls::Button.new(CHOOSER_BUTTON_WIDTH, MESSAGE_BOX_BUTTON_HEIGHT, graphic_chooser.viewport, option[1])
       graphic_chooser.add_control_at(option[0],
                                      graphic_chooser.x + graphic_chooser.width - (CHOOSER_BUTTON_WIDTH * 2) - 4 - 3 + ((CHOOSER_BUTTON_WIDTH + 4) * i),
-                                     list.y + list.height - MESSAGE_BOX_BUTTON_HEIGHT,
+                                     list.y + list.height + CHOOSER_ROW_HEIGHT - MESSAGE_BOX_BUTTON_HEIGHT,
                                      btn)
     end
     graphic_chooser.visible = false
@@ -456,12 +473,29 @@ class AnimationEditor
                                    list.y + (28 * 2),
                                    btn)
     end
+    # Filter
+    filter_y = audio_chooser.y + CHOOSER_FILE_LIST_Y + CHOOSER_FILE_LIST_HEIGHT + 2
+    audio_chooser.add_control_at(:filter_label,
+      audio_chooser.x + CHOOSER_FILE_LIST_X,
+      filter_y,
+      UIControls::Label.new(CHOOSER_FILE_LIST_WIDTH, CHOOSER_ROW_HEIGHT, audio_chooser.viewport, _INTL("Filter:"))
+    )
+    audio_chooser.add_control_at(:filter,
+      audio_chooser.x + CHOOSER_FILE_LIST_X + 60,
+      filter_y,
+      UIControls::TextBox.new(CHOOSER_FILE_LIST_WIDTH - 60 - 60 - 4, CHOOSER_ROW_HEIGHT, audio_chooser.viewport, "")
+    )
+    audio_chooser.add_control_at(:filter_clear,
+      audio_chooser.x + CHOOSER_FILE_LIST_X + CHOOSER_FILE_LIST_WIDTH - 60,
+      filter_y + 2,
+      UIControls::Button.new(60, 20, audio_chooser.viewport, _INTL("Clear"))
+    )
     # Buttons
     [[:ok, _INTL("OK")], [:cancel, _INTL("Cancel")]].each_with_index do |option, i|
       btn = UIControls::Button.new(CHOOSER_BUTTON_WIDTH, MESSAGE_BOX_BUTTON_HEIGHT, audio_chooser.viewport, option[1])
       audio_chooser.add_control_at(option[0],
                                    audio_chooser.x + audio_chooser.width - (CHOOSER_BUTTON_WIDTH * 2) - 4 - 3 + ((CHOOSER_BUTTON_WIDTH + 4) * i),
-                                   list.y + list.height - MESSAGE_BOX_BUTTON_HEIGHT,
+                                   list.y + list.height + CHOOSER_ROW_HEIGHT - MESSAGE_BOX_BUTTON_HEIGHT,
                                    btn)
     end
     audio_chooser.visible = false

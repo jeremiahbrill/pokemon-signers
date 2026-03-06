@@ -69,6 +69,10 @@ class UIControls::BaseControl < BitmapSprite
     invalidate
   end
 
+  def enabled=(value)
+    (value) ? enable : disable
+  end
+
   def invalid?
     return @invalid
   end
