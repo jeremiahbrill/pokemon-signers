@@ -253,7 +253,7 @@ module AnimationPlayer::Helper
       sprite.ox = sprite.bitmap.width / 2
       sprite.oy = sprite.bitmap.height
     else
-      sprite.bitmap = RPG::Cache.load_bitmap("Graphics/Battle animations/", particle[:graphic])
+      sprite.bitmap = RPG::Cache.load_bitmap("Graphics/Battle animations/", particle[:graphic] || "")
       sprite.src_rect.set(0, 0, sprite.bitmap.width, sprite.bitmap.height)
       if [:foreground, :midground, :background].include?(particle[:focus]) &&
          sprite.bitmap.width >= Settings::SCREEN_WIDTH &&
@@ -268,7 +268,7 @@ module AnimationPlayer::Helper
         sprite.ox = sprite.bitmap.width / 2
         sprite.oy = sprite.bitmap.height / 2
       end
-      if particle[:graphic][/\[\s*bottom\s*\]\s*$/i]   # [bottom] at end of filename
+      if (particle[:graphic] || "")[/\[\s*bottom\s*\]\s*$/i]   # [bottom] at end of filename
         sprite.oy = sprite.bitmap.height
       end
     end

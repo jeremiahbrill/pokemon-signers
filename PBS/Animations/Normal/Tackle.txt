@@ -6,7 +6,7 @@ Credit = Maruno
 <User>
     FoeInvertX = true
     FoeInvertY = true
-    MoveX = 0,1,28
+    MoveX = 0,1,32
     MoveY = 0,1,-16
     MoveX = 3,1,0
     MoveY = 3,1,0

@@ -272,9 +272,13 @@ class AnimationPlayer::Emitter
 
   # NOTE: @processes assume the first keyframe is 0.
   def create_particle_sprite_add_commands(particle_sprite, target_idx = -1)
-    # Find earliest command and add a "make visible" command then
+    # Find earliest command and add certain command then to account for
+    # randomness added above
     if !particle_sprite.is_battler_sprite?
       if AnimationPlayer::Helper.get_first_command_frame(@particle, PARTICLE_PROPERTIES) >= 0
+        particle_sprite.add_set_process(:x, @next_emission, particle_sprite.property_offsets[:x])
+        particle_sprite.add_set_process(:y, @next_emission, particle_sprite.property_offsets[:y])
+        particle_sprite.add_set_process(:flip, @next_emission, particle_sprite.property_offsets[:flip])
         particle_sprite.add_set_process(:visible, @next_emission, true)
       end
       # Apply random frame
