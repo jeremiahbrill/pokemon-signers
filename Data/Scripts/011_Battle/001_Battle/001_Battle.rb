@@ -805,23 +805,23 @@ class Battle
     return @field.weather
   end
 
-  def pbCanStartWeather?(newWeather, ignore_primal = false)
-    return false if @field.weather == newWeather
+  def pbCanStartWeather?(new_weather, ignore_primal = false)
+    return false if @field.weather == new_weather
     primal_weathers = [:HarshSun, :HeavyRain, :StrongWinds]
     if !ignore_primal && primal_weathers.include?(@field.weather)
-      return newWeather == :None || primal_weathers.include?(newWeather)
+      return new_weather == :None || primal_weathers.include?(new_weather)
     end
     return false if Settings::DEFAULT_WEATHER_AND_TERRAIN_CANNOT_BE_REPLACED &&
-                    ![:None, newWeather].include?(@field.defaultWeather) &&
-                    !primal_weathers.include?(newWeather)
+                    ![:None, new_weather].include?(@field.defaultWeather) &&
+                    !primal_weathers.include?(new_weather)
     return true
   end
 
   # Used for causing weather by a move or by an ability.
-  def pbStartWeather(user, newWeather, fixedDuration = false, showAnim = true, message = nil)
-    return if !pbCanStartWeather?(newWeather)
+  def pbStartWeather(user, new_weather, fixedDuration = false, showAnim = true, message = nil)
+    return if !pbCanStartWeather?(new_weather)
     old_weather = @field.weather
-    @field.weather = newWeather
+    @field.weather = new_weather
     duration = (fixedDuration) ? 5 : -1
     if duration > 0 && user && user.itemActive?
       duration = Battle::ItemEffects.triggerWeatherExtender(user.item, @field.weather,
@@ -907,7 +907,7 @@ class Battle
   end
 
   def pbStartWeatherAbility(new_weather, battler, ignore_primal = false, message = nil)
-    return if !pbCanStartWeather?(newWeather, ignore_primal)
+    return if !pbCanStartWeather?(new_weather, ignore_primal)
     pbShowAbilitySplash(battler)
     if !Scene::USE_ABILITY_SPLASH
       pbDisplay(_INTL("{1} {2} activated!", battler.pbOfThis, battler.abilityName))
@@ -929,20 +929,20 @@ class Battle
     @field.terrainDuration = -1
   end
 
-  def pbCanStartTerrain?(newTerrain)
-    return false if @field.terrain == newTerrain
+  def pbCanStartTerrain?(new_terrain)
+    return false if @field.terrain == new_terrain
     return false if Settings::DEFAULT_WEATHER_AND_TERRAIN_CANNOT_BE_REPLACED &&
-                    ![:None, newTerrain].include?(@field.defaultTerrain)
+                    ![:None, new_terrain].include?(@field.defaultTerrain)
     return true
   end
 
-  def pbStartTerrain(user, newTerrain, fixedDuration = true, message = nil)
-    return if !pbCanStartTerrain?(newTerrain)
+  def pbStartTerrain(user, new_terrain, fixedDuration = true, message = nil)
+    return if !pbCanStartTerrain?(new_terrain)
     old_terrain = @field.terrain
-    @field.terrain = newTerrain
+    @field.terrain = new_terrain
     duration = (fixedDuration) ? 5 : -1
     if duration > 0 && user && user.itemActive?
-      duration = Battle::ItemEffects.triggerTerrainExtender(user.item, newTerrain,
+      duration = Battle::ItemEffects.triggerTerrainExtender(user.item, new_terrain,
                                                             duration, user, self)
     end
     @field.terrainDuration = duration

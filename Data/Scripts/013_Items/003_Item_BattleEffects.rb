@@ -508,12 +508,12 @@ ItemHandlers::BattleUseOnPokemon.add(:ETHER, proc { |item, pokemon, battler, cho
   pbSEPlay("Use item in party")
   if battler
     if battler.battle.pbOwnedByPlayer?(battler.index)
-      scene.pbDisplay(_INTL("The PP of {1} {2} was restored!",
-                            battler.pbOfThis(true), pokemon.moves[idxMove].name))
+      scene.pbDisplay(_INTL("The PP of {1}'s {2} was restored!",
+                            battler.name, pokemon.moves[idxMove].name))
     else
       scene.pbDisplay(_INTL("{1}'s {2} had its {3} PP restored!",
                             battler.battle.pbGetOwnerName(battler.index),
-                            battler.pbThis(true), pokemon.moves[idxMove].name))
+                            battler.name, pokemon.moves[idxMove].name))
     end
   else
     scene.pbDisplay(_INTL("The PP of {1}'s {2} was restored!", pokemon.name, pokemon.moves[idxMove].name))
@@ -528,12 +528,12 @@ ItemHandlers::BattleUseOnPokemon.add(:MAXETHER, proc { |item, pokemon, battler, 
   pbSEPlay("Use item in party")
   if battler
     if battler.battle.pbOwnedByPlayer?(battler.index)
-      scene.pbDisplay(_INTL("The PP of {1} {2} was restored!",
-                            battler.pbOfThis(true), pokemon.moves[idxMove].name))
+      scene.pbDisplay(_INTL("The PP of {1}'s {2} was restored!",
+                            battler.name, pokemon.moves[idxMove].name))
     else
       scene.pbDisplay(_INTL("{1}'s {2} had its {3} PP restored!",
                             battler.battle.pbGetOwnerName(battler.index),
-                            battler.pbThis(true), pokemon.moves[idxMove].name))
+                            battler.name, pokemon.moves[idxMove].name))
     end
   else
     scene.pbDisplay(_INTL("The PP of {1}'s {2} was restored!", pokemon.name, pokemon.moves[idxMove].name))
@@ -547,10 +547,10 @@ ItemHandlers::BattleUseOnPokemon.add(:ELIXIR, proc { |item, pokemon, battler, ch
   pbSEPlay("Use item in party")
   if battler
     if battler.battle.pbOwnedByPlayer?(battler.index)
-      scene.pbDisplay(_INTL("All of {1} moves had their PP restored!", battler.pbOfThis(true)))
+      scene.pbDisplay(_INTL("All of {1}'s moves had their PP restored!", battler.name))
     else
       scene.pbDisplay(_INTL("{1}'s {2} had PP restored to all of its moves!",
-                            battler.battle.pbGetOwnerName(battler.index), battler.pbThis(true)))
+                            battler.battle.pbGetOwnerName(battler.index), battler.name))
     end
   else
     scene.pbDisplay(_INTL("All of {1}'s moves had their PP restored!", pokemon.name))
@@ -564,10 +564,10 @@ ItemHandlers::BattleUseOnPokemon.add(:MAXELIXIR, proc { |item, pokemon, battler,
   pbSEPlay("Use item in party")
   if battler
     if battler.battle.pbOwnedByPlayer?(battler.index)
-      scene.pbDisplay(_INTL("All of {1} moves had their PP restored!", battler.pbOfThis(true)))
+      scene.pbDisplay(_INTL("All of {1}'s moves had their PP restored!", battler.name))
     else
       scene.pbDisplay(_INTL("{1}'s {2} had PP restored to all of its moves!",
-                            battler.battle.pbGetOwnerName(battler.index), battler.pbThis(true)))
+                            battler.battle.pbGetOwnerName(battler.index), battler.name))
     end
   else
     scene.pbDisplay(_INTL("All of {1}'s moves had their PP restored!", pokemon.name))
