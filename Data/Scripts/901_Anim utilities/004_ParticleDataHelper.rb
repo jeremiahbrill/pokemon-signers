@@ -256,6 +256,7 @@ module AnimationEditor::ParticleDataHelper
   # * SetXYZ and MoveXYZ end - (unlikely) delete both
   # * SetXYZ and MoveXYZ start and end - (unlikely) delete SetXYZ, merge Moves together
   def delete_command(particle, property, frame, full_delete = false)
+    return nil if !particle[property] || particle[property].empty?
     # Find all relevant commands
     set_now = nil
     move_ending_now = nil
