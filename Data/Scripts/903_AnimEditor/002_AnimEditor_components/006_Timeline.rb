@@ -671,12 +671,14 @@ class AnimationEditor::Timeline < UIControls::BaseContainer
   end
 
   def update_changed_controls_and_particles
+    ret = false
     # Check for updated controls
     @controls.each_pair do |id, c|
       next if !c.changed?
       @changed_controls ||= {}
       @changed_controls[id] = c.value
       c.clear_changed
+      ret = true
     end
     # Check for updated listed particles
     @display_particles.each_with_index do |particle, particle_index|
@@ -692,7 +694,9 @@ class AnimationEditor::Timeline < UIControls::BaseContainer
         end
       end
       particle.clear_changed
+      ret = true
     end
+    return ret
   end
 
   def update_input
@@ -757,8 +761,8 @@ class AnimationEditor::Timeline < UIControls::BaseContainer
   def update
     return if disposed? || !@visible
     update_controls_and_particles
-    update_changed_controls_and_particles
-    if !@captured &&
+    changed = update_changed_controls_and_particles
+    if !changed &&
        (!@display_particles || @display_particles.none? { |ctrl| ctrl.choosing_interpolation? })
       update_input
     end

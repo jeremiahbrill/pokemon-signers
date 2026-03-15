@@ -290,9 +290,9 @@ class AnimationPlayer::Emitter
     # randomness added above
     if !particle_sprite.is_battler_sprite?
       if AnimationPlayer::Helper.get_first_command_frame(@particle, PARTICLE_PROPERTIES) >= 0
-        particle_sprite.add_set_process(:x, @next_emission, particle_sprite.property_offsets[:x])
-        particle_sprite.add_set_process(:y, @next_emission, particle_sprite.property_offsets[:y])
-        particle_sprite.add_set_process(:flip, @next_emission, particle_sprite.property_offsets[:flip])
+        particle_sprite.add_set_process(:x, @next_emission, GameData::Animation::PARTICLE_KEYFRAME_DEFAULT_VALUES[:x])
+        particle_sprite.add_set_process(:y, @next_emission, GameData::Animation::PARTICLE_KEYFRAME_DEFAULT_VALUES[:y])
+        particle_sprite.add_set_process(:flip, @next_emission, GameData::Animation::PARTICLE_KEYFRAME_DEFAULT_VALUES[:flip])
         particle_sprite.add_set_process(:visible, @next_emission, true)
       end
       # Apply random frame
