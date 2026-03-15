@@ -238,7 +238,10 @@ class AnimationPlayer::Emitter
     [
       [:emit_radius_x_range, :radius_x_mult],
       [:emit_radius_y_range, :radius_y_mult],
-      [:emit_radius_z_range, :radius_z_mult]
+      [:emit_radius_z_range, :radius_z_mult],
+      [:emit_zoom_range, :zoom_mult],
+      [:emit_zoom_x_range, :zoom_x_mult],
+      [:emit_zoom_y_range, :zoom_y_mult]
     ].each do |property|
       val = @values[property[0]]
       val = rand(-val, val) if val > 0
@@ -290,9 +293,9 @@ class AnimationPlayer::Emitter
     # randomness added above
     if !particle_sprite.is_battler_sprite?
       if AnimationPlayer::Helper.get_first_command_frame(@particle, PARTICLE_PROPERTIES) >= 0
-        particle_sprite.add_set_process(:x, @next_emission, GameData::Animation::PARTICLE_KEYFRAME_DEFAULT_VALUES[:x])
-        particle_sprite.add_set_process(:y, @next_emission, GameData::Animation::PARTICLE_KEYFRAME_DEFAULT_VALUES[:y])
-        particle_sprite.add_set_process(:flip, @next_emission, GameData::Animation::PARTICLE_KEYFRAME_DEFAULT_VALUES[:flip])
+        [:x, :y, :priority, :zoom_x, :zoom_y, :angle, :flip, :opacity].each do |property|
+          particle_sprite.add_set_process(property, @next_emission, GameData::Animation::PARTICLE_KEYFRAME_DEFAULT_VALUES[property])
+        end
         particle_sprite.add_set_process(:visible, @next_emission, true)
       end
       # Apply random frame

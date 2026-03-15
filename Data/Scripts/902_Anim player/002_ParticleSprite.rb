@@ -234,9 +234,13 @@ class AnimationPlayer::ParticleSprite
       AnimationPlayer::Helper.apply_z_focus_to_sprite(@sprite, value, @focus_z)
     when :zoom_x
       value += (@property_offsets[property] || 0)
+      value *= @emitter_params[:zoom_mult] || 1
+      value *= @emitter_params[:zoom_x_mult] || 1
       @sprite.zoom_x = value / 100.0
     when :zoom_y
       value += (@property_offsets[property] || 0)
+      value *= @emitter_params[:zoom_mult] || 1
+      value *= @emitter_params[:zoom_y_mult] || 1
       @sprite.zoom_y = value / 100.0
     when :angle
       if @angle_override == :always_point_at_focus

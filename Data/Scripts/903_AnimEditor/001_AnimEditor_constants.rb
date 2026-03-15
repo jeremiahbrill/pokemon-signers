@@ -39,6 +39,9 @@ class AnimationEditor
     :emit_radius_x_range => [    0, 9999],
     :emit_radius_y_range => [    0, 9999],
     :emit_radius_z_range => [    0,   50],
+    :emit_zoom_range     => [    0, 9999],
+    :emit_zoom_x_range   => [    0, 9999],
+    :emit_zoom_y_range   => [    0, 9999],
     :radius_x            => [    0, 9999],
     :radius_y            => [    0, 9999],
     :radius_z            => [    0,   50]
