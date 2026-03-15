@@ -148,38 +148,51 @@ class AnimationPlayer::ParticleSprite
     when :no_movement
       # NOTE: This doesn't change any properties.
     when :straight
-      new_x = (@emitter_params[:speed_x] * delta_t).round
-      @values[:base_x] = new_x
-      changed_properties.push(:x)
-      new_y = (@emitter_params[:speed_y] * delta_t).round
-      @values[:base_y] = new_y
-      changed_properties.push(:y)
+      if @emitter_params[:speed_x] != 0
+        new_x = (@emitter_params[:speed_x] * delta_t).round
+        @values[:base_x] = new_x
+        changed_properties.push(:x)
+      end
+      if @emitter_params[:speed_y] != 0
+        new_y = (@emitter_params[:speed_y] * delta_t).round
+        @values[:base_y] = new_y
+        changed_properties.push(:y)
+      end
     when :projectile
-      new_x = (@emitter_params[:speed_x] * delta_t).round
-      @values[:base_x] = new_x
-      changed_properties.push(:x)
-      new_y = ((@emitter_params[:speed_y] * delta_t) + (@emitter_params[:gravity] * delta_t * delta_t / 2)).round   # s = ut + 1/2 at^2
-      @values[:base_y] = new_y
-      changed_properties.push(:y)
+      if @emitter_params[:speed_x] != 0
+        new_x = (@emitter_params[:speed_x] * delta_t).round
+        @values[:base_x] = new_x
+        changed_properties.push(:x)
+      end
+      if @emitter_params[:speed_y] != 0 || @emitter_params[:gravity] != 0
+        new_y = ((@emitter_params[:speed_y] * delta_t) + (@emitter_params[:gravity] * delta_t * delta_t / 2)).round   # s = ut + 1/2 at^2
+        @values[:base_y] = new_y
+        changed_properties.push(:y)
+      end
     when :helix
       if @emitter_params[:period_x] != 0
-        new_angle = @emitter_params[:angle] + (360 * delta_t / @emitter_params[:period_x])
+        new_angle = @emitter_params[:angle]
+        new_angle += (360 * delta_t / @emitter_params[:period_x]) * (@emitter_params[:clockwise] ? -1 : 1)
         new_x = @values[:radius_x] * @emitter_params[:radius_x_mult] * Math.sin(new_angle * Math::PI / 180)
         @values[:base_x] = new_x
         changed_properties.push(:x)
       end
-      new_y = (@emitter_params[:speed] * delta_t).round
-      @values[:base_y] = new_y
-      changed_properties.push(:y)
+      if @emitter_params[:speed] != 0
+        new_y = (@emitter_params[:speed] * delta_t).round
+        @values[:base_y] = new_y
+        changed_properties.push(:y)
+      end
       if @emitter_params[:period_z] != 0
-        new_angle = @emitter_params[:angle] + (360 * delta_t / @emitter_params[:period_z])
+        new_angle = @emitter_params[:angle]
+        new_angle += (360 * delta_t / @emitter_params[:period_z]) * (@emitter_params[:clockwise] ? -1 : 1)
         new_z = @values[:radius_z] * @emitter_params[:radius_z_mult] * Math.cos(new_angle * Math::PI / 180)
         @values[:z] = new_z
         changed_properties.push(:z)
       end
     when :polar
       if @emitter_params[:period_x] != 0
-        new_angle = @emitter_params[:angle] + (360 * delta_t / @emitter_params[:period_x])
+        new_angle = @emitter_params[:angle]
+        new_angle += (360 * delta_t / @emitter_params[:period_x]) * (@emitter_params[:clockwise] ? -1 : 1)
         new_x = @values[:radius_x] * @emitter_params[:radius_x_mult] * Math.sin(new_angle * Math::PI / 180)
         @values[:base_x] = new_x
         changed_properties.push(:x)

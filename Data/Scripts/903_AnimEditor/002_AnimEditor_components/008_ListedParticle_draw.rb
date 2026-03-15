@@ -159,8 +159,9 @@ class AnimationEditor::ListedParticle < UIControls::BaseContainer
       vals = AnimationEditor::PROPERTY_RANGES[row] || [0, 0]
       default = GameData::Animation::PARTICLE_KEYFRAME_DEFAULT_VALUES[row] || 0
       ctrl = UIControls::NumberTextBox.new(ctrl_width, ctrl_height, @list_viewport, *vals, default)
-    when :flip, :emitting
-      ctrl = UIControls::Checkbox.new(ctrl_width, ctrl_height, @list_viewport, false)
+    when :flip, :emitting, :emit_clockwise
+      default = GameData::Animation::PARTICLE_KEYFRAME_DEFAULT_VALUES[row] || false
+      ctrl = UIControls::Checkbox.new(ctrl_width, ctrl_height, @list_viewport, default)
     when :visible
       ctrl = UIControls::Checkbox.new(ctrl_width, ctrl_height, @list_viewport, true)
     when :color

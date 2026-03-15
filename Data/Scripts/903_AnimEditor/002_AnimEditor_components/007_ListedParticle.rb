@@ -26,6 +26,7 @@ class AnimationEditor::ListedParticle < UIControls::BaseContainer
                                :emit_period_y, :emit_period_y_range,
                                :emit_period_z, :emit_period_z_range,
                                :emit_radius_x_range, :emit_radius_y_range, :emit_radius_z_range,
+                               :emit_clockwise,
                                :emit_zoom_range, :emit_zoom_x_range, :emit_zoom_y_range],
     :position_group        => [:x, :y, :z, :radius_x, :radius_y, :radius_z],
     :transformation_group  => [:zoom_x, :zoom_y, :angle, :flip],
@@ -46,13 +47,13 @@ class AnimationEditor::ListedParticle < UIControls::BaseContainer
                               :emit_angle, :emit_angle_range,
                               :emit_gravity, :emit_gravity_range,
                               :emit_zoom_range, :emit_zoom_x_range, :emit_zoom_y_range],
-    # TODO: Add clockwise/anticlockwise boolean to :helix and :polar.
     :helix                => [:emit_x_range, :emit_y_range,
                               :emit_speed, :emit_speed_range,
                               :emit_angle, :emit_angle_range,
                               :emit_period_x, :emit_period_x_range,
                               :emit_period_z, :emit_period_z_range,
                               :emit_radius_x_range, :emit_radius_z_range,
+                              :emit_clockwise,
                               :emit_zoom_range, :emit_zoom_x_range, :emit_zoom_y_range,
                               :radius_x, :radius_z],
     :polar                => [:emit_x_range, :emit_y_range,
@@ -60,6 +61,7 @@ class AnimationEditor::ListedParticle < UIControls::BaseContainer
                               :emit_period_x, :emit_period_x_range,
                               :emit_period_y, :emit_period_y_range,
                               :emit_radius_x_range, :emit_radius_y_range,
+                              :emit_clockwise,
                               :emit_zoom_range, :emit_zoom_x_range, :emit_zoom_y_range,
                               :radius_x, :radius_y]
   }

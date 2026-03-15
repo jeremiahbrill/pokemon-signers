@@ -247,6 +247,8 @@ class AnimationPlayer::Emitter
       val = rand(-val, val) if val > 0
       particle_sprite.emitter_params[property[1]] = (val + 100) / 100.0
     end
+    # Clockwise
+    particle_sprite.emitter_params[:clockwise] = @values[:emit_clockwise]
     # X/Y speed
     speed = particle_sprite.emitter_params[:speed]
     angle = particle_sprite.emitter_params[:angle]
