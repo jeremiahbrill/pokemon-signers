@@ -64,7 +64,8 @@ module GameData
       "NoMovement" => :no_movement,   # Doesn't move once spawned
       "Straight"   => :straight,      # Moves in a straight line
       "Projectile" => :projectile,    # Moved under gravity
-      "Helix"      => :helix          # Sine movement in x, straight movement in y
+      "Helix"      => :helix,         # Sine movement in x, straight movement in y
+      "Polar"      => :polar          # Sine movement in x/y
     }
     ANGLE_OVERRIDES = {
       "None"                => :none,
