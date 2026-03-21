@@ -56,7 +56,7 @@ class AnimationEditor::AnimationSelector
   FILTERS_Y                = ANIMATION_LISTS_Y
   FILTERS_WIDTH            = WINDOW_WIDTH - FILTERS_X - CONTAINER_BORDER
   FILTERS_HEIGHT           = ANIMATION_LISTS_HEIGHT
-  FILTER_ROW_WIDTH         = 320
+  FILTER_ROW_WIDTH         = 340
   FILTER_ROW_LABEL_WIDTH   = 200
   FILTER_ROW_CONTROL_WIDTH = FILTER_ROW_WIDTH - FILTER_ROW_LABEL_WIDTH
   FILTER_ROW_HEIGHT        = 24
@@ -228,14 +228,14 @@ class AnimationEditor::AnimationSelector
     label = UIControls::Label.new(FILTER_ROW_LABEL_WIDTH, FILTER_ROW_HEIGHT,
                                   @viewport, _INTL("Animation name contains"))
     @components.add_control_at(:anim_name_filter_label, FILTER_ROW_LABEL_X, row_y, label)
-    text_box = UIControls::TextBox.new(FILTER_ROW_CONTROL_WIDTH, FILTER_ROW_HEIGHT, @viewport, "")
+    text_box = UIControls::TextBoxDropdownList.new(FILTER_ROW_CONTROL_WIDTH, FILTER_ROW_HEIGHT, @viewport, [], "")
     @components.add_control_at(:anim_name_filter, FILTER_ROW_CONTROL_X, row_y, text_box)
     row_y += FILTER_ROW_HEIGHT
     # Credit name
     label = UIControls::Label.new(FILTER_ROW_LABEL_WIDTH, FILTER_ROW_HEIGHT,
                                   @viewport, _INTL("Credit text contains"))
     @components.add_control_at(:credit_filter_label, FILTER_ROW_LABEL_X, row_y, label)
-    text_box = UIControls::TextBox.new(FILTER_ROW_CONTROL_WIDTH, FILTER_ROW_HEIGHT, @viewport, "")
+    text_box = UIControls::TextBoxDropdownList.new(FILTER_ROW_CONTROL_WIDTH, FILTER_ROW_HEIGHT, @viewport, [], "")
     @components.add_control_at(:credit_filter, FILTER_ROW_CONTROL_X, row_y, text_box)
     row_y += FILTER_ROW_HEIGHT
     # Usable in battle
@@ -267,6 +267,7 @@ class AnimationEditor::AnimationSelector
                                FILTERS_X + ((FILTERS_WIDTH - FILTER_BUTTON_WIDTH) / 2),
                                row_y + 2,
                                btn)
+    set_filter_options
   end
 
   def dispose
@@ -468,6 +469,19 @@ class AnimationEditor::AnimationSelector
     @common_list.sort!
   end
 
+  def set_filter_options
+    anim_names = []
+    credits = []
+    GameData::Animation.each do |anim|
+      anim_names.push(anim.name) if anim.name && anim.name != "" && !anim_names.include?(anim.name)
+      credits.push(anim.credit) if anim.credit && anim.credit != "" && !credits.include?(anim.credit)
+    end
+    anim_names.sort! { |a, b| a.downcase <=> b.downcase }
+    credits.sort! { |a, b| a.downcase <=> b.downcase }
+    @components.get_control(:anim_name_filter).options = anim_names.to_h { |item| [item, item] }
+    @components.get_control(:credit_filter).options = credits.to_h { |item| [item, item] }
+  end
+
   def selected_move_display_animations
     val = @components.get_control(:moves_list).value
     return [] if !val
@@ -531,6 +545,7 @@ class AnimationEditor::AnimationSelector
       screen = AnimationEditor.new(new_id, new_anim)
       screen.run
       generate_full_lists
+      set_filter_options
     when :color_scheme
       @settings[:color_scheme] = @components.get_control(button).value
       save_settings
@@ -552,6 +567,7 @@ class AnimationEditor::AnimationSelector
         @components.get_control(:color_scheme).value = @settings[:color_scheme]
         self.color_scheme = @settings[:color_scheme]
         generate_full_lists
+        set_filter_options
         refresh
       end
     when :copy
@@ -563,6 +579,7 @@ class AnimationEditor::AnimationSelector
         screen = AnimationEditor.new(new_id, new_anim)
         screen.run
         generate_full_lists
+        set_filter_options
       end
     when :delete
       anim_id = selected_animation_id
@@ -575,6 +592,7 @@ class AnimationEditor::AnimationSelector
           File.delete("PBS/Animations/" + pbs_path + ".txt")
         end
         generate_full_lists
+        set_filter_options
       end
     when :clear_filters
       [:move_name_filter, :anim_name_filter, :credit_filter].each do |filter|

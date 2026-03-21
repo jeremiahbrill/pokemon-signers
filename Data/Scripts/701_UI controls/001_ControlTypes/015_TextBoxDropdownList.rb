@@ -61,8 +61,14 @@ class UIControls::TextBoxDropdownList < UIControls::TextBox
     @dropdown_menu_viewport = Viewport.new(view_x, view_y, @button_rect.x + @button_rect.width - @text_box_rect.x, menu_height)
     @dropdown_menu_viewport.z = self.viewport.z + 100
     # Create menu
+    shown_options = @options
+    if @value && @value != ""
+      shown_options = @options.select do |key, val|
+        key.downcase.include?(@value.downcase) || val.downcase.include?(@value.downcase)
+      end
+    end
     @dropdown_menu = UIControls::List.new(@text_box_rect.width + @button_rect.width, menu_height,
-                                          @dropdown_menu_viewport, @options, TEXT_BOX_HEIGHT)
+                                          @dropdown_menu_viewport, shown_options, TEXT_BOX_HEIGHT)
     @dropdown_menu.color_scheme = @color_scheme
     @dropdown_menu.set_interactive_rects
     @dropdown_menu.repaint
@@ -74,7 +80,6 @@ class UIControls::TextBoxDropdownList < UIControls::TextBox
     @dropdown_menu_viewport&.dispose
     @dropdown_menu_viewport = nil
     @captured_area = nil
-    @applied_filter = false
   end
 
   #-----------------------------------------------------------------------------
@@ -205,12 +210,11 @@ class UIControls::TextBoxDropdownList < UIControls::TextBox
     @dropdown_menu&.repaint
     super
     # Filter the dropdown menu options based on @value if it changes
-    if @dropdown_menu && @initial_value && (@applied_filter || @value != @initial_value)
+    if @dropdown_menu && @initial_value && @value != @initial_value
       filtered_options = @options.select do |key, val|
         key.downcase.include?(@value.downcase) || val.downcase.include?(@value.downcase)
       end
       @dropdown_menu.options = filtered_options
-      @applied_filter = true
     end
   end
 end
