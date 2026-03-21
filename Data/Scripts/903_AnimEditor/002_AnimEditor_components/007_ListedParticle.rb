@@ -69,7 +69,7 @@ class AnimationEditor::ListedParticle < UIControls::BaseContainer
   ROW_HEIGHT      = 24
   ROW_SPACING     = 1
   FULL_ROW_HEIGHT = ROW_HEIGHT + ROW_SPACING
-  LIST_ARROW_SIZE        = 16   # Size of bitmap showing the expanding arrow in group rows
+  LIST_ARROW_SIZE        = 20   # Size of bitmap showing the expanding arrow in group rows
   LIST_BOX_TOP_LEVEL_X   = 20
   LIST_BOX_INDENT_X      = 12   # Number of pixels per indent level
   CONTROL_X              = 128
@@ -129,22 +129,26 @@ class AnimationEditor::ListedParticle < UIControls::BaseContainer
     icon_color = get_color_of(:text)
     # Expandable arrow to left of listed particle
     arrow_graphic = %w(
-      . . . . . . . . . . . . . . . .
-      . . . . . . . . . . . . . . . .
-      . . . . . . X X . . . . . . . .
-      . . . . . X X X X . . . . . . .
-      . . . . . X X X X X . . . . . .
-      . . . . . X X X X X X . . . . .
-      . . . . . X X X X X X X . . . .
-      . . . . . X X X X X X X X . . .
-      . . . . . X X X X X X X . . . .
-      . . . . . X X X X X X . . . . .
-      . . . . . X X X X X . . . . . .
-      . . . . . X X X X . . . . . . .
-      . . . . . . X X . . . . . . . .
-      . . . . . . . . . . . . . . . .
-      . . . . . . . . . . . . . . . .
-      . . . . . . . . . . . . . . . .
+      . . . . . . . . . . . . . . . . . . . .
+      . . . . . . . . . . . . . . . . . . . .
+      . . . . . . . . . . . . . . . . . . . .
+      . . . . . . . . . . . . . . . . . . . .
+      . . . . . . . . X X . . . . . . . . . .
+      . . . . . . . X X X X . . . . . . . . .
+      . . . . . . . X X X X X . . . . . . . .
+      . . . . . . . X X X X X X . . . . . . .
+      . . . . . . . X X X X X X X . . . . . .
+      . . . . . . . X X X X X X X X . . . . .
+      . . . . . . . X X X X X X X . . . . . .
+      . . . . . . . X X X X X X . . . . . . .
+      . . . . . . . X X X X X . . . . . . . .
+      . . . . . . . X X X X . . . . . . . . .
+      . . . . . . . . X X . . . . . . . . . .
+      . . . . . . . . . . . . . . . . . . . .
+      . . . . . . . . . . . . . . . . . . . .
+      . . . . . . . . . . . . . . . . . . . .
+      . . . . . . . . . . . . . . . . . . . .
+      . . . . . . . . . . . . . . . . . . . .
     )
     @bitmaps[:collapsed_arrow] = Bitmap.new(LIST_ARROW_SIZE, LIST_ARROW_SIZE) if !@bitmaps[:collapsed_arrow]
     @bitmaps[:collapsed_arrow].clear
