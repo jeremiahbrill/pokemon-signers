@@ -84,6 +84,7 @@ class AnimationEditor
     @components[:help] = UIControls::ListedContainer.new(
       HELP_X, HELP_Y, HELP_WIDTH, HELP_HEIGHT, @pop_up_viewport
     )
+    @components[:help].label_offset_x = 140
     [:editor_settings, :animation_properties, :particle_properties].each do |pop_up|
       @components[pop_up] = UIControls::ListedContainer.new(
         ANIM_PROPERTIES_X + 4, ANIM_PROPERTIES_Y, ANIM_PROPERTIES_WIDTH - 8, ANIM_PROPERTIES_HEIGHT, @pop_up_viewport
@@ -172,22 +173,24 @@ class AnimationEditor
   def set_help_window_contents
     help_window = @components[:help]
     help_window.add_header_label(:header, _INTL("Help"))
-    # Keyboard controls
-    help_window.add_underlined_label(:section_keyboard, _INTL("Keyboard controls"))
-    help_window.add_label(:text_esc, _INTL("Esc - Close any pop-up window (such as this one)."))
-    help_window.add_label(:text_space, _INTL("Space - Play the animation, or stop it if it is playing."))
-    help_window.add_label(:text_arrows, _INTL("Up/Down/Left/Right - Change which keyframe and row is selected. Hold Ctrl to move faster."))
-    help_window.add_label(:text_wasd, _INTL("W/A/S/D - Move the selected particle in the canvas. Hold Ctrl to move faster."))
-    help_window.add_label(:text_delete, _INTL("Delete - Remove the command selected in the timeline."))
-    help_window.add_label(:text_insert, _INTL("Insert - Add a command at the selected point in the timeline."))
-    help_window.add_label(:text_undo, _INTL("Ctrl + Z - Undo."))
-    help_window.add_label(:text_redo, _INTL("Ctrl + Y - Redo."))
     # Mouse controls
     help_window.add_underlined_label(:section_mouse, _INTL("Mouse controls"))
-    help_window.add_label(:text_left_click, _INTL("Left click - Select/change something."))
-    help_window.add_label(:text_left_drag, _INTL("Left click and drag - Move a command in the timeline, move a particle in the canvas, move through keyframes in the time bar."))
-    help_window.add_label(:text_right_click, _INTL("Right click - Change the type of interpolation between two commands."))
-    help_window.add_label(:text_scroll_wheel, _INTL("Scroll wheel - Scroll up/down in the list of particles."))
+    help_window.add_labelled_label(:text_left_click, _INTL("Left click"), _INTL("Select/change something."))
+    help_window.add_labelled_label(:text_left_drag, _INTL("Left click and drag"), _INTL("Move a command in the timeline, move a particle in the canvas, move through keyframes in the time bar."))
+    help_window.add_labelled_label(:text_right_click, _INTL("Right click"), _INTL("Change the type of interpolation between two commands."))
+    help_window.add_labelled_label(:text_right_drag, _INTL("Right click and drag"), _INTL("Rotate the selected particle in the canvas."))
+    help_window.add_labelled_label(:text_scroll_wheel, _INTL("Scroll wheel"), _INTL("Scroll up/down in places where there is a scrollbar, change a particle's size in the canvas."))
+    # Keyboard controls
+    help_window.add_underlined_label(:section_keyboard, _INTL("Keyboard controls"))
+    help_window.add_labelled_label(:text_esc, _INTL("Esc"), _INTL("Close any pop-up window (such as this one)."))
+    help_window.add_labelled_label(:text_space, _INTL("Space"), _INTL("Play the animation, or stop it if it's playing."))
+    help_window.add_labelled_label(:text_arrows, _INTL("Up/Down/Left/Right"), _INTL("Change which keyframe and row is selected. Hold Ctrl to move faster."))
+    help_window.add_labelled_label(:text_tab, _INTL("Tab"), _INTL("Select the next particle. Hold Shift to select the previous particle instead."))
+    help_window.add_labelled_label(:text_wasd, _INTL("W/A/S/D"), _INTL("Move the selected particle in the canvas. Hold Ctrl to move faster."))
+    help_window.add_labelled_label(:text_delete, _INTL("Delete"), _INTL("Remove the command selected in the timeline."))
+    help_window.add_labelled_label(:text_insert, _INTL("Insert"), _INTL("Add a command at the selected point in the timeline."))
+    help_window.add_labelled_label(:text_undo, _INTL("Ctrl + Z"), _INTL("Undo."))
+    help_window.add_labelled_label(:text_redo, _INTL("Ctrl + Y"), _INTL("Redo."))
     # Close button
     help_window.increment_row_count
     help_window.add_fitted_button(:close, _INTL("Close"))

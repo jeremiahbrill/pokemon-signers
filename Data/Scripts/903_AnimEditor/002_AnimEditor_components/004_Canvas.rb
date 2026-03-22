@@ -243,6 +243,14 @@ class AnimationEditor::Canvas < Sprite
     return !@captured.nil?
   end
 
+  def moving_particle?
+    return busy? && @captured.length == 4
+  end
+
+  def rotating_particle?
+    return busy? && @captured.length == 3
+  end
+
   def changed?
     return !@changed_controls.nil?
   end
@@ -652,6 +660,25 @@ class AnimationEditor::Canvas < Sprite
 
   #-----------------------------------------------------------------------------
 
+  def update_input
+    particle = (@selected_particle) ? @anim[:particles][@selected_particle] : nil
+    particle = nil if particle[:name] == "SE"
+    update_input_move_particle(particle) if particle
+    update_input_mouse_wheel_particle(particle) if particle
+    # Mouse clicks
+    if !busy?
+      if Input.trigger?(Input::MOUSELEFT)
+        on_mouse_press
+      elsif Input.trigger?(Input::MOUSERIGHT)
+        on_mouse_right_press
+      end
+    elsif particle
+      if Input.release?(Input::MOUSELEFT) || Input.release?(Input::MOUSERIGHT)
+        on_mouse_release
+      end
+    end
+  end
+
   def on_mouse_press
     mouse_x, mouse_y = mouse_pos
     return if !mouse_x || !mouse_y
@@ -697,6 +724,20 @@ class AnimationEditor::Canvas < Sprite
     @changed_controls = {:particle_index => nearest_index}
   end
 
+  def on_mouse_right_press
+    mouse_x, mouse_y = mouse_pos
+    return if !mouse_x || !mouse_y
+    particle = (@selected_particle) ? @anim[:particles][@selected_particle] : nil
+    particle = nil if particle[:name] == "SE"
+    return if !particle
+    if GameData::Animation::FOCUS_TYPES_WITH_TARGET.include?(particle[:focus])
+      sprite, _frame = get_sprite_and_frame(@selected_particle, first_target_index)
+    else
+      sprite, _frame = get_sprite_and_frame(@selected_particle)
+    end
+    @captured = [mouse_x, mouse_y, sprite.angle]
+  end
+
   def on_mouse_release
     # NOTE: We set this value now for the sake of recording a snapshot in the
     #       undo history.
@@ -705,7 +746,7 @@ class AnimationEditor::Canvas < Sprite
     @captured = nil
   end
 
-  def update_input
+  def update_input_move_particle(particle)
     increment = (Input.pressex?(:LCTRL) || Input.pressex?(:RCTRL)) ? 10 : 1
     # Move selected particle left/right
     x_move = 0
@@ -715,7 +756,6 @@ class AnimationEditor::Canvas < Sprite
       x_move = increment
     end
     if x_move != 0
-      particle = @anim[:particles][@selected_particle]
       if GameData::Animation::FOCUS_TYPES_WITH_TARGET.include?(particle[:focus])
         sprite, frame = get_sprite_and_frame(@selected_particle, first_target_index)
       else
@@ -734,7 +774,6 @@ class AnimationEditor::Canvas < Sprite
       y_move = increment
     end
     if y_move != 0
-      particle = @anim[:particles][@selected_particle]
       if GameData::Animation::FOCUS_TYPES_WITH_TARGET.include?(particle[:focus])
         sprite, frame = get_sprite_and_frame(@selected_particle, first_target_index)
       else
@@ -751,16 +790,31 @@ class AnimationEditor::Canvas < Sprite
         @changed_controls[:on_dir_keys_release] = true
       end
     end
-    # Mouse clicks
-    if Input.trigger?(Input::MOUSELEFT)
-      on_mouse_press
-    elsif busy? && Input.release?(Input::MOUSELEFT)
-      on_mouse_release
+  end
+
+  def update_input_mouse_wheel_particle(particle)
+    mouse_x, mouse_y = mouse_pos
+    wheel_v = Input.scroll_v
+    if mouse_x && mouse_y && wheel_v != 0
+      # TODO: mkxp-z has a bug whereby holding Ctrl stops the scroll wheel from
+      #       being updated. Await the implementation of its fix.
+      increment = (Input.pressex?(:LCTRL) || Input.pressex?(:RCTRL)) ? 20 : 5
+      @changed_controls ||= {}
+      @changed_controls[:zoom] = (wheel_v > 0) ? increment : -increment
+      @scrolling = true
+      @time_last_scrolled = System.uptime   # Coyote time
+    elsif @scrolling && System.uptime - @time_last_scrolled > 0.4
+      # NOTE: We set this value now for the sake of recording a snapshot in the
+      #       undo history.
+      @changed_controls ||= {}
+      @changed_controls[:on_mouse_wheel_stopped] = true
+      @scrolling = false
+      @time_last_scrolled = nil
     end
   end
 
   def update_particle_moved
-    return if !busy?
+    return if !moving_particle?
     mouse_x, mouse_y = mouse_pos
     return if !mouse_x || !mouse_y
     new_canvas_x = mouse_x + @captured[2]
@@ -864,6 +918,31 @@ class AnimationEditor::Canvas < Sprite
     end
   end
 
+  def update_particle_rotated
+    return if !rotating_particle?
+    mouse_x, mouse_y = mouse_pos
+    return if !mouse_x || !mouse_y
+    return if @captured[0] == mouse_x && @captured[1] == mouse_y
+    particle = @anim[:particles][@selected_particle]
+    if GameData::Animation::FOCUS_TYPES_WITH_TARGET.include?(particle[:focus])
+      sprite, frame = get_sprite_and_frame(@selected_particle, first_target_index)
+    else
+      sprite, frame = get_sprite_and_frame(@selected_particle)
+    end
+    # Calculate angle between mouse's original position and its current position
+    init_x = @captured[0] - frame.x
+    init_y = @captured[1] - frame.y
+    now_x = mouse_x - frame.x
+    now_y = mouse_y - frame.y
+    init_angle = Math.atan2(init_y, init_x)
+    now_angle = Math.atan2(now_y, now_x)
+    # Apply new angle
+    angle = @captured[2] + ((init_angle - now_angle) * 180 / Math::PI)
+    @changed_controls ||= {}
+    @changed_controls[:angle] = angle
+    sprite.angle = angle
+  end
+
   def update_selected_particle_frame
     if !show_particle_sprite?(@selected_particle)
       @sel_frame_sprite.visible = false
@@ -900,6 +979,7 @@ class AnimationEditor::Canvas < Sprite
   def update
     update_input
     update_particle_moved
+    update_particle_rotated
     update_selected_particle_frame
   end
 end

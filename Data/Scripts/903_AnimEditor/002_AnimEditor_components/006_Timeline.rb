@@ -719,6 +719,22 @@ class AnimationEditor::Timeline < UIControls::BaseContainer
     elsif Input.triggerex?(:DOWN) || Input.repeatex?(:DOWN)
       self.selected_row += increment
     end
+    # Tab to change selected particle
+    if Input.triggerex?(:TAB) || Input.repeatex?(:TAB)
+      if Input.pressex?(:LSHIFT) || Input.pressex?(:RSHIFT)
+        if self.particle_index > 0
+          self.particle_index -= 1
+        else
+          self.particle_index = @particles.length - 1
+        end
+      else
+        if self.particle_index >= @particles.length - 1
+          self.particle_index = 0
+        else
+          self.particle_index += 1
+        end
+      end
+    end
   end
 
   # Change selected keyframe/row if clicked on.

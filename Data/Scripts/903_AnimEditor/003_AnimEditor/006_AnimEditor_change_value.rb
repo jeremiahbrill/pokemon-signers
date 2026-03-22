@@ -75,7 +75,7 @@ class AnimationEditor
     when :particle_index
       @components[:timeline].particle_index = value
       refresh
-    when :x, :y, :emit_x, :emit_y
+    when :x, :y, :emit_x, :emit_y, :angle
       particle = @anim[:particles][particle_index]
       before_all = particle[property] && particle[property].none? { |cmd| cmd[0] <= keyframe }
       after_all = particle[property] && particle[property].none? { |cmd| cmd[0] + cmd[1] >= keyframe }
@@ -99,7 +99,38 @@ class AnimationEditor
       @components[:timeline].change_particle_commands(particle_index)
       refresh_component(:timeline)
       refresh_component(:canvas)
-    when :on_mouse_release, :on_dir_keys_release
+    when :zoom
+      particle = @anim[:particles][particle_index]
+      [:zoom_x, :zoom_y].each do |prop|
+        before_all = particle[prop] && particle[prop].none? { |cmd| cmd[0] <= keyframe }
+        after_all = particle[prop] && particle[prop].none? { |cmd| cmd[0] + cmd[1] >= keyframe }
+        val = AnimationEditor::ParticleDataHelper.get_keyframe_particle_value(particle, prop, keyframe)[0]
+        # NOTE: I'm aware that simply adding value to val for each of :zoom_x
+        #       and :zoom_y won't keep their ratio constant, but I can't figure
+        #       out how to do it a smarter way without running into rounding
+        #       errors causing the ratio to deviate anyway.
+        new_cmds = AnimationEditor::ParticleDataHelper.add_command(particle, prop, keyframe, val + value)
+        if new_cmds
+          particle[prop] = new_cmds
+          if GameData::Animation.property_can_interpolate?(prop)
+            if before_all
+              AnimationEditor::ParticleDataHelper.set_interpolation(
+                particle, prop, keyframe, @settings[:default_interpolation] || :linear
+              )
+            elsif after_all
+              AnimationEditor::ParticleDataHelper.set_interpolation(
+                particle, prop, keyframe - 1, @settings[:default_interpolation] || :linear
+              )
+            end
+          end
+        else
+          particle.delete(prop)
+        end
+      end
+      @components[:timeline].change_particle_commands(particle_index)
+      refresh_component(:timeline)
+      refresh_component(:canvas)
+    when :on_mouse_release, :on_dir_keys_release, :on_mouse_wheel_stopped
       add_to_change_history
     end
   end
