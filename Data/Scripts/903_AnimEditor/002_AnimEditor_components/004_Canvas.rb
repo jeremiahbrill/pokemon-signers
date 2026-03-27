@@ -96,6 +96,7 @@ class AnimationEditor::Canvas < Sprite
 
   def initialize_particle_sprites
     @particle_sprites = []
+    @particle_tiled_sprites = []
   end
 
   def initialize_particle_frames
@@ -136,6 +137,18 @@ class AnimationEditor::Canvas < Sprite
       end
     end
     @particle_sprites.clear
+    @particle_tiled_sprites.each do |sprites|
+      next if sprites.nil? || sprites.empty?
+      sprites.each do |s|
+        if s.is_a?(Array)
+          s.each { |s2| s2.dispose if s2 && !s2.disposed? }
+        else
+          s.dispose if s && !s.disposed?
+        end
+      end
+      sprites.clear
+    end
+    @particle_tiled_sprites.clear
     @battler_frame_sprites.each { |s| s.dispose if s && !s.disposed? }
     @battler_frame_sprites.clear
     @frame_sprites.each do |s|
@@ -455,24 +468,41 @@ class AnimationEditor::Canvas < Sprite
 
   def create_particle_sprite(index, target_idx = -1)
     if target_idx >= 0
-      if @particle_sprites[index].is_a?(Array)
-        return if @particle_sprites[index][target_idx] && !@particle_sprites[index][target_idx].disposed?
-      else
+      # Multiple targets; make a sprite for the specified target
+      if !@particle_sprites[index].is_a?(Array)
         @particle_sprites[index].dispose if @particle_sprites[index] && !@particle_sprites[index].disposed?
         @particle_sprites[index] = []
       end
-      @particle_sprites[index][target_idx] = Sprite.new(self.viewport)
-      create_frame_sprite(index, target_idx)
+      if !@particle_sprites[index][target_idx] || @particle_sprites[index][target_idx].disposed?
+        @particle_sprites[index][target_idx] = Sprite.new(self.viewport)
+      end
+      if @particle_tiled_sprites[index]
+        # NOTE: Tiled sprites shouldn't be used with foci featuring multiple
+        #       targets (they're meant for scrolling backgrounds). I'm not even
+        #       going to try to support that here.
+        @particle_tiled_sprites[index].each { |s| s.dispose if s && !s.disposed? }
+        @particle_tiled_sprites[index] = nil
+      end
     else
+      # Just one target; make a sprite
       if @particle_sprites[index].is_a?(Array)
         @particle_sprites[index].each { |s| s.dispose if s && !s.disposed? }
         @particle_sprites[index] = nil
-      else
-        return if @particle_sprites[index] && !@particle_sprites[index].disposed?
       end
-      @particle_sprites[index] = Sprite.new(self.viewport)
-      create_frame_sprite(index)
+      if !@particle_sprites[index] || @particle_sprites[index].disposed?
+        @particle_sprites[index] = Sprite.new(self.viewport)
+      end
+      if @anim[:particles][index][:tiled_graphic]
+        @particle_tiled_sprites[index] ||= []
+        if !@particle_tiled_sprites[index][0] || @particle_tiled_sprites[index][0].disposed?
+          3.times { |i| @particle_tiled_sprites[index].push(Sprite.new(self.viewport)) }
+        end
+      elsif @particle_tiled_sprites[index]
+        @particle_tiled_sprites[index].each { |s| s.dispose if s && !s.disposed? }
+        @particle_tiled_sprites[index] = nil
+      end
     end
+    create_frame_sprite(index, target_idx)
   end
 
   def get_sprite_and_frame(index, target_idx = -1)
@@ -531,6 +561,9 @@ class AnimationEditor::Canvas < Sprite
     end
     # Set visibility
     spr.visible = values[visible_property] || last_frame_visible
+    if @particle_tiled_sprites[index]
+      @particle_tiled_sprites[index].each { |ts| ts.visible = spr.visible }
+    end
     frame.visible = spr.visible
     return if !spr.visible
     # Set coordinates
@@ -552,6 +585,13 @@ class AnimationEditor::Canvas < Sprite
       AnimationPlayer::Helper.set_bitmap_and_origin(particle, spr, user_index, target_idx,
                                                     [@user_bitmap_front_name, @user_bitmap_back_name],
                                                     [@target_bitmap_front_name, @target_bitmap_back_name])
+      if @particle_tiled_sprites[index]
+        @particle_tiled_sprites[index].each do |ts|
+          AnimationPlayer::Helper.set_bitmap_and_origin(particle, ts, user_index, target_idx,
+                                                        [@user_bitmap_front_name, @user_bitmap_back_name],
+                                                        [@target_bitmap_front_name, @target_bitmap_back_name])
+        end
+      end
     else
       # Emitter
       spr.z = 99997
@@ -563,14 +603,40 @@ class AnimationEditor::Canvas < Sprite
     offset_xy = AnimationPlayer::Helper.get_xy_offset(particle, spr)
     spr.x += offset_xy[0]
     spr.y += offset_xy[1]
+    if @particle_tiled_sprites[index]
+      while spr.x < 0
+        spr.x += spr.src_rect.width
+      end
+      while spr.x >= spr.src_rect.width
+        spr.x -= spr.src_rect.width
+      end
+      while spr.y < 0
+        spr.y += spr.src_rect.height
+      end
+      while spr.y >= spr.src_rect.height
+        spr.y -= spr.src_rect.height
+      end
+      @particle_tiled_sprites[index].each_with_index do |ts, i|
+        ts.x = spr.x
+        ts.x -= spr.src_rect.width if i.even?
+        ts.y = spr.y
+        ts.y -= spr.src_rect.height if i > 0
+      end
+    end
     return if (particle[:emitter_type] || :none) != :none   # Emitter
     # Set opacity
     spr.opacity = (values[visible_property]) ? values[:opacity] : 0
+    if @particle_tiled_sprites[index]
+      @particle_tiled_sprites[index].each { |ts| ts.opacity = spr.opacity }
+    end
     # Set frame
     spr.src_rect.x = values[:frame].floor * spr.src_rect.width
     # Set z (priority)
     focus_z = AnimationPlayer::Helper.get_z_focus(particle, user_index, target_idx)
     AnimationPlayer::Helper.apply_z_focus_to_sprite(spr, values[:z], focus_z)
+    if @particle_tiled_sprites[index]
+      @particle_tiled_sprites[index].each { |ts| ts.z = spr.z }
+    end
     # Set various other properties
     spr.zoom_x = values[:zoom_x] / 100.0
     spr.zoom_y = values[:zoom_y] / 100.0
@@ -593,12 +659,24 @@ class AnimationEditor::Canvas < Sprite
     spr.angle += values[:angle]
     spr.mirror = values[:flip]
     spr.mirror = !spr.mirror if relative_to_index >= 0 && relative_to_index.odd? && particle[:foe_flip]
+    if @particle_tiled_sprites[index]
+      @particle_tiled_sprites[index].each { |ts| ts.mirror = spr.mirror }
+    end
     spr.blend_type = values[:blending]
+    if @particle_tiled_sprites[index]
+      @particle_tiled_sprites[index].each { |ts| ts.blend_type = spr.blend_type }
+    end
     # Set color and tone
     col = Color.new_from_rgb(values[:color])
     spr.color.set(col.red, col.green, col.blue, col.alpha)
+    if @particle_tiled_sprites[index]
+      @particle_tiled_sprites[index].each { |ts| ts.color.set(col.red, col.green, col.blue, col.alpha) }
+    end
     ton = Tone.new_from_rgbg(values[:tone])
     spr.tone.set(ton.red, ton.green, ton.blue, ton.gray)
+    if @particle_tiled_sprites[index]
+      @particle_tiled_sprites[index].each { |ts| ts.tone.set(ton.red, ton.green, ton.blue, ton.gray) }
+    end
     # Position frame over spr
     frame.x = spr.x
     frame.y = spr.y
@@ -632,6 +710,16 @@ class AnimationEditor::Canvas < Sprite
       sprites.each { |s| s.visible = false if s && !s.disposed? }
     end
     [@particle_sprites, @frame_sprites].each do |sprites|
+      sprites.each do |s|
+        if s.is_a?(Array)
+          s.each { |s2| s2.visible = false if s2 && !s2.disposed? }
+        else
+          s.visible = false if s && !s.disposed?
+        end
+      end
+    end
+    @particle_tiled_sprites.each do |sprites|
+      next if sprites.nil? || sprites.empty?
       sprites.each do |s|
         if s.is_a?(Array)
           s.each { |s2| s2.visible = false if s2 && !s2.disposed? }

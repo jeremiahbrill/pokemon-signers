@@ -210,6 +210,11 @@ class AnimationPlayer
         particle, sprite, @user&.index, target_idx,
         @battler_filenames[@user&.index || -1], @battler_filenames[target_idx]
       )
+      if particle[:tiled_graphic]
+        particle_sprite.set_tiled_sprites(particle, @user&.index, target_idx,
+                                          @battler_filenames[@user&.index || -1],
+                                          @battler_filenames[target_idx])
+      end
     end
   end
 

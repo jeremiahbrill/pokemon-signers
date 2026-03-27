@@ -133,22 +133,6 @@ class AnimationEditor
       GameData::Animation::FOCUS_TYPES_WITH_TARGET.each { |f| focus_values.delete(f) }
     end
     ctrls.get_control(:focus).options = focus_values
-    # Emitter quantity
-    if !this_particle[:emitter_type] || this_particle[:emitter_type] == :none
-      ctrls.get_control(:emitter_rate).disable
-      ctrls.get_control(:emitter_intensity).disable
-    else
-      ctrls.get_control(:emitter_rate).enable
-      ctrls.get_control(:emitter_intensity).enable
-    end
-    # Angle override
-    if GameData::Animation::FOCUS_TYPES_WITH_USER.include?(this_particle[:focus]) ||
-       GameData::Animation::FOCUS_TYPES_WITH_TARGET.include?(this_particle[:focus])
-      ctrls.get_control(:angle_override).enable
-    else
-      this_particle[:angle_override] = :none
-      ctrls.get_control(:angle_override).disable
-    end
     # "If on opposing side..." properties
     if GameData::Animation::FOCUS_TYPES_WITH_USER.include?(this_particle[:focus]) == GameData::Animation::FOCUS_TYPES_WITH_TARGET.include?(this_particle[:focus])
       ctrls.get_control(:foe_invert_x).disable
@@ -159,18 +143,36 @@ class AnimationEditor
       ctrls.get_control(:foe_invert_y).enable
       ctrls.get_control(:foe_flip).enable
     end
+    # Tiled graphic
+    if (this_particle[:emitter_type] || :none) == :none &&
+       !GameData::Animation::FOCUS_TYPES_WITH_USER.include?(this_particle[:focus]) &&
+       !GameData::Animation::FOCUS_TYPES_WITH_TARGET.include?(this_particle[:focus])
+      ctrls.get_control(:tiled_graphic).enable
+    else
+      this_particle[:tiled_graphic] = false
+      ctrls.get_control(:tiled_graphic).value = this_particle[:tiled_graphic]
+      ctrls.get_control(:tiled_graphic).disable
+    end
+    # Angle override
+    if GameData::Animation::FOCUS_TYPES_WITH_USER.include?(this_particle[:focus]) ||
+       GameData::Animation::FOCUS_TYPES_WITH_TARGET.include?(this_particle[:focus])
+      ctrls.get_control(:angle_override).enable
+    else
+      this_particle[:angle_override] = :none
+      ctrls.get_control(:angle_override).disable
+    end
+    # Emitter quantity
+    if (this_particle[:emitter_type] || :none) == :none
+      ctrls.get_control(:emitter_rate).disable
+      ctrls.get_control(:emitter_intensity).disable
+    else
+      ctrls.get_control(:emitter_rate).enable
+      ctrls.get_control(:emitter_intensity).enable
+    end
     # Duplicate button
-    if @anim[:particles][idx_particle][:name] == "SE"
-      ctrls.get_control(:duplicate).disable
-    else
-      ctrls.get_control(:duplicate).enable
-    end
+    ctrls.get_control(:duplicate).enabled = (@anim[:particles][idx_particle][:name] != "SE")
     # Delete button
-    if ["User", "Target", "SE"].include?(this_particle[:name])
-      ctrls.get_control(:delete).disable
-    else
-      ctrls.get_control(:delete).enable
-    end
+    ctrls.get_control(:delete).enabled = (!["User", "Target", "SE"].include?(this_particle[:name]))
     # Refresh each control's value
     new_vals = AnimationEditor::ParticleDataHelper.get_all_particle_values(this_particle)
     ctrls.controls.each_pair do |key, ctrl|

@@ -100,6 +100,7 @@ module GameData
       "Emitter"              => [:emitter_type,        "e", EMITTER_TYPES],
       "EmitterRate"          => [:emitter_rate,        "v"],   # Emissions/second
       "EmitterIntensity"     => [:emitter_intensity,   "v"],   # Sprites/emission
+      "TiledGraphic"         => [:tiled_graphic,       "b"],
       "AngleOverride"        => [:angle_override,      "e", ANGLE_OVERRIDES],
       "RandomFrameMax"       => [:random_frame_max,    "u"],
       "RandomAngleRange"     => [:random_angle_range,  "u"],
@@ -197,6 +198,7 @@ module GameData
       :foe_invert_x        => false,
       :foe_invert_y        => false,
       :foe_flip            => false,
+      :tiled_graphic       => false,
       :angle_override      => :none,
       :random_frame_max    => 0,
       :random_angle_range  => 0,
@@ -462,6 +464,10 @@ module GameData
       when "EmitterRate", "EmitterIntensity"
         ret = nil if @particles[index][:emitter_type].nil? || @particles[index][:emitter_type] == :none
         ret = nil if ret == PARTICLE_DEFAULT_VALUES[SUB_SCHEMA[key][0]]
+      when "TiledGraphic"
+        ret = nil if (@particles[index][:emitter_type] || :none) != :none
+        ret = nil if FOCUS_TYPES_WITH_USER.include?(@particles[index][:focus]) ||
+                     FOCUS_TYPES_WITH_TARGET.include?(@particles[index][:focus])
       when "AngleOverride"
         ret = nil if ret == :none
         ret = nil if !FOCUS_TYPES_WITH_USER.include?(@particles[index][:focus]) &&

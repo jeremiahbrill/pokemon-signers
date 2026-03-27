@@ -465,19 +465,6 @@ class AnimationEditor
       end
     else
       if @anim[:particles][idx_particle][property] != value
-        # TODO: If any of these change, does anything special need to be done
-        #       relating to values or other controls?
-                # when :name
-                # when :graphic_name
-                # when :focus
-                # when :random_frame_max
-                # when :emitter_type
-                # when :angle_override
-                # when :random_invert_angle
-                # when :random_invert_flip
-                # when :foe_invert_x
-                # when :foe_invert_y
-                # when :foe_flip
         @anim[:particles][idx_particle][property] = value
         add_to_change_history
         refresh_component(:particle_properties, idx_particle)

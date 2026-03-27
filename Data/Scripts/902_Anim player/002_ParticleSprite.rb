@@ -30,16 +30,30 @@ class AnimationPlayer::ParticleSprite
     return if is_battler_sprite? || !@sprite || @sprite.disposed?
     @sprite.bitmap&.dispose
     @sprite.dispose
+    if @tiled_sprites
+      @tiled_sprites.each { |spr| spr&.dispose }
+      @tiled_sprites.clear
+    end
   end
 
   #-----------------------------------------------------------------------------
 
-  # NOTE: is_battler_sprite is needed because sprite.is_a?(Battle::Scene::BattlerSprite)
+  # NOTE: is_battler is needed because sprite.is_a?(Battle::Scene::BattlerSprite)
   #       won't work in the Animation Editor, where battler sprites are just
   #       Sprites.
   def set_sprite(sprite, is_battler = false)
     @sprite = sprite
     set_as_battler_sprite if is_battler
+  end
+
+  def set_tiled_sprites(particle, user_index, target_index, user_sprites, target_sprites)
+    @tiled_sprites = []
+    3.times do |i|
+      @tiled_sprites.push(Sprite.new(sprite.viewport))
+      AnimationPlayer::Helper.set_bitmap_and_origin(
+        particle, @tiled_sprites.last, user_index, target_index, user_sprites, target_sprites
+      )
+    end
   end
 
   def set_as_battler_sprite
@@ -224,16 +238,34 @@ class AnimationPlayer::ParticleSprite
       @sprite.src_rect.x = value.floor * @sprite.src_rect.width
     when :blending
       @sprite.blend_type = value
+      if @tiled_sprites
+        @tiled_sprites.each { |spr| spr.blend_type = value }
+      end
     when :flip
       @sprite.mirror = value
       @sprite.mirror = !@sprite.mirror if @foe_flip
       @sprite.mirror = !@sprite.mirror if @random_invert_flip
+      if @tiled_sprites
+        @tiled_sprites.each { |spr| spr.mirror = @sprite.mirror }
+      end
     when :x
       value = value.round + (@property_offsets[property] || 0)
       value += @values[:base_x] || 0   # Used by emitters
       value *= -1 if @foe_invert_x
       AnimationPlayer::Helper.apply_xy_focus_to_sprite(@sprite, :x, value, @focus_xy)
       @sprite.x += @offset_xy[0]
+      if @tiled_sprites
+        while @sprite.x < 0
+          @sprite.x += @sprite.src_rect.width
+        end
+        while @sprite.x >= @sprite.src_rect.width
+          @sprite.x -= @sprite.src_rect.width
+        end
+        @tiled_sprites.each_with_index do |spr, i|
+          spr.x = @sprite.x
+          spr.x -= @sprite.src_rect.width if i.even?
+        end
+      end
       apply_sprite_property_override(:angle)
     when :y
       value = value.round + (@property_offsets[property] || 0)
@@ -241,10 +273,25 @@ class AnimationPlayer::ParticleSprite
       value *= -1 if @foe_invert_y
       AnimationPlayer::Helper.apply_xy_focus_to_sprite(@sprite, :y, value, @focus_xy)
       @sprite.y += @offset_xy[1]
+      if @tiled_sprites
+        while @sprite.y < 0
+          @sprite.y += @sprite.src_rect.height
+        end
+        while @sprite.y >= @sprite.src_rect.height
+          @sprite.y -= @sprite.src_rect.height
+        end
+        @tiled_sprites.each_with_index do |spr, i|
+          spr.y = @sprite.y
+          spr.y -= @sprite.src_rect.height if i > 0
+        end
+      end
       apply_sprite_property_override(:angle)
     when :z
       value += (@property_offsets[property] || 0)
       AnimationPlayer::Helper.apply_z_focus_to_sprite(@sprite, value, @focus_z)
+      if @tiled_sprites
+        @tiled_sprites.each { |spr| spr.z = @sprite.z }
+      end
     when :zoom_x
       value += (@property_offsets[property] || 0)
       value *= @emitter_params[:zoom_mult] || 1
@@ -265,12 +312,24 @@ class AnimationPlayer::ParticleSprite
       @sprite.angle *= -1 if @random_invert_angle
     when :visible
       @sprite.visible = value
+      if @tiled_sprites
+        @tiled_sprites.each { |spr| spr.visible = value }
+      end
     when :opacity
       @sprite.opacity = value + (@property_offsets[property] || 0)
+      if @tiled_sprites
+        @tiled_sprites.each { |spr| spr.opacity = @sprite.opacity }
+      end
     when :color
       @sprite.color = Color.new_from_rgb(value)
+      if @tiled_sprites
+        @tiled_sprites.each { |spr| spr.color = Color.new_from_rgb(value) }
+      end
     when :tone
       @sprite.tone = Tone.new_from_rgbg(value)
+      if @tiled_sprites
+        @tiled_sprites.each { |spr| spr.tone = Tone.new_from_rgbg(value) }
+      end
     end
   end
 
