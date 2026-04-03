@@ -446,8 +446,8 @@ class AnimationEditor::AnimationSelector
           next if @filters[:move_name] != "" && !anim[:move_name].downcase.include?(@filters[:move_name].downcase)
           next if @filters[:anim_name] != "" && !anim[:anim_name].downcase.include?(@filters[:anim_name].downcase)
           next if @filters[:credit] != "" && !anim[:credit].downcase.include?(@filters[:credit].downcase)
-          next if @filters[:usable] == :yes && anim[:ignore]
-          next if @filters[:usable] == :no && !anim[:ignore]
+          next if @filters[:usable] == :yes && !anim[:usable]
+          next if @filters[:usable] == :no && anim[:usable]
           anim_set[1][move] ||= []
           anim_set[1][move].push(anim)
         end
