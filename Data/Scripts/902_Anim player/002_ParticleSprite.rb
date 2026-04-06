@@ -27,9 +27,12 @@ class AnimationPlayer::ParticleSprite
   end
 
   def dispose
-    return if is_battler_sprite? || !@sprite || @sprite.disposed?
-    @sprite.bitmap&.dispose
-    @sprite.dispose
+    return if is_battler_sprite? || !@sprite || @sprite.empty?
+    @sprite.each do |spr|
+      spr.bitmap&.dispose
+      spr.dispose
+    end
+    @sprite.clear
     if @tiled_sprites
       @tiled_sprites.each { |spr| spr&.dispose }
       @tiled_sprites.clear
@@ -42,7 +45,8 @@ class AnimationPlayer::ParticleSprite
   #       won't work in the Animation Editor, where battler sprites are just
   #       Sprites.
   def set_sprite(sprite, is_battler = false)
-    @sprite = sprite
+    @sprite ||= []
+    @sprite.push(sprite)
     set_as_battler_sprite if is_battler
   end
 
@@ -235,101 +239,140 @@ class AnimationPlayer::ParticleSprite
     case property
     when :frame
       value += (@property_offsets[property] || 0)
-      @sprite.src_rect.x = value.floor * @sprite.src_rect.width
+      @sprite[0].src_rect.x = value.floor * @sprite[0].src_rect.width
+    when :frame2
+      @sprite[1].src_rect.x = value.floor * @sprite[1].src_rect.width if @sprite[1]
     when :blending
-      @sprite.blend_type = value
+      @sprite[0].blend_type = value
       if @tiled_sprites
         @tiled_sprites.each { |spr| spr.blend_type = value }
       end
+    when :blending2
+      @sprite[1].blend_type = value if @sprite[1]
     when :flip
-      @sprite.mirror = value
-      @sprite.mirror = !@sprite.mirror if @foe_flip
-      @sprite.mirror = !@sprite.mirror if @random_invert_flip
+      @sprite[0].mirror = value
+      @sprite[0].mirror = !@sprite[0].mirror if @foe_flip
+      @sprite[0].mirror = !@sprite[0].mirror if @random_invert_flip
+      apply_sprite_property(:flip2, @values[:flip2])
       if @tiled_sprites
-        @tiled_sprites.each { |spr| spr.mirror = @sprite.mirror }
+        @tiled_sprites.each { |spr| spr.mirror = @sprite[0].mirror }
+      end
+    when :flip2
+     if @sprite[1]
+        @sprite[1].mirror = @sprite[0].mirror
+        @sprite[1].mirror = !@sprite[1].mirror if value
       end
     when :x
       value = value.round + (@property_offsets[property] || 0)
       value += @values[:base_x] || 0   # Used by emitters
       value *= -1 if @foe_invert_x
-      AnimationPlayer::Helper.apply_xy_focus_to_sprite(@sprite, :x, value, @focus_xy)
-      @sprite.x += @offset_xy[0]
+      AnimationPlayer::Helper.apply_xy_focus_to_sprite(@sprite[0], :x, value, @focus_xy)
+      @sprite[0].x += @offset_xy[0]
+      apply_sprite_property(:x2, @values[:x2])
       if @tiled_sprites
-        while @sprite.x < 0
-          @sprite.x += @sprite.src_rect.width
+        while @sprite[0].x < 0
+          @sprite[0].x += @sprite[0].src_rect.width
         end
-        while @sprite.x >= @sprite.src_rect.width
-          @sprite.x -= @sprite.src_rect.width
+        while @sprite[0].x >= @sprite[0].src_rect.width
+          @sprite[0].x -= @sprite[0].src_rect.width
         end
         @tiled_sprites.each_with_index do |spr, i|
-          spr.x = @sprite.x
-          spr.x -= @sprite.src_rect.width if i.even?
+          spr.x = @sprite[0].x
+          spr.x -= @sprite[0].src_rect.width if i.even?
         end
       end
       apply_sprite_property_override(:angle)
+    when :x2
+      @sprite[1].x = @sprite[0].x + value if @sprite[1]
     when :y
       value = value.round + (@property_offsets[property] || 0)
       value += @values[:base_y] || 0   # Used by emitters
       value *= -1 if @foe_invert_y
-      AnimationPlayer::Helper.apply_xy_focus_to_sprite(@sprite, :y, value, @focus_xy)
-      @sprite.y += @offset_xy[1]
+      AnimationPlayer::Helper.apply_xy_focus_to_sprite(@sprite[0], :y, value, @focus_xy)
+      @sprite[0].y += @offset_xy[1]
+      apply_sprite_property(:y2, @values[:y2])
       if @tiled_sprites
-        while @sprite.y < 0
-          @sprite.y += @sprite.src_rect.height
+        while @sprite[0].y < 0
+          @sprite[0].y += @sprite[0].src_rect.height
         end
-        while @sprite.y >= @sprite.src_rect.height
-          @sprite.y -= @sprite.src_rect.height
+        while @sprite[0].y >= @sprite[0].src_rect.height
+          @sprite[0].y -= @sprite[0].src_rect.height
         end
         @tiled_sprites.each_with_index do |spr, i|
-          spr.y = @sprite.y
-          spr.y -= @sprite.src_rect.height if i > 0
+          spr.y = @sprite[0].y
+          spr.y -= @sprite[0].src_rect.height if i > 0
         end
       end
       apply_sprite_property_override(:angle)
+    when :y2
+      @sprite[1].y = @sprite[0].y + value if @sprite[1]
     when :z
       value += (@property_offsets[property] || 0)
-      AnimationPlayer::Helper.apply_z_focus_to_sprite(@sprite, value, @focus_z)
+      AnimationPlayer::Helper.apply_z_focus_to_sprite(@sprite[0], value, @focus_z)
+      apply_sprite_property(:z2, @values[:z2])
       if @tiled_sprites
-        @tiled_sprites.each { |spr| spr.z = @sprite.z }
+        @tiled_sprites.each { |spr| spr.z = @sprite[0].z }
       end
+    when :z2
+      @sprite[1].z = @sprite[0].z + value if @sprite[1]
     when :zoom_x
       value += (@property_offsets[property] || 0)
       value *= @emitter_params[:zoom_mult] || 1
       value *= @emitter_params[:zoom_x_mult] || 1
-      @sprite.zoom_x = value / 100.0
+      @sprite[0].zoom_x = value / 100.0
+      apply_sprite_property(:zoom_x2, @values[:zoom_x2])
+    when :zoom_x2
+      @sprite[1].zoom_x = @sprite[0].zoom_x * value / 100.0 if @sprite[1]
     when :zoom_y
       value += (@property_offsets[property] || 0)
       value *= @emitter_params[:zoom_mult] || 1
       value *= @emitter_params[:zoom_y_mult] || 1
-      @sprite.zoom_y = value / 100.0
+      @sprite[0].zoom_y = value / 100.0
+      apply_sprite_property(:zoom_y2, @values[:zoom_y2])
+    when :zoom_y2
+      @sprite[1].zoom_y = @sprite[0].zoom_y * value / 100.0 if @sprite[1]
     when :angle
       if @angle_override == :always_point_at_focus
         apply_sprite_property_override(:angle)
-        @sprite.angle += value
+        @sprite[0].angle += value
       else
-        @sprite.angle = value + (@property_offsets[property] || 0)
+        @sprite[0].angle = value + (@property_offsets[property] || 0)
       end
-      @sprite.angle *= -1 if @random_invert_angle
+      @sprite[0].angle *= -1 if @random_invert_angle
+      apply_sprite_property(:angle2, @values[:angle2])
+    when :angle2
+     if @sprite[1]
+        new_val = value
+        new_val *= -1 if @random_invert_angle
+        @sprite[1].angle = @sprite[0].angle + new_val
+      end
     when :visible
-      @sprite.visible = value
+      @sprite.each { |spr| spr.visible = value }
       if @tiled_sprites
         @tiled_sprites.each { |spr| spr.visible = value }
       end
     when :opacity
-      @sprite.opacity = value + (@property_offsets[property] || 0)
+      @sprite[0].opacity = value + (@property_offsets[property] || 0)
+      apply_sprite_property(:opacity2, @values[:opacity2]) if @sprite[1]
       if @tiled_sprites
-        @tiled_sprites.each { |spr| spr.opacity = @sprite.opacity }
+        @tiled_sprites.each { |spr| spr.opacity = @sprite[0].opacity }
       end
+    when :opacity2
+      @sprite[1].opacity = @sprite[0].opacity + value if @sprite[1]
     when :color
-      @sprite.color = Color.new_from_rgb(value)
+      @sprite[0].color = Color.new_from_rgb(value)
       if @tiled_sprites
         @tiled_sprites.each { |spr| spr.color = Color.new_from_rgb(value) }
       end
+    when :color2
+      @sprite[1].color = Color.new_from_rgb(value) if @sprite[1]
     when :tone
-      @sprite.tone = Tone.new_from_rgbg(value)
+      @sprite[0].tone = Tone.new_from_rgbg(value)
       if @tiled_sprites
         @tiled_sprites.each { |spr| spr.tone = Tone.new_from_rgbg(value) }
       end
+    when :tone2
+      @sprite[1].tone = Tone.new_from_rgbg(value) if @sprite[1]
     end
   end
 
@@ -340,15 +383,16 @@ class AnimationPlayer::ParticleSprite
       #       increases anticlockwise.
       return if @angle_override != :always_point_at_focus
       # Get coordinates
-      sprite_x = @sprite.x
-      sprite_y = @sprite.y
+      sprite_x = @sprite[0].x
+      sprite_y = @sprite[0].y
       target_x = (@focus_xy.length == 2) ? @focus_xy[1][0] : @focus_xy[0][0]
       target_x += @offset_xy[0]
       target_y = (@focus_xy.length == 2) ? @focus_xy[1][1] : @focus_xy[0][1]
       target_y += @offset_xy[1]
       # Recalculate angle
-      @sprite.angle = AnimationPlayer::Helper.angle_between(sprite_x, sprite_y, target_x, target_y)
-      @sprite.angle += (@property_offsets[property] || 0)
+      @sprite[0].angle = AnimationPlayer::Helper.angle_between(sprite_x, sprite_y, target_x, target_y)
+      @sprite[0].angle += (@property_offsets[property] || 0)
+      apply_sprite_property(:angle2, @values[:angle2])
     end
   end
 

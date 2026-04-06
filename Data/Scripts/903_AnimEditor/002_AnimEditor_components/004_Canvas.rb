@@ -19,6 +19,21 @@ class AnimationEditor::Canvas < Sprite
 
   FRAME_SIZE           = 48
   PARTICLE_FRAME_COLOR = Color.new(0, 0, 0, 64)
+  # NOTE: This doesn't include :visible, which is set separately before these.
+  SPRITE_PROPERTIES_TO_SET = [
+    :x, :x2,
+    :y, :y2,
+    :opacity, :opacity2,
+    :frame, :frame2,
+    :z, :z2,
+    :zoom_x, :zoom_x2,
+    :zoom_y, :zoom_y2,
+    :angle, :angle2,   # Should be after x/y
+    :flip, :flip2,
+    :blending, :blending2,
+    :color, :color2,
+    :tone, :tone2
+  ]
 
   include UIControls::StyleMixin
 
@@ -130,10 +145,10 @@ class AnimationEditor::Canvas < Sprite
     @battler_sprites.each { |s| s.dispose if s && !s.disposed? }
     @battler_sprites.clear
     @particle_sprites.each do |s|
-      if s.is_a?(Array)
-        s.each { |s2| s2.dispose if s2 && !s2.disposed? }
-      else
-        s.dispose if s && !s.disposed?
+      next if !s
+      s.each do |s2|
+        next if !s2
+        s2.each { |s3| s3.dispose if s3 && !s3.disposed? }
       end
     end
     @particle_sprites.clear
@@ -467,40 +482,21 @@ class AnimationEditor::Canvas < Sprite
   end
 
   def create_particle_sprite(index, target_idx = -1)
-    if target_idx >= 0
-      # Multiple targets; make a sprite for the specified target
-      if !@particle_sprites[index].is_a?(Array)
-        @particle_sprites[index].dispose if @particle_sprites[index] && !@particle_sprites[index].disposed?
-        @particle_sprites[index] = []
+    @particle_sprites[index] ||= []
+    this_index = (target_idx >= 0) ? target_idx : 0
+    @particle_sprites[index][this_index] ||= [Sprite.new(self.viewport), Sprite.new(self.viewport)]
+    # Make tiled sprites
+    if target_idx < 0 && @anim[:particles][index][:tiled_graphic]
+      # NOTE: Tiled sprites shouldn't be used with foci featuring multiple
+      #       targets (they're meant for scrolling backgrounds), so I'm not
+      #       bothering to support them here.
+      @particle_tiled_sprites[index] ||= []
+      if !@particle_tiled_sprites[index][0] || @particle_tiled_sprites[index][0].disposed?
+        3.times { |i| @particle_tiled_sprites[index].push(Sprite.new(self.viewport)) }
       end
-      if !@particle_sprites[index][target_idx] || @particle_sprites[index][target_idx].disposed?
-        @particle_sprites[index][target_idx] = Sprite.new(self.viewport)
-      end
-      if @particle_tiled_sprites[index]
-        # NOTE: Tiled sprites shouldn't be used with foci featuring multiple
-        #       targets (they're meant for scrolling backgrounds). I'm not even
-        #       going to try to support that here.
-        @particle_tiled_sprites[index].each { |s| s.dispose if s && !s.disposed? }
-        @particle_tiled_sprites[index] = nil
-      end
-    else
-      # Just one target; make a sprite
-      if @particle_sprites[index].is_a?(Array)
-        @particle_sprites[index].each { |s| s.dispose if s && !s.disposed? }
-        @particle_sprites[index] = nil
-      end
-      if !@particle_sprites[index] || @particle_sprites[index].disposed?
-        @particle_sprites[index] = Sprite.new(self.viewport)
-      end
-      if @anim[:particles][index][:tiled_graphic]
-        @particle_tiled_sprites[index] ||= []
-        if !@particle_tiled_sprites[index][0] || @particle_tiled_sprites[index][0].disposed?
-          3.times { |i| @particle_tiled_sprites[index].push(Sprite.new(self.viewport)) }
-        end
-      elsif @particle_tiled_sprites[index]
-        @particle_tiled_sprites[index].each { |s| s.dispose if s && !s.disposed? }
-        @particle_tiled_sprites[index] = nil
-      end
+    elsif @particle_tiled_sprites[index]
+      @particle_tiled_sprites[index].each { |s| s.dispose if s && !s.disposed? }
+      @particle_tiled_sprites[index] = nil
     end
     create_frame_sprite(index, target_idx)
   end
@@ -524,75 +520,45 @@ class AnimationEditor::Canvas < Sprite
     else
       create_particle_sprite(index, target_idx)
       if target_idx >= 0
-        spr = @particle_sprites[index][target_idx]
+        spr = @particle_sprites[index][target_idx][0]
         frame = @frame_sprites[index][target_idx]
       else
-        spr = @particle_sprites[index]
+        spr = @particle_sprites[index][0][0]
         frame = @frame_sprites[index]
       end
     end
     return spr, frame
   end
 
+  def get_second_sprite(index, target_idx = -1)
+    return nil if !show_particle_sprite?(index)
+    return nil if ["User", "Target"].include?(@anim[:particles][index][:name])
+    if target_idx >= 0
+      return nil if !@particle_sprites[index][target_idx]
+      return @particle_sprites[index][target_idx][1]
+    end
+    return nil if !@particle_sprites[index][0]
+    return @particle_sprites[index][0][1]
+  end
+
   def refresh_sprite(index, target_idx = -1)
     particle = @anim[:particles][index]
     return if !show_particle_sprite?(index)
-    relative_to_index = -1
-    if !GameData::Animation::FOCUS_TYPES_WITH_USER_AND_TARGET.include?(particle[:focus])
-      if GameData::Animation::FOCUS_TYPES_WITH_USER.include?(particle[:focus])
-        relative_to_index = user_index
-      elsif GameData::Animation::FOCUS_TYPES_WITH_TARGET.include?(particle[:focus])
-        relative_to_index = target_idx
-      end
-    end
-    # Get sprite
+    # Get sprites
     spr, frame = get_sprite_and_frame(index, target_idx)
+    spr2 = get_second_sprite(index, target_idx)
     # Calculate all values of particle at the current keyframe
     values = AnimationEditor::ParticleDataHelper.get_all_keyframe_particle_values(particle, @display_keyframe)
-    values.each_pair do |property, val|
-      values[property] = val[0]
-    end
-    visible_property = ((particle[:emitter_type] || :none) == :none) ? :visible : :emitting
-    last_frame_visible = false
-    if !values[visible_property] && @display_keyframe > 0
-      last_frame_visible = AnimationEditor::ParticleDataHelper.get_keyframe_particle_value(
-        particle, visible_property, @display_keyframe - 1
-      )[0]
-    end
-    # Set visibility
-    spr.visible = values[visible_property] || last_frame_visible
-    if @particle_tiled_sprites[index]
-      @particle_tiled_sprites[index].each { |ts| ts.visible = spr.visible }
-    end
+    values.each_pair { |property, val| values[property] = val[0] }
+    # Set visible
+    apply_sprite_property(particle, index, :visible, values[:visible], target_idx, spr, spr2)
     frame.visible = spr.visible
     return if !spr.visible
-    # Set coordinates
-    x_property = ((particle[:emitter_type] || :none) == :none) ? :x : :emit_x
-    y_property = ((particle[:emitter_type] || :none) == :none) ? :y : :emit_y
-    base_x = values[x_property]
-    base_y = values[y_property]
-    if relative_to_index >= 0 && relative_to_index.odd?
-      base_x *= -1 if particle[:foe_invert_x]
-      base_y *= -1 if particle[:foe_invert_y]
-    end
-    focus_xy = AnimationPlayer::Helper.get_xy_focus(particle, user_index, target_idx,
-                                                    @user_coords, @target_coords[target_idx],
-                                                    [side_size(0), side_size(1)])
-    AnimationPlayer::Helper.apply_xy_focus_to_sprite(spr, :x, base_x, focus_xy)
-    AnimationPlayer::Helper.apply_xy_focus_to_sprite(spr, :y, base_y, focus_xy)
-    # Set graphic and ox/oy (may also alter y coordinate)
-    if (particle[:emitter_type] || :none) == :none
-      AnimationPlayer::Helper.set_bitmap_and_origin(particle, spr, user_index, target_idx,
-                                                    [@user_bitmap_front_name, @user_bitmap_back_name],
-                                                    [@target_bitmap_front_name, @target_bitmap_back_name])
-      if @particle_tiled_sprites[index]
-        @particle_tiled_sprites[index].each do |ts|
-          AnimationPlayer::Helper.set_bitmap_and_origin(particle, ts, user_index, target_idx,
-                                                        [@user_bitmap_front_name, @user_bitmap_back_name],
-                                                        [@target_bitmap_front_name, @target_bitmap_back_name])
-        end
+    # Set position, graphic and ox/oy for emitter
+    if (particle[:emitter_type] || :none) != :none
+      [:x, :y].each do |property|
+        apply_sprite_property(particle, index, property, values[property], target_idx, spr, spr2)
       end
-    else
       # Emitter
       spr.z = 99997
       spr.bitmap = @emitter_bitmap
@@ -600,84 +566,28 @@ class AnimationEditor::Canvas < Sprite
       spr.oy = spr.bitmap.height / 2
       return
     end
-    offset_xy = AnimationPlayer::Helper.get_xy_offset(particle, spr)
-    spr.x += offset_xy[0]
-    spr.y += offset_xy[1]
+    # Set graphic and ox/oy
+    AnimationPlayer::Helper.set_bitmap_and_origin(
+      particle, spr, user_index, target_idx,
+      [@user_bitmap_front_name, @user_bitmap_back_name], [@target_bitmap_front_name, @target_bitmap_back_name]
+    )
+    AnimationPlayer::Helper.set_bitmap_and_origin(
+      particle, spr2, user_index, target_idx,
+      [@user_bitmap_front_name, @user_bitmap_back_name], [@target_bitmap_front_name, @target_bitmap_back_name]
+    )
     if @particle_tiled_sprites[index]
-      while spr.x < 0
-        spr.x += spr.src_rect.width
-      end
-      while spr.x >= spr.src_rect.width
-        spr.x -= spr.src_rect.width
-      end
-      while spr.y < 0
-        spr.y += spr.src_rect.height
-      end
-      while spr.y >= spr.src_rect.height
-        spr.y -= spr.src_rect.height
-      end
-      @particle_tiled_sprites[index].each_with_index do |ts, i|
-        ts.x = spr.x
-        ts.x -= spr.src_rect.width if i.even?
-        ts.y = spr.y
-        ts.y -= spr.src_rect.height if i > 0
+      @particle_tiled_sprites[index].each do |ts|
+        AnimationPlayer::Helper.set_bitmap_and_origin(
+          particle, ts, user_index, target_idx,
+          [@user_bitmap_front_name, @user_bitmap_back_name], [@target_bitmap_front_name, @target_bitmap_back_name]
+        )
       end
     end
-    return if (particle[:emitter_type] || :none) != :none   # Emitter
-    # Set opacity
-    spr.opacity = (values[visible_property]) ? values[:opacity] : 0
-    if @particle_tiled_sprites[index]
-      @particle_tiled_sprites[index].each { |ts| ts.opacity = spr.opacity }
+    # Set properties of sprites
+    SPRITE_PROPERTIES_TO_SET.each do |property|
+      apply_sprite_property(particle, index, property, values[property], target_idx, spr, spr2)
     end
-    # Set frame
-    spr.src_rect.x = values[:frame].floor * spr.src_rect.width
-    # Set z (priority)
-    focus_z = AnimationPlayer::Helper.get_z_focus(particle, user_index, target_idx)
-    AnimationPlayer::Helper.apply_z_focus_to_sprite(spr, values[:z], focus_z)
-    if @particle_tiled_sprites[index]
-      @particle_tiled_sprites[index].each { |ts| ts.z = spr.z }
-    end
-    # Set various other properties
-    spr.zoom_x = values[:zoom_x] / 100.0
-    spr.zoom_y = values[:zoom_y] / 100.0
-    case particle[:angle_override]
-    when :initial_angle_to_focus
-      target_x = (focus_xy.length == 2) ? focus_xy[1][0] : focus_xy[0][0]
-      target_x += offset_xy[0]
-      target_y = (focus_xy.length == 2) ? focus_xy[1][1] : focus_xy[0][1]
-      target_y += offset_xy[1]
-      spr.angle = AnimationPlayer::Helper.initial_angle_between(particle, focus_xy, offset_xy)
-    when :always_point_at_focus
-      target_x = (focus_xy.length == 2) ? focus_xy[1][0] : focus_xy[0][0]
-      target_x += offset_xy[0]
-      target_y = (focus_xy.length == 2) ? focus_xy[1][1] : focus_xy[0][1]
-      target_y += offset_xy[1]
-      spr.angle = AnimationPlayer::Helper.angle_between(spr.x, spr.y, target_x, target_y)
-    else
-      spr.angle = 0
-    end
-    spr.angle += values[:angle]
-    spr.mirror = values[:flip]
-    spr.mirror = !spr.mirror if relative_to_index >= 0 && relative_to_index.odd? && particle[:foe_flip]
-    if @particle_tiled_sprites[index]
-      @particle_tiled_sprites[index].each { |ts| ts.mirror = spr.mirror }
-    end
-    spr.blend_type = values[:blending]
-    if @particle_tiled_sprites[index]
-      @particle_tiled_sprites[index].each { |ts| ts.blend_type = spr.blend_type }
-    end
-    # Set color and tone
-    col = Color.new_from_rgb(values[:color])
-    spr.color.set(col.red, col.green, col.blue, col.alpha)
-    if @particle_tiled_sprites[index]
-      @particle_tiled_sprites[index].each { |ts| ts.color.set(col.red, col.green, col.blue, col.alpha) }
-    end
-    ton = Tone.new_from_rgbg(values[:tone])
-    spr.tone.set(ton.red, ton.green, ton.blue, ton.gray)
-    if @particle_tiled_sprites[index]
-      @particle_tiled_sprites[index].each { |ts| ts.tone.set(ton.red, ton.green, ton.blue, ton.gray) }
-    end
-    # Position frame over spr
+    # Position frame over sprite
     frame.x = spr.x
     frame.y = spr.y
     case particle[:graphic]
@@ -685,6 +595,197 @@ class AnimationEditor::Canvas < Sprite
          "TARGET", "TARGET_OPP", "TARGET_FRONT", "TARGET_BACK"
       # Offset battler frames because they aren't around the battler's position
       frame.y -= spr.bitmap.height / 2
+    end
+  end
+
+  def apply_sprite_property(particle, index, property, value, target_idx, sprite1, sprite2 = nil)
+    case property
+    when :frame
+      sprite1.src_rect.x = value.floor * sprite1.src_rect.width
+    when :frame2
+      sprite2.src_rect.x = value.floor * sprite2.src_rect.width if sprite2
+    when :blending
+      sprite1.blend_type = value
+      if @particle_tiled_sprites[index]
+        @particle_tiled_sprites[index].each { |ts| ts.blend_type = sprite1.blend_type }
+      end
+    when :blending2
+      sprite2.blend_type = value if sprite2
+    when :flip
+      sprite1.mirror = value
+      relative_to_index = -1
+      if !GameData::Animation::FOCUS_TYPES_WITH_USER_AND_TARGET.include?(particle[:focus])
+        if GameData::Animation::FOCUS_TYPES_WITH_USER.include?(particle[:focus])
+          relative_to_index = user_index
+        elsif GameData::Animation::FOCUS_TYPES_WITH_TARGET.include?(particle[:focus])
+          relative_to_index = target_idx
+        end
+      end
+      sprite1.mirror = !sprite1.mirror if relative_to_index >= 0 && relative_to_index.odd? && particle[:foe_flip]
+      if @particle_tiled_sprites[index]
+        @particle_tiled_sprites[index].each { |ts| ts.mirror = sprite1.mirror }
+      end
+    when :flip2
+      if sprite2
+        sprite2.mirror = sprite1.mirror
+        sprite2.mirror = !sprite2.mirror if value
+      end
+    when :x
+      relative_to_index = -1
+      if !GameData::Animation::FOCUS_TYPES_WITH_USER_AND_TARGET.include?(particle[:focus])
+        if GameData::Animation::FOCUS_TYPES_WITH_USER.include?(particle[:focus])
+          relative_to_index = user_index
+        elsif GameData::Animation::FOCUS_TYPES_WITH_TARGET.include?(particle[:focus])
+          relative_to_index = target_idx
+        end
+      end
+      x_property = ((particle[:emitter_type] || :none) == :none) ? :x : :emit_x
+      base_x = AnimationEditor::ParticleDataHelper.get_keyframe_particle_value(particle, x_property, @display_keyframe)[0]
+      if relative_to_index >= 0 && relative_to_index.odd?
+        base_x *= -1 if particle[:foe_invert_x]
+      end
+      focus_xy = AnimationPlayer::Helper.get_xy_focus(particle, user_index, target_idx,
+                                                      @user_coords, @target_coords[target_idx],
+                                                      [side_size(0), side_size(1)])
+      AnimationPlayer::Helper.apply_xy_focus_to_sprite(sprite1, :x, base_x, focus_xy)
+      offset_xy = AnimationPlayer::Helper.get_xy_offset(particle, sprite1)
+      sprite1.x += offset_xy[0]
+      if @particle_tiled_sprites[index]
+        while sprite1.x < 0
+          sprite1.x += sprite1.src_rect.width
+        end
+        while sprite1.x >= sprite1.src_rect.width
+          sprite1.x -= sprite1.src_rect.width
+        end
+        @particle_tiled_sprites[index].each_with_index do |ts, i|
+          ts.x = sprite1.x
+          ts.x -= sprite1.src_rect.width if i.even?
+        end
+      end
+    when :x2
+      sprite2.x = sprite1.x + value if sprite2
+    when :y
+      relative_to_index = -1
+      if !GameData::Animation::FOCUS_TYPES_WITH_USER_AND_TARGET.include?(particle[:focus])
+        if GameData::Animation::FOCUS_TYPES_WITH_USER.include?(particle[:focus])
+          relative_to_index = user_index
+        elsif GameData::Animation::FOCUS_TYPES_WITH_TARGET.include?(particle[:focus])
+          relative_to_index = target_idx
+        end
+      end
+      y_property = ((particle[:emitter_type] || :none) == :none) ? :y : :emit_y
+      base_y = AnimationEditor::ParticleDataHelper.get_keyframe_particle_value(particle, y_property, @display_keyframe)[0]
+      if relative_to_index >= 0 && relative_to_index.odd?
+        base_y *= -1 if particle[:foe_invert_y]
+      end
+      focus_xy = AnimationPlayer::Helper.get_xy_focus(particle, user_index, target_idx,
+                                                      @user_coords, @target_coords[target_idx],
+                                                      [side_size(0), side_size(1)])
+      AnimationPlayer::Helper.apply_xy_focus_to_sprite(sprite1, :y, base_y, focus_xy)
+      offset_xy = AnimationPlayer::Helper.get_xy_offset(particle, sprite1)
+      sprite1.y += offset_xy[1]
+      if @particle_tiled_sprites[index]
+        while sprite1.y < 0
+          sprite1.y += sprite1.src_rect.height
+        end
+        while sprite1.y >= sprite1.src_rect.height
+          sprite1.y -= sprite1.src_rect.height
+        end
+        @particle_tiled_sprites[index].each_with_index do |ts, i|
+          ts.y = sprite1.y
+          ts.y -= sprite1.src_rect.height if i > 0
+        end
+      end
+    when :y2
+      sprite2.y = sprite1.y + value if sprite2
+    when :z
+      focus_z = AnimationPlayer::Helper.get_z_focus(particle, user_index, target_idx)
+      AnimationPlayer::Helper.apply_z_focus_to_sprite(sprite1, value, focus_z)
+      if @particle_tiled_sprites[index]
+        @particle_tiled_sprites[index].each { |ts| ts.z = sprite1.z }
+      end
+    when :z2
+      sprite2.z = sprite1.z + value if sprite2
+    when :zoom_x
+      sprite1.zoom_x = value / 100.0
+    when :zoom_x2
+      sprite2.zoom_x = sprite1.zoom_x * value / 100.0 if sprite2
+    when :zoom_y
+      sprite1.zoom_y = value / 100.0
+    when :zoom_y2
+      sprite2.zoom_y = sprite1.zoom_y * value / 100.0 if sprite2
+    when :angle
+      case particle[:angle_override]
+      when :initial_angle_to_focus
+        focus_xy = AnimationPlayer::Helper.get_xy_focus(
+          particle, user_index, target_idx,
+          @user_coords, @target_coords[target_idx], [side_size(0), side_size(1)]
+        )
+        offset_xy = AnimationPlayer::Helper.get_xy_offset(particle, sprite1)
+        target_x = (focus_xy.length == 2) ? focus_xy[1][0] : focus_xy[0][0]
+        target_x += offset_xy[0]
+        target_y = (focus_xy.length == 2) ? focus_xy[1][1] : focus_xy[0][1]
+        target_y += offset_xy[1]
+        sprite1.angle = AnimationPlayer::Helper.initial_angle_between(particle, focus_xy, offset_xy)
+      when :always_point_at_focus
+        focus_xy = AnimationPlayer::Helper.get_xy_focus(
+          particle, user_index, target_idx,
+          @user_coords, @target_coords[target_idx], [side_size(0), side_size(1)]
+        )
+        offset_xy = AnimationPlayer::Helper.get_xy_offset(particle, sprite1)
+        target_x = (focus_xy.length == 2) ? focus_xy[1][0] : focus_xy[0][0]
+        target_x += offset_xy[0]
+        target_y = (focus_xy.length == 2) ? focus_xy[1][1] : focus_xy[0][1]
+        target_y += offset_xy[1]
+        sprite1.angle = AnimationPlayer::Helper.angle_between(sprite1.x, sprite1.y, target_x, target_y)
+      else
+        sprite1.angle = 0
+      end
+      sprite1.angle += value
+    when :angle2
+      sprite2.angle = sprite1.angle + value if sprite2
+    when :visible
+      visible_property = ((particle[:emitter_type] || :none) == :none) ? property : :emitting
+      last_frame_visible = false
+      vis = AnimationEditor::ParticleDataHelper.get_keyframe_particle_value(particle, visible_property, @display_keyframe)[0]
+      if !vis && @display_keyframe > 0
+        last_frame_visible = AnimationEditor::ParticleDataHelper.get_keyframe_particle_value(particle, visible_property, @display_keyframe - 1)[0]
+      end
+      sprite1.visible = value || last_frame_visible
+      sprite2.visible = sprite1.visible if sprite2 && particle[:second_layer]
+      if @particle_tiled_sprites[index]
+        @particle_tiled_sprites[index].each { |ts| ts.visible = sprite1.visible }
+      end
+    when :opacity
+      vis = AnimationEditor::ParticleDataHelper.get_keyframe_particle_value(particle, :visible, @display_keyframe)[0]
+      sprite1.opacity = (vis) ? value : 0
+      if @particle_tiled_sprites[index]
+        @particle_tiled_sprites[index].each { |ts| ts.opacity = sprite1.opacity }
+      end
+    when :opacity2
+      sprite2.opacity = sprite1.opacity + value if sprite2
+    when :color
+      col = Color.new_from_rgb(value)
+      sprite1.color.set(col.red, col.green, col.blue, col.alpha)
+      if @particle_tiled_sprites[index]
+        @particle_tiled_sprites[index].each { |ts| ts.color.set(col.red, col.green, col.blue, col.alpha) }
+      end
+    when :color2
+      if sprite2
+        col = Color.new_from_rgb(value)
+        sprite2.color.set(col.red, col.green, col.blue, col.alpha)
+      end
+    when :tone
+      ton = Tone.new_from_rgbg(value)
+      sprite1.tone.set(ton.red, ton.green, ton.blue, ton.gray)
+      if @particle_tiled_sprites[index]
+        @particle_tiled_sprites[index].each { |ts| ts.tone.set(ton.red, ton.green, ton.blue, ton.gray) }
+      end
+    when :tone2
+      if sprite2
+        ton = Tone.new_from_rgbg(value)
+        sprite2.tone.set(ton.red, ton.green, ton.blue, ton.gray)
+      end
     end
   end
 
@@ -712,7 +813,13 @@ class AnimationEditor::Canvas < Sprite
     [@particle_sprites, @frame_sprites].each do |sprites|
       sprites.each do |s|
         if s.is_a?(Array)
-          s.each { |s2| s2.visible = false if s2 && !s2.disposed? }
+          s.each do |s2|
+            if s2.is_a?(Array)
+              s2.each { |s3| s3.visible = false if s3 && !s3.disposed? }
+            else
+              s2.visible = false if s2 && !s2.disposed?
+            end
+          end
         else
           s.visible = false if s && !s.disposed?
         end
@@ -914,6 +1021,7 @@ class AnimationEditor::Canvas < Sprite
     else
       sprite, frame = get_sprite_and_frame(@selected_particle)
     end
+    spr2 = get_second_sprite(@selected_particle, first_target_index)
     # Check if moved horizontally
     if @captured[0] != new_canvas_x
       new_pos = new_canvas_x
@@ -952,6 +1060,10 @@ class AnimationEditor::Canvas < Sprite
       @changed_controls[property] = new_pos
       @captured[0] = new_canvas_x
       sprite.x = new_canvas_x
+      if spr2
+        value = AnimationEditor::ParticleDataHelper.get_keyframe_particle_value(particle, :x2, @display_keyframe)
+        spr2.x = sprite.x + value[0]
+      end
     end
     # Check if moved vertically
     if @captured[1] != new_canvas_y
@@ -1003,6 +1115,10 @@ class AnimationEditor::Canvas < Sprite
       @changed_controls[property] = new_pos
       @captured[1] = new_canvas_y
       sprite.y = new_canvas_y
+      if spr2
+        value = AnimationEditor::ParticleDataHelper.get_keyframe_particle_value(particle, :y2, @display_keyframe)
+        spr2.y = sprite.y + value[0]
+      end
     end
   end
 
@@ -1017,6 +1133,7 @@ class AnimationEditor::Canvas < Sprite
     else
       sprite, frame = get_sprite_and_frame(@selected_particle)
     end
+    spr2 = get_second_sprite(@selected_particle, first_target_index)
     # Calculate angle between mouse's original position and its current position
     init_x = @captured[0] - frame.x
     init_y = @captured[1] - frame.y
@@ -1029,6 +1146,10 @@ class AnimationEditor::Canvas < Sprite
     @changed_controls ||= {}
     @changed_controls[:angle] = angle
     sprite.angle = angle
+    if spr2
+      value = AnimationEditor::ParticleDataHelper.get_keyframe_particle_value(particle, :angle2, @display_keyframe)
+      spr2.angle = sprite.angle + value[0]
+    end
   end
 
   def update_selected_particle_frame
@@ -1047,7 +1168,11 @@ class AnimationEditor::Canvas < Sprite
                   @anim[:particles][@selected_particle][:name]) if !target
     else
       target = @particle_sprites[@selected_particle]
-      target = target[first_target_index] if target&.is_a?(Array)
+      if target.compact.length > 1
+        target = target[first_target_index][0]
+      else
+        target = target.compact[0][0]
+      end
     end
     if !target || !target.visible
       @sel_frame_sprite.visible = false

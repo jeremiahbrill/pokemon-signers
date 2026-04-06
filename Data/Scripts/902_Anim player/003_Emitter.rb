@@ -167,6 +167,7 @@ class AnimationPlayer::Emitter
   def create_particle_sprite_assign_sprite(particle_sprite, target_idx = -1)
     # Get/create a sprite
     sprite = nil
+    sprite2 = nil
     is_battler_sprite = false
     case @particle[:name]
     when "User"
@@ -183,10 +184,18 @@ class AnimationPlayer::Emitter
     return if sprite.nil?
     # Apply sprite to particle sprite
     particle_sprite.set_sprite(sprite, is_battler_sprite)
+    if @particle[:second_layer]
+      sprite2 = Sprite.new(@viewport)
+      particle_sprite.set_sprite(sprite2, false)
+    end
     # Set sprite's graphic and ox/oy
     if !is_battler_sprite
       AnimationPlayer::Helper.set_bitmap_and_origin(
         @particle, sprite, @user&.index, target_idx,
+        @battler_filenames[@user&.index || -1], @battler_filenames[target_idx]
+      )
+      AnimationPlayer::Helper.set_bitmap_and_origin(
+        @particle, sprite2, @user&.index, target_idx,
         @battler_filenames[@user&.index || -1], @battler_filenames[target_idx]
       )
     end
@@ -198,7 +207,7 @@ class AnimationPlayer::Emitter
     focus_xy = AnimationPlayer::Helper.get_xy_focus(
       @particle, @user&.index, target_idx, @user_coords, @target_coords[target_idx], @side_sizes
     )
-    offset_xy = AnimationPlayer::Helper.get_xy_offset(@particle, particle_sprite.sprite)
+    offset_xy = AnimationPlayer::Helper.get_xy_offset(@particle, (particle_sprite.sprite) ? particle_sprite.sprite[0] : nil)
     focus_z = AnimationPlayer::Helper.get_z_focus(@particle, @user&.index, target_idx)
     particle_sprite.focus_xy = focus_xy
     particle_sprite.offset_xy = offset_xy

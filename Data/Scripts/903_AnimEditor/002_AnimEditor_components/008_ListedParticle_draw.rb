@@ -146,6 +146,7 @@ class AnimationEditor::ListedParticle < UIControls::BaseContainer
       @rows[row][LIST_CONTROL] = ctrl
       return
     when :x, :y, :z, :zoom_x, :zoom_y, :angle, :opacity, :frame,
+         :x2, :y2, :z2, :zoom_x2, :zoom_y2, :angle2, :opacity2, :frame2,
          :emit_x, :emit_y, :emit_x_range, :emit_y_range,
          :emit_speed, :emit_speed_range,
          :emit_angle, :emit_angle_range,
@@ -159,18 +160,18 @@ class AnimationEditor::ListedParticle < UIControls::BaseContainer
       vals = AnimationEditor::PROPERTY_RANGES[row] || [0, 0]
       default = GameData::Animation::PARTICLE_KEYFRAME_DEFAULT_VALUES[row] || 0
       ctrl = UIControls::NumberTextBox.new(ctrl_width, ctrl_height, @list_viewport, *vals, default)
-    when :flip, :emitting, :emit_clockwise
+    when :flip, :flip2, :emitting, :emit_clockwise
       default = GameData::Animation::PARTICLE_KEYFRAME_DEFAULT_VALUES[row] || false
       ctrl = UIControls::Checkbox.new(ctrl_width, ctrl_height, @list_viewport, default)
     when :visible
       ctrl = UIControls::Checkbox.new(ctrl_width, ctrl_height, @list_viewport, true)
-    when :color
+    when :color, :color2
       ctrl = UIControls::ColorPicker.new(ctrl_width, ctrl_height, @list_viewport,
                                          GameData::Animation::PARTICLE_KEYFRAME_DEFAULT_VALUES[:color])
-    when :tone
+    when :tone, :tone2
       ctrl = UIControls::TonePicker.new(ctrl_width, ctrl_height, @list_viewport,
                                         GameData::Animation::PARTICLE_KEYFRAME_DEFAULT_VALUES[:tone])
-    when :blending
+    when :blending, :blending2
       vals = {
         0 => _INTL("None"),
         1 => _INTL("Add"),

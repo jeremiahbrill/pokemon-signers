@@ -226,7 +226,7 @@ module AnimationPlayer::Helper
 
   # user_sprites, target_sprites = [front sprite, back sprite]
   def set_bitmap_and_origin(particle, sprite, user_index, target_index, user_sprites, target_sprites)
-    return if sprite&.is_a?(Battle::Scene::BattlerSprite)
+    return if !sprite || sprite.is_a?(Battle::Scene::BattlerSprite)
     case particle[:graphic]
     when "USER", "USER_OPP", "USER_FRONT", "USER_BACK",
          "TARGET", "TARGET_OPP", "TARGET_FRONT", "TARGET_BACK"

@@ -72,6 +72,14 @@ module GameData
       "InitialAngleToFocus" => :initial_angle_to_focus,
       "AlwaysPointAtFocus"  => :always_point_at_focus
     }
+    # NOTE: These are all the same properties as the base layer, minus :visible.
+    #       :frame2, :blending2, :color2 and :tone2 are standalone and are not
+    #       affected by changes to the base layer.
+    #       :x2, :y2, :z2, :zoom_x2, :zoom_y2, :angle2, :opacity2 are all
+    #       offsets relative to those properties of the base layer.
+    SECOND_LAYER_PROPERTIES = [:frame2, :blending2, :flip2, :x2, :y2, :z2,
+                               :zoom_x2, :zoom_y2, :angle2, :opacity2,
+                               :color2, :tone2]
 
     # Properties that apply to the animation in general, not to individual
     # particles. They don't change during the animation.
@@ -94,6 +102,7 @@ module GameData
       #       from the "Particle" property above.
       "Graphic"              => [:graphic,             "s"],
       "Focus"                => [:focus,               "e", FOCUS_TYPES],
+      "SecondLayer"          => [:second_layer,        "b"],
       "FoeInvertX"           => [:foe_invert_x,        "b"],
       "FoeInvertY"           => [:foe_invert_y,        "b"],
       "FoeFlip"              => [:foe_flip,            "b"],
@@ -133,6 +142,30 @@ module GameData
       "MoveColor"            => [:color,               "^uusE", nil, nil, nil, INTERPOLATION_TYPES],
       "SetTone"              => [:tone,                "^us"],
       "MoveTone"             => [:tone,                "^uusE", nil, nil, nil, INTERPOLATION_TYPES],
+      # These properties are for the second layer of a particle. It has all the
+      # same properties as the base layer, except for :visible.
+      "SetFrame2"            => [:frame2,              "^uu"],   # Frame within the graphic if it's a spritesheet
+      "MoveFrame2"           => [:frame2,              "^uuuE", nil, nil, nil, INTERPOLATION_TYPES],
+      "SetBlending2"         => [:blending2,           "^uu"],   # 0, 1 or 2
+      "SetFlip2"             => [:flip2,               "^ub"],
+      "SetX2"                => [:x2,                  "^ui"],
+      "MoveX2"               => [:x2,                  "^uuiE", nil, nil, nil, INTERPOLATION_TYPES],
+      "SetY2"                => [:y2,                  "^ui"],
+      "MoveY2"               => [:y2,                  "^uuiE", nil, nil, nil, INTERPOLATION_TYPES],
+      "SetZ2"                => [:z2,                  "^ui"],
+      "MoveZ2"               => [:z2,                  "^uuiE", nil, nil, nil, INTERPOLATION_TYPES],
+      "SetZoomX2"            => [:zoom_x2,             "^uu"],
+      "MoveZoomX2"           => [:zoom_x2,             "^uuuE", nil, nil, nil, INTERPOLATION_TYPES],
+      "SetZoomY2"            => [:zoom_y2,             "^uu"],
+      "MoveZoomY2"           => [:zoom_y2,             "^uuuE", nil, nil, nil, INTERPOLATION_TYPES],
+      "SetAngle2"            => [:angle2,              "^ui"],
+      "MoveAngle2"           => [:angle2,              "^uuiE", nil, nil, nil, INTERPOLATION_TYPES],
+      "SetOpacity2"          => [:opacity2,            "^uu"],
+      "MoveOpacity2"         => [:opacity2,            "^uuuE", nil, nil, nil, INTERPOLATION_TYPES],
+      "SetColor2"            => [:color2,              "^us"],
+      "MoveColor2"           => [:color2,              "^uusE", nil, nil, nil, INTERPOLATION_TYPES],
+      "SetTone2"             => [:tone2,               "^us"],
+      "MoveTone2"            => [:tone2,               "^uusE", nil, nil, nil, INTERPOLATION_TYPES],
       # These properties are specifically for emitter particles.
       "SetEmitting"          => [:emitting,            "^ub"],
       "SetEmitX"             => [:emit_x,              "^ui"],
@@ -195,6 +228,7 @@ module GameData
       :name                => "",
       :graphic             => "",
       :focus               => :foreground,
+      :second_layer        => false,
       :foe_invert_x        => false,
       :foe_invert_y        => false,
       :foe_flip            => false,
@@ -225,6 +259,20 @@ module GameData
       :opacity             => 255,
       :color               => "00000000",
       :tone                => "+00+00+00+00",
+      # These properties are for the second layer of a particle. It has all the
+      # same properties as the base layer, except for :visible.
+      :frame2              => 0,
+      :blending2           => 0,
+      :flip2               => false,
+      :x2                  => 0,
+      :y2                  => 0,
+      :z2                  => 0,
+      :zoom_x2             => 100,
+      :zoom_y2             => 100,
+      :angle2              => 0,
+      :opacity2            => 255,
+      :color2              => "00000000",
+      :tone2               => "+00+00+00+00",
       # These properties are specifically for emitter particles.
       :emitting            => false,
       :emit_x              => 0,
@@ -274,6 +322,20 @@ module GameData
         :opacity             => _INTL("Opacity"),
         :color               => _INTL("Color"),
         :tone                => _INTL("Tone"),
+        # These properties are for the second layer of a particle. It has all
+        # the same properties as the base layer, except for :visible.
+        :frame2              => _INTL("Frame"),
+        :blending2           => _INTL("Blending"),
+        :flip2               => _INTL("Flip"),
+        :x2                  => _INTL("X"),
+        :y2                  => _INTL("Y"),
+        :z2                  => _INTL("Priority"),
+        :zoom_x2             => _INTL("Zoom X"),
+        :zoom_y2             => _INTL("Zoom Y"),
+        :angle2              => _INTL("Angle"),
+        :opacity2            => _INTL("Opacity"),
+        :color2              => _INTL("Color"),
+        :tone2               => _INTL("Tone"),
         # These properties are specifically for emitter particles
         :emitting            => _INTL("Emitting"),
         :emit_x              => _INTL("X"),
@@ -455,9 +517,9 @@ module GameData
       ret = @particles[index][SUB_SCHEMA[key][0]] if SUB_SCHEMA[key]
       ret = nil if ret == false || (ret.is_a?(Array) && ret.length == 0) || ret == ""
       case key
-      when "Graphic", "Focus"
-        # The User and Target particles have hardcoded graphics/foci, so they
-        # don't need writing to PBS
+      when "Graphic", "Focus", "SecondLayer"
+        # The User and Target particles have hardcoded graphics/foci and can't
+        # have a second layer, so they don't need writing to PBS
         ret = nil if ["User", "Target"].include?(@particles[index][:name])
       when "Emitter"
         ret = nil if ret == PARTICLE_DEFAULT_VALUES[SUB_SCHEMA[key][0]]
@@ -465,6 +527,7 @@ module GameData
         ret = nil if @particles[index][:emitter_type].nil? || @particles[index][:emitter_type] == :none
         ret = nil if ret == PARTICLE_DEFAULT_VALUES[SUB_SCHEMA[key][0]]
       when "TiledGraphic"
+        ret = nil if @particles[index][:second_layer]
         ret = nil if (@particles[index][:emitter_type] || :none) != :none
         ret = nil if FOCUS_TYPES_WITH_USER.include?(@particles[index][:focus]) ||
                      FOCUS_TYPES_WITH_TARGET.include?(@particles[index][:focus])
@@ -495,6 +558,7 @@ module GameData
           next if !val.is_a?(Array)
           next if key.to_s[0, 4] == "emit" && (@particles[index][:emitter_type] || :none) == :none
           next if key.to_s[0, 6] == "radius" && (@particles[index][:emitter_type] || :none) == :none
+          next if SECOND_LAYER_PROPERTIES.include?(key) && !@particles[index][:second_layer]
           val.each do |cmd|
             new_cmd = cmd.clone
             if @particles[index][:name] != "SE" && new_cmd[1] > 0

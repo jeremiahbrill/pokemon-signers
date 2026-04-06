@@ -265,10 +265,11 @@ class AnimationEditor
     part_properties.get_control(:name).set_blacklist("", "User", "Target", "SE")
     part_properties.add_labelled_label(:graphic_name, _INTL("Graphic"),
       GameData::Animation::PARTICLE_DEFAULT_VALUES[:graphic])
-    part_properties.add_labelled_fitted_button(:graphic,
-      GameData::Animation::PARTICLE_DEFAULT_VALUES[:graphic], _INTL("Change"))
+    part_properties.add_labelled_fitted_button(:graphic, "", _INTL("Change"))
     part_properties.add_labelled_dropdown_list(:focus, _INTL("Focus"), {},
       GameData::Animation::PARTICLE_DEFAULT_VALUES[:focus])
+    part_properties.add_labelled_checkbox(:second_layer, _INTL("Second layer"),
+      GameData::Animation::PARTICLE_DEFAULT_VALUES[:second_layer])
     # OppMove replacements
     part_properties.add_underlined_label(:opposing_label, _INTL("If on opposing side..."))
     part_properties.add_labelled_checkbox(:foe_invert_x, _INTL("Invert X"),

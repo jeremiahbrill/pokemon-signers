@@ -185,6 +185,14 @@ module Compiler
     end
     # Go through each particle in turn
     hash[:particles].each do |particle|
+      # Ensure the second layer-exclusive commands are only on particles with one
+      if !particle[:second_layer]
+        particle.keys.each do |property|
+          next if !GameData::Animation::SECOND_LAYER_PROPERTIES.include?(property)
+          raise _INTL("Particle \"{1}\" doesn't have a second layer but has a second layer command.",
+                      particle[:name]) + "\n" + FileLineData.linereport
+        end
+      end
       # Ensure the emitter-exclusive commands are only on emitter particles
       if !particle[:emitter_type] || particle[:emitter_type] == :none
         particle.keys.each do |property|

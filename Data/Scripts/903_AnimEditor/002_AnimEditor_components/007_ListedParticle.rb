@@ -12,7 +12,10 @@ class AnimationEditor::ListedParticle < UIControls::BaseContainer
   PROPERTY_GROUPS = {
     :position_group       => [:x, :y, :z],
     :transformation_group => [:zoom_x, :zoom_y, :angle, :flip],
-    :appearance_group     => [:visible, :opacity, :color, :tone, :frame, :blending]
+    :appearance_group     => [:visible, :opacity, :color, :tone, :frame, :blending],
+    :second_layer_group   => [:x2, :y2, :z2,
+                              :zoom_x2, :zoom_y2, :angle2, :flip2, 
+                              :opacity2, :color2, :tone2, :frame2, :blending2]
   }
   # NOTE: Any property in here that is also in PROPERTY_GROUPS above should be
   #       in the same group.
@@ -30,7 +33,10 @@ class AnimationEditor::ListedParticle < UIControls::BaseContainer
                                :emit_zoom_range, :emit_zoom_x_range, :emit_zoom_y_range],
     :position_group        => [:x, :y, :z, :radius_x, :radius_y, :radius_z],
     :transformation_group  => [:zoom_x, :zoom_y, :angle, :flip],
-    :appearance_group      => [:visible, :opacity, :color, :tone, :frame, :blending]
+    :appearance_group      => [:visible, :opacity, :color, :tone, :frame, :blending],
+    :second_layer_group    => [:x2, :y2, :z2,
+                               :zoom_x2, :zoom_y2, :angle2, :flip2,
+                               :opacity2, :color2, :tone2, :frame2, :blending2]
   }
   # The parameters in EMITTER_PROPERTY_GROUPS that aren't in PROPERTY_GROUPS
   # that are used for each emitter type. Parameters in :emitter_group are all
@@ -225,6 +231,7 @@ class AnimationEditor::ListedParticle < UIControls::BaseContainer
       :position_group        => _INTL("Position"),
       :transformation_group  => _INTL("Transformation"),
       :appearance_group      => _INTL("Appearance"),
+      :second_layer_group    => _INTL("Second layer"),
       :emitter_group         => _INTL("Emitter"),
       :emit_parameters_group => _INTL("Emit parameters")
     }[group] || group.to_s.capitalize
@@ -300,6 +307,14 @@ class AnimationEditor::ListedParticle < UIControls::BaseContainer
   #       there isn't a masking graphic. I don't think any other properties
   #       would need this.
   def row_always_hidden?(row)
+    if !@particle[:second_layer] &&
+       (row == :second_layer_group || GameData::Animation::SECOND_LAYER_PROPERTIES.include?(row))
+      return true
+    end
+    if !is_emitter? && EMITTER_PROPERTY_GROUPS.has_key?(row) &&
+       !PROPERTY_GROUPS.has_key?(row)
+      return true
+    end
     if is_emitter? && emitter_only_row?(row) &&
        group_for_row(row) != :emitter_group &&
        USED_EMITTER_PARAMETERS[@particle[:emitter_type]] &&
@@ -320,7 +335,7 @@ class AnimationEditor::ListedParticle < UIControls::BaseContainer
     yielded = []
     to_yield.each_pair do |key, properties|
       if key != :main
-        yield key, groups_visible
+        yield key, !row_always_hidden?(key) && groups_visible
         yielded.push(key)
       end
       group_visible = @groups_expanded[key]

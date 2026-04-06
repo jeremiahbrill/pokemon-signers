@@ -20,6 +20,16 @@ class AnimationEditor
     :angle               => [-99999, 99999],
     :opacity             => [     0,   255],
     :frame               => [     0,    99],
+    # These properties are for the second layer of a particle.
+    :x2                  => [-99999, 99999],
+    :y2                  => [-99999, 99999],
+    :z2                  => [   -50,    50],
+    :zoom_x2             => [     0,  1000],
+    :zoom_y2             => [     0,  1000],
+    :angle2              => [-99999, 99999],
+    :opacity2            => [  -255,   255],
+    :frame2              => [     0,    99],
+    # These properties are specifically for emitter particles.
     :emit_x              => [  -999,   999],
     :emit_x_range        => [     0,   999],
     :emit_y              => [  -999,   999],

@@ -101,13 +101,16 @@ class AnimationEditor
     }
     graphic_name = graphic_override_names[graphic_name] || this_particle[:graphic]
     ctrls.get_control(:graphic_name).text = graphic_name
-    # Graphic button, focus
+    # Graphic button, focus, second layer
     if ["User", "Target"].include?(this_particle[:name])
       ctrls.get_control(:graphic).disable
       ctrls.get_control(:focus).disable
+      this_particle[:second_layer] = false
+      ctrls.get_control(:second_layer).disable
     else
       ctrls.get_control(:graphic).enable
       ctrls.get_control(:focus).enable
+      ctrls.get_control(:second_layer).enable
     end
     focus_values = {
       :foreground                        => _INTL("Foreground"),
@@ -144,7 +147,8 @@ class AnimationEditor
       ctrls.get_control(:foe_flip).enable
     end
     # Tiled graphic
-    if (this_particle[:emitter_type] || :none) == :none &&
+    if !this_particle[:second_layer] &&
+       (this_particle[:emitter_type] || :none) == :none &&
        !GameData::Animation::FOCUS_TYPES_WITH_USER.include?(this_particle[:focus]) &&
        !GameData::Animation::FOCUS_TYPES_WITH_TARGET.include?(this_particle[:focus])
       ctrls.get_control(:tiled_graphic).enable
