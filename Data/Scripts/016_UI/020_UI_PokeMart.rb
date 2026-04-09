@@ -51,7 +51,7 @@ class UI::MartStockWrapper
     max_quantity = (item_price <= 0) ? PokemonBag::MAX_PER_SLOT : money / item_price
     max_quantity = [max_quantity, PokemonBag::MAX_PER_SLOT].min
     max_stock = stock_quantity(item)
-    max_quantity = [max_quantity, max_stock].min if max_quantity >= 0
+    max_quantity = [max_quantity, max_stock].min if max_stock > 0
     return max_quantity
   end
 
