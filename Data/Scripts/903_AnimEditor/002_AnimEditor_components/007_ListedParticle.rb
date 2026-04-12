@@ -14,7 +14,7 @@ class AnimationEditor::ListedParticle < UIControls::BaseContainer
     :transformation_group => [:zoom_x, :zoom_y, :angle, :flip],
     :appearance_group     => [:visible, :opacity, :color, :tone, :frame, :blending],
     :second_layer_group   => [:x2, :y2, :z2,
-                              :zoom_x2, :zoom_y2, :angle2, :flip2, 
+                              :zoom_x2, :zoom_y2, :angle2, :flip2,
                               :opacity2, :color2, :tone2, :frame2, :blending2]
   }
   # NOTE: Any property in here that is also in PROPERTY_GROUPS above should be
@@ -316,7 +316,7 @@ class AnimationEditor::ListedParticle < UIControls::BaseContainer
       return true
     end
     if is_emitter? && emitter_only_row?(row) &&
-       group_for_row(row) != :emitter_group &&
+       ![:main, :emitter_group].include?(group_for_row(row)) &&
        USED_EMITTER_PARAMETERS[@particle[:emitter_type]] &&
        !USED_EMITTER_PARAMETERS[@particle[:emitter_type]].include?(row)
       return true

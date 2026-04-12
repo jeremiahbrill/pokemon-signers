@@ -6,10 +6,16 @@ class AnimationPlayer::Emitter
 
   # These properties are used by individual ParticleSprites spawned by this
   # emitter, and aren't used by the emitter itself so don't need updating here.
-  PARTICLE_PROPERTIES = [:frame, :blending, :flip,
-                         :x, :y, :z, :radius_x, :radius_y, :radius_z,
-                         :zoom_x, :zoom_y, :angle, :visible, :opacity,
-                         :color, :tone]
+  PARTICLE_PROPERTIES = [:frame, :frame2,
+                         :blending, :blending2,
+                         :flip, :flip2,
+                         :x, :x2, :y, :y2, :z, :z2,
+                         :radius_x, :radius_y, :radius_z,
+                         :zoom_x, :zoom_x2, :zoom_y, :zoom_y2,
+                         :angle, :angle2,
+                         :visible,
+                         :opacity, :opacity2,
+                         :color, :color2, :tone, :tone2]
 
   def initialize(viewport, particle, fps)
     @viewport = viewport

@@ -556,8 +556,9 @@ class AnimationEditor::Canvas < Sprite
     return if !spr.visible
     # Set position, graphic and ox/oy for emitter
     if (particle[:emitter_type] || :none) != :none
-      [:x, :y].each do |property|
-        apply_sprite_property(particle, index, property, values[property], target_idx, spr, spr2)
+      SPRITE_PROPERTIES_TO_SET.each do |property|
+        val = ([:x, :y].include?(property)) ? values[property] : GameData::Animation::PARTICLE_KEYFRAME_DEFAULT_VALUES[property]
+        apply_sprite_property(particle, index, property, val, target_idx, spr, spr2)
       end
       # Emitter
       spr.z = 99997
@@ -746,13 +747,15 @@ class AnimationEditor::Canvas < Sprite
       sprite2.angle = sprite1.angle + value if sprite2
     when :visible
       visible_property = ((particle[:emitter_type] || :none) == :none) ? property : :emitting
-      last_frame_visible = false
       vis = AnimationEditor::ParticleDataHelper.get_keyframe_particle_value(particle, visible_property, @display_keyframe)[0]
+      last_frame_visible = false
       if !vis && @display_keyframe > 0
         last_frame_visible = AnimationEditor::ParticleDataHelper.get_keyframe_particle_value(particle, visible_property, @display_keyframe - 1)[0]
       end
-      sprite1.visible = value || last_frame_visible
-      sprite2.visible = sprite1.visible if sprite2 && particle[:second_layer]
+      sprite1.visible = vis || last_frame_visible
+      if sprite2
+        sprite2.visible = sprite1.visible && particle[:second_layer] && (particle[:emitter_type] || :none) == :none
+      end
       if @particle_tiled_sprites[index]
         @particle_tiled_sprites[index].each { |ts| ts.visible = sprite1.visible }
       end
@@ -857,7 +860,7 @@ class AnimationEditor::Canvas < Sprite
 
   def update_input
     particle = (@selected_particle) ? @anim[:particles][@selected_particle] : nil
-    particle = nil if particle[:name] == "SE"
+    particle = nil if particle && particle[:name] == "SE"
     update_input_move_particle(particle) if particle
     update_input_mouse_wheel_particle(particle) if particle
     # Mouse clicks
@@ -1168,9 +1171,9 @@ class AnimationEditor::Canvas < Sprite
                   @anim[:particles][@selected_particle][:name]) if !target
     else
       target = @particle_sprites[@selected_particle]
-      if target.compact.length > 1
+      if target && target.compact.length > 1
         target = target[first_target_index][0]
-      else
+      elsif target
         target = target.compact[0][0]
       end
     end
