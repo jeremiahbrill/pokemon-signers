@@ -404,7 +404,7 @@ module Battle::Scene::Animation::BallAnimationMixin
       start_zoom = rand(50...100)
       ray = addNewSprite(ballX + (ray_min_radius * Math.cos(radian)),
                          ballY - (ray_min_radius * Math.sin(radian)),
-                         "Graphics/Battle animations/ray", PictureOrigin::BOTTOM)
+                         "Graphics/Battle animations/ray [bottom]", PictureOrigin::BOTTOM)
       ray.setZ(0, 5100)
       ray.setZoomXY(0, 200, start_zoom)
       ray.setTone(0, variances[0]) if poke_ball != :CHERISHBALL
