@@ -324,7 +324,7 @@ Description = The Pokémon raises its Speed stat every time it flinches.
 #-------------------------------
 [SNOWCLOAK]
 Name = Snow Cloak
-Description = Hailstorms boosts the Pokémon's evasiveness and will not damage it.
+Description = Hailstorms boost the Pokémon's evasiveness and will not damage it.
 #-------------------------------
 [GLUTTONY]
 Name = Gluttony

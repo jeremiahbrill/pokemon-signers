@@ -24,10 +24,6 @@ Being hit by an Electric-type move restores the Pokémon's HP instead.
 Being hit by an Electric-type move restores the Pokémon's HP instead.
 Being hit by a Water-type move restores the Pokémon's HP instead.
 Being hit by a Water-type move restores the Pokémon's HP instead.
-The Pokémon cannot become infatuated.
-The Pokémon cannot become infatuated.
-The Pokémon cannot become infatuated or fall for taunts.
-The Pokémon cannot become infatuated or fall for taunts.
 The Pokémon cannot become infatuated, fall for taunts or be intimidated.
 The Pokémon cannot become infatuated, fall for taunts or be intimidated.
 The Pokémon's carefree outlook prevents all effects of weather.
@@ -44,8 +40,6 @@ Being hit by a Fire-type move instead powers up the Pokémon's Fire-type moves.
 Being hit by a Fire-type move instead powers up the Pokémon's Fire-type moves.
 Negates the additional effects of attacks that hit the Pokémon.
 Negates the additional effects of attacks that hit the Pokémon.
-Having its own tempo means the Pokémon cannot become confused.
-Having its own tempo means the Pokémon cannot become confused.
 Having its own tempo means the Pokémon cannot become confused or be intimidated.
 Having its own tempo means the Pokémon cannot become confused or be intimidated.
 The Pokémon cannot be forced to switch out by another Pokémon.
@@ -76,8 +70,6 @@ The Pokémon's Speed stat is doubled in rain.
 The Pokémon's Speed stat is doubled in rain.
 The Pokémon's Speed stat is doubled in harsh sunlight.
 The Pokémon's Speed stat is doubled in harsh sunlight.
-The Pokémon's illumination raises the likelihood of meeting wild Pokémon.
-The Pokémon's illumination raises the likelihood of meeting wild Pokémon.
 The Pokémon's accuracy stat cannot be lowered by another Pokémon.
 The Pokémon's accuracy stat cannot be lowered by another Pokémon.
 When the Pokémon enters a battle, it copies an opposing Pokémon's Ability.
@@ -86,8 +78,6 @@ The Pokémon's Attack stat is doubled.
 The Pokémon's Attack stat is doubled.
 Contact with the Pokémon may poison the attacker.
 Contact with the Pokémon may poison the attacker.
-The Pokémon's force of will prevents it from flinching.
-The Pokémon's force of will prevents it from flinching.
 The Pokémon's force of will prevents it from flinching or being intimidated.
 The Pokémon's force of will prevents it from flinching or being intimidated.
 The Pokémon is coated with hot magma, preventing it from being frozen.
@@ -166,8 +156,6 @@ Deals more damage to same gender targets and less to opposite gender targets.
 Deals more damage to same gender targets and less to opposite gender targets.
 The Pokémon raises its Speed stat every time it flinches.
 The Pokémon raises its Speed stat every time it flinches.
-Hailstorms boosts the Pokémon's evasiveness and will not damage it.
-Hailstorms boosts the Pokémon's evasiveness and will not damage it.
 Boosts the Pokémon's evasiveness in snow.
 Boosts the Pokémon's evasiveness in snow.
 The Pokémon will eat its held Berry after its HP drops to half or less.
@@ -198,8 +186,6 @@ In harsh sunlight, boosts the Pokémon's Sp. Atk stat, but it loses HP every tur
 In harsh sunlight, boosts the Pokémon's Sp. Atk stat, but it loses HP every turn.
 Boosts the Pokémon's Speed stat if it has a status condition.
 Boosts the Pokémon's Speed stat if it has a status condition.
-All the Pokémon's moves become Normal type.
-All the Pokémon's moves become Normal type.
 All the Pokémon's moves become Normal type and are powered up a little.
 All the Pokémon's moves become Normal type and are powered up a little.
 Powers up the Pokémon's moves if they are critical hits when attacking.
@@ -234,24 +220,16 @@ The Pokémon takes less damage from attacks that are "super effective".
 The Pokémon takes less damage from attacks that are "super effective".
 For its first five turns, the Pokémon's Attack and Speed stats are halved.
 For its first five turns, the Pokémon's Attack and Speed stats are halved.
-The Pokémon can hit Ghost-type targets with any move.
-The Pokémon can hit Ghost-type targets with any move.
 The Pokémon can hit Ghost-type targets with any move and it can't be intimidated.
 The Pokémon can hit Ghost-type targets with any move and it can't be intimidated.
 The Pokémon draws in all Water-type moves to raise its Sp. Attack stat.
 The Pokémon draws in all Water-type moves to raise its Sp. Attack stat.
-Hailstorms heal the Pokémon a little each turn and will not damage it.
-Hailstorms heal the Pokémon a little each turn and will not damage it.
 The Pokémon regains a little HP at the end of every turn in snow.
 The Pokémon regains a little HP at the end of every turn in snow.
-When the Pokémon enters a battle, it summons a hailstorm.
-When the Pokémon enters a battle, it summons a hailstorm.
 When the Pokémon enters a battle, it makes it snow.
 When the Pokémon enters a battle, it makes it snow.
 The Pokémon may gather Honey from somewhere after a battle.
 The Pokémon may gather Honey from somewhere after a battle.
-Upon entering a battle, the Pokémon identifies the item being held by a foe.
-Upon entering a battle, the Pokémon identifies the item being held by a foe.
 Upon entering a battle, the Pokémon identifies the items being held by foes.
 Upon entering a battle, the Pokémon identifies the items being held by foes.
 Powers up the Pokémon's moves that have recoil or crash damage.
@@ -280,8 +258,6 @@ The Pokémon may cure its allies' status conditions at the end of each turn.
 The Pokémon may cure its allies' status conditions at the end of each turn.
 The Pokémon reduces the damage taken by allies from any attacks.
 The Pokémon reduces the damage taken by allies from any attacks.
-Physical damage lowers the Pokémon's Defense stat and raises its Speed stat.
-Physical damage lowers the Pokémon's Defense stat and raises its Speed stat.
 Physical damage lowers the Pokémon's Defense and sharply raises its Speed.
 Physical damage lowers the Pokémon's Defense and sharply raises its Speed.
 The Pokémon is clad in heavy metal that doubles its weight.
@@ -300,8 +276,6 @@ The Pokémon anticipates and avoids the damaging attacks of its allies.
 The Pokémon anticipates and avoids the damaging attacks of its allies.
 Every turn, the Pokémon sharply raises one of its stats and lowers another.
 Every turn, the Pokémon sharply raises one of its stats and lowers another.
-Protects the Pokémon from weather damage.
-Protects the Pokémon from weather damage.
 Protects the Pokémon from weather damage, and from powder and spore effects.
 Protects the Pokémon from weather damage, and from powder and spore effects.
 When the Pokémon attacks and makes contact, it may poison the target.
@@ -320,8 +294,6 @@ The Pokémon enters battle disguised as the last Pokémon in the party.
 The Pokémon enters battle disguised as the last Pokémon in the party.
 When the Pokémon enters battle, it transforms into the Pokémon it is facing.
 When the Pokémon enters battle, it transforms into the Pokémon it is facing.
-The Pokémon bypasses its target's safeguards and screens.
-The Pokémon bypasses its target's safeguards and screens.
 The Pokémon bypasses its target's safeguards, screens and substitutes.
 The Pokémon bypasses its target's safeguards, screens and substitutes.
 Contact with the Pokémon changes the attacker's Ability to Mummy.
@@ -350,8 +322,6 @@ Ally Grass-type Pokémon are protected from status conditions and stat drops.
 Ally Grass-type Pokémon are protected from status conditions and stat drops.
 The Pokémon restores a third of its HP when it eats a Berry.
 The Pokémon restores a third of its HP when it eats a Berry.
-The Pokémon changes its type to match that of the move it's about to use.
-The Pokémon changes its type to match that of the move it's about to use.
 Once while in battle, the Pokémon's type changes to that of the move it uses.
 Once while in battle, the Pokémon's type changes to that of the move it uses.
 The Pokémon's thick fur halves the damage it takes from physical moves.
@@ -370,8 +340,6 @@ Prevents the Pokémon and its allies from falling asleep.
 Prevents the Pokémon and its allies from falling asleep.
 The Pokémon changes between Blade and Shield Forme with certain attacks.
 The Pokémon changes between Blade and Shield Forme with certain attacks.
-The Pokémon's Flying-type moves gain priority and are used faster.
-The Pokémon's Flying-type moves gain priority and are used faster.
 The Pokémon's Flying-type moves gain priority when its HP is full.
 The Pokémon's Flying-type moves gain priority when its HP is full.
 Powers up the Pokémon's aura and pulse moves.
@@ -422,8 +390,6 @@ Powers up the Pokémon's Steel-type moves.
 Powers up the Pokémon's Steel-type moves.
 The Pokémon raises its Sp. Atk stat when it is hit and its HP drops to half or less.
 The Pokémon raises its Sp. Atk stat when it is hit and its HP drops to half or less.
-The Pokémon's Speed stat is doubled in a hailstorm.
-The Pokémon's Speed stat is doubled in a hailstorm.
 The Pokémon's Speed stat is doubled in snow.
 The Pokémon's Speed stat is doubled in snow.
 The Pokémon uses its moves without making contact with the target.
@@ -440,8 +406,6 @@ The Pokémon forms a powerful school while it is at a quarter HP or higher.
 The Pokémon forms a powerful school while it is at a quarter HP or higher.
 Once per battle, the shroud that covers the Pokémon protects it from an attack.
 Once per battle, the shroud that covers the Pokémon protects it from an attack.
-When the Pokémon defeats a foe, it becomes Ash-Greninja.
-When the Pokémon defeats a foe, it becomes Ash-Greninja.
 Once when the Pokémon defeats a foe, it raises its Attack, Sp. Atk and Speed.
 Once when the Pokémon defeats a foe, it raises its Attack, Sp. Atk and Speed.
 The Pokémon turns into its Complete Forme when its HP becomes half or less.
@@ -482,12 +446,8 @@ When the Pokémon enters battle, it turns the ground into Grassy Terrain.
 When the Pokémon enters battle, it turns the ground into Grassy Terrain.
 Powers up the Pokémon's moves if they are "super effective".
 Powers up the Pokémon's moves if they are "super effective".
-When the Pokémon enters a battle, it raises its Attack stat.
-When the Pokémon enters a battle, it raises its Attack stat.
 When the Pokémon first enters a battle, it raises its Attack stat.
 When the Pokémon first enters a battle, it raises its Attack stat.
-When the Pokémon enters a battle, it raises its Defense stat.
-When the Pokémon enters a battle, it raises its Defense stat.
 When the Pokémon first enters a battle, it raises its Defense stat.
 When the Pokémon first enters a battle, it raises its Defense stat.
 Once per battle, the Pokémon retrieves the first thrown Poké Ball.
@@ -512,8 +472,6 @@ The Pokémon's ice scales halve the damage it takes from special moves.
 The Pokémon's ice scales halve the damage it takes from special moves.
 Ripens the Pokémon's held Berry and doubles its effect when consumed.
 Ripens the Pokémon's held Berry and doubles its effect when consumed.
-The ice head blocks damage from a physical attack, but breaks. It restores in hail.
-The ice head blocks damage from a physical attack, but breaks. It restores in hail.
 The ice head blocks damage from a physical attack, but breaks. Snow restores it.
 The ice head blocks damage from a physical attack, but breaks. Snow restores it.
 Powers up the moves used by the Pokémon's allies.

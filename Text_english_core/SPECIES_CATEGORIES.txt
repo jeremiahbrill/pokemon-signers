@@ -1442,10 +1442,14 @@ Malevolent
 Malevolent
 Ghost Flame
 Ghost Flame
+Double Jaw
+Double Jaw
 Poison Fish
 Poison Fish
 Hexpert
 Hexpert
+Bad Dreams
+Bad Dreams
 Spinning
 Spinning
 Mellow
@@ -1456,8 +1460,12 @@ Baneful Fox
 Baneful Fox
 Battle Cry
 Battle Cry
+Second Sight
+Second Sight
 Shell Bunker
 Shell Bunker
+Imposing
+Imposing
 High King
 High King
 Hero

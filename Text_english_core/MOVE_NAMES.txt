@@ -156,6 +156,8 @@ Topsy-Turvy
 Topsy-Turvy
 Torment
 Torment
+Nihil Light
+Nihil Light
 Eternabeam
 Eternabeam
 Dragon Energy
@@ -964,8 +966,6 @@ Round
 Round
 Swift
 Swift
-Vice Grip
-Vice Grip
 Vise Grip
 Vise Grip
 Cut
