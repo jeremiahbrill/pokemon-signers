@@ -277,6 +277,8 @@ module AnimationPlayer::Helper
   #-----------------------------------------------------------------------------
 
   def interpolate(interpolation, start_val, end_val, duration, start_time, now)
+    return start_val if now <= start_time
+    return end_val if now >= start_time + duration
     case interpolation
     when :linear
       return lerp(start_val, end_val, duration, start_time, now).to_i
