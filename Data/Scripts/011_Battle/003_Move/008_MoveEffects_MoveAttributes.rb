@@ -1701,23 +1701,27 @@ end
 #===============================================================================
 class Battle::Move::TypeAndPowerDependOnWeather < Battle::Move
   def pbBasePower(base_power, user, target)
-    base_power *= 2 if user.effectiveWeather != :None
+    base_power *= 2 if user.effectiveWeather != :None || user.hasActiveAbility?(:MEGASOL)
     return base_power
   end
 
   def pbBaseType(user)
     ret = :NORMAL
-    case user.effectiveWeather
-    when :Sun, :HarshSun
-      ret = :FIRE if GameData::Type.exists?(:FIRE)
-    when :Rain, :HeavyRain
-      ret = :WATER if GameData::Type.exists?(:WATER)
-    when :Sandstorm
-      ret = :ROCK if GameData::Type.exists?(:ROCK)
-    when :Hail, :Snowstorm
-      ret = :ICE if GameData::Type.exists?(:ICE)
-    when :ShadowSky
-      ret = :NONE
+    if user.hasActiveAbility?(:MEGASOL)
+      ret = :FIRE
+    else
+      case user.effectiveWeather
+      when :Sun, :HarshSun
+        ret = :FIRE if GameData::Type.exists?(:FIRE)
+      when :Rain, :HeavyRain
+        ret = :WATER if GameData::Type.exists?(:WATER)
+      when :Sandstorm
+        ret = :ROCK if GameData::Type.exists?(:ROCK)
+      when :Hail, :Snowstorm
+        ret = :ICE if GameData::Type.exists?(:ICE)
+      when :ShadowSky
+        ret = :NONE
+      end
     end
     return ret
   end

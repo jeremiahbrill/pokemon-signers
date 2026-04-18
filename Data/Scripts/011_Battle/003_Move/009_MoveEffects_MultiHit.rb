@@ -229,7 +229,7 @@ class Battle::Move::TwoTurnAttackOneTurnInSun < Battle::Move::TwoTurnMove
   def pbIsChargingTurn?(user)
     ret = super
     if !user.effects[PBEffects::TwoTurnAttack] &&
-       [:Sun, :HarshSun].include?(user.effectiveWeather)
+       ([:Sun, :HarshSun].include?(user.effectiveWeather) || user.hasActiveAbility?(:MEGASOL))
       @powerHerb = false
       @chargingTurn = true
       @damagingTurn = true
@@ -243,7 +243,7 @@ class Battle::Move::TwoTurnAttackOneTurnInSun < Battle::Move::TwoTurnMove
   end
 
   def pbBasePowerMultiplier(power_mult, user, target)
-    power_mult /= 2 if ![:None, :Sun, :HarshSun].include?(user.effectiveWeather)
+    power_mult /= 2 if ![:None, :Sun, :HarshSun].include?(user.effectiveWeather) && !user.hasActiveAbility?(:MEGASOL)
     return power_mult
   end
 end
@@ -396,7 +396,7 @@ class Battle::Move::TwoTurnAttackOneTurnInRainChargeRaiseUserSpAtk1 < Battle::Mo
   def pbIsChargingTurn?(user)
     ret = super
     if !user.effects[PBEffects::TwoTurnAttack] &&
-       [:Rain, :HeavyRain].include?(user.effectiveWeather)
+       [:Rain, :HeavyRain].include?(user.effectiveWeather) && !user.hasActiveAbility?(:MEGASOL)
       @powerHerb = false
       @chargingTurn = true
       @damagingTurn = true

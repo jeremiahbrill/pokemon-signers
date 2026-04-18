@@ -222,7 +222,7 @@ end
 #===============================================================================
 class Battle::Move::ParalyzeTargetAlwaysHitsInRain < Battle::Move::ParalyzeTarget
   def pbBaseAccuracy(user, target)
-    return 0 if [:Rain, :HeavyRain].include?(target.effectiveWeather)
+    return 0 if [:Rain, :HeavyRain].include?(target.effectiveWeather) && !user.hasActiveAbility?(:MEGASOL)
     return super
   end
 end
@@ -235,6 +235,7 @@ class Battle::Move::ParalyzeTargetAlwaysHitsInRainHitsTargetInSky < Battle::Move
   def hitsFlyingTargets?; return true; end
 
   def pbBaseAccuracy(user, target)
+    return 50 if user.hasActiveAbility?(:MEGASOL)
     case target.effectiveWeather
     when :Sun, :HarshSun
       return 50
@@ -291,7 +292,7 @@ end
 #===============================================================================
 class Battle::Move::BurnTargetAlwaysHitsInRain < Battle::Move::BurnTarget
   def pbBaseAccuracy(user, target)
-    return 0 if [:Rain, :HeavyRain].include?(target.effectiveWeather)
+    return 0 if [:Rain, :HeavyRain].include?(target.effectiveWeather) && !user.hasActiveAbility?(:MEGASOL)
     return super
   end
 end
@@ -362,7 +363,7 @@ end
 #===============================================================================
 class Battle::Move::FreezeTargetAlwaysHitsInHail < Battle::Move::FreezeTarget
   def pbBaseAccuracy(user, target)
-    return 0 if [:Hail, :Snowstorm].include?(target.effectiveWeather)
+    return 0 if [:Hail, :Snowstorm].include?(target.effectiveWeather) && !user.hasActiveAbility?(:MEGASOL)
     return super
   end
 end
@@ -720,6 +721,7 @@ class Battle::Move::ConfuseTargetAlwaysHitsInRainHitsTargetInSky < Battle::Move:
   def hitsFlyingTargets?; return true; end
 
   def pbBaseAccuracy(user, target)
+    return 50 if user.hasActiveAbility?(:MEGASOL)
     case target.effectiveWeather
     when :Sun, :HarshSun
       return 50

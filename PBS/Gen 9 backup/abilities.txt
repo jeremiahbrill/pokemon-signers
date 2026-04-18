@@ -1242,3 +1242,19 @@ Description = The Pokémon prevents all effects of weather and terrain.
 [POISONPUPPETEER]
 Name = Poison Puppeteer
 Description = Pokémon poisoned by Pecharunt's moves will also become confused.
+#-------------------------------
+[PIERCINGDRILL]
+Name = Piercing Drill
+Description = The Pokémon's moves that make contact ignore the target's protections.
+#-------------------------------
+[DRAGONIZE]
+Name = Dragonize
+Description = The Pokémon's Normal-type moves become Dragon-type and are powered up a little.
+#-------------------------------
+[MEGASOL]
+Name = Mega Sol
+Description = The Pokémon can use its moves as if the weather were harsh sunlight.
+#-------------------------------
+[SPICYSPRAY]
+Name = Spicy Spray
+Description = When the Pokémon takes damage from a move, it burns the attacker.

@@ -596,3 +596,9 @@ The Pokémon prevents all effects of weather and terrain.
 The Pokémon prevents all effects of weather and terrain.
 Pokémon poisoned by Pecharunt's moves will also become confused.
 Pokémon poisoned by Pecharunt's moves will also become confused.
+The Pokémon's Normal-type moves become Dragon-type and are powered up a little.
+The Pokémon's Normal-type moves become Dragon-type and are powered up a little.
+The Pokémon can use its moves as if the weather were harsh sunlight.
+The Pokémon can use its moves as if the weather were harsh sunlight.
+When the Pokémon takes damage from a move, it burns the attacker.
+When the Pokémon takes damage from a move, it burns the attacker.

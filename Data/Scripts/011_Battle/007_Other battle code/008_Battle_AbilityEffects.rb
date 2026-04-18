@@ -1243,6 +1243,14 @@ Battle::AbilityEffects::ModifyMoveBaseType.add(:AERILATE,
   }
 )
 
+Battle::AbilityEffects::ModifyMoveBaseType.add(:DRAGONIZE,
+  proc { |ability, user, move, type|
+    next if type != :NORMAL || !GameData::Type.exists?(:DRAGON)
+    move.powerBoost = true
+    next :DRAGON
+  }
+)
+
 Battle::AbilityEffects::ModifyMoveBaseType.add(:GALVANIZE,
   proc { |ability, user, move, type|
     next if type != :NORMAL || !GameData::Type.exists?(:ELECTRIC)
@@ -1401,7 +1409,9 @@ Battle::AbilityEffects::DamageCalcFromUser.add(:AERILATE,
   }
 )
 
-Battle::AbilityEffects::DamageCalcFromUser.copy(:AERILATE, :GALVANIZE, :NORMALIZE, :PIXILATE, :REFRIGERATE)
+Battle::AbilityEffects::DamageCalcFromUser.copy(:AERILATE,
+                                                :DRAGONIZE, :GALVANIZE, :NORMALIZE,
+                                                :PIXILATE, :REFRIGERATE)
 
 Battle::AbilityEffects::DamageCalcFromUser.add(:ANALYTIC,
   proc { |ability, user, target, move, mults, power, type|
@@ -2261,6 +2271,19 @@ Battle::AbilityEffects::OnBeingHit.add(:STAMINA,
 Battle::AbilityEffects::OnBeingHit.add(:SEEDSOWER,
   proc { |ability, user, target, move, battle|
     battle.pbStartTerrainAbility(:Grassy, target)
+  }
+)
+
+Battle::AbilityEffects::OnBeingHit.add(:SPICYSPRAY,
+  proc { |ability, user, target, move, battle|
+    next if user.burned? || !user.pbCanBurn?(target, false)
+    battle.pbShowAbilitySplash(target)
+    msg = nil
+    if !Battle::Scene::USE_ABILITY_SPLASH
+      msg = _INTL("{1} {2} burned {3}!", target.pbOfThis, target.abilityName, user.pbThis(true))
+    end
+    user.pbBurn(target, msg)
+    battle.pbHideAbilitySplash(target)
   }
 )
 

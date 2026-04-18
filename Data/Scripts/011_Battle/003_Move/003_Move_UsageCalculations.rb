@@ -474,13 +474,16 @@ class Battle::Move
       multipliers[:power_multiplier] /= 2 if type == :DRAGON && target.affectedByTerrain?
     end
     # Weather
-    case target.effectiveWeather
+    weather_type = target.effectiveWeather
+    weather_type = :Sun if user.hasActiveAbility?(:MEGASOL)
+    case weather_type
     when :Sun, :HarshSun
       case type
       when :FIRE
         multipliers[:final_damage_multiplier] *= 1.5
       when :WATER
-        if @function_code == "IncreasePowerInSun" && [:Sun, :HarshSun].include?(user.effectiveWeather)
+        if @function_code == "IncreasePowerInSun" &&
+           ([:Sun, :HarshSun].include?(user.effectiveWeather) || user.hasActiveAbility?(:MEGASOL))
           multipliers[:final_damage_multiplier] *= 1.5
         else
           multipliers[:final_damage_multiplier] /= 2
