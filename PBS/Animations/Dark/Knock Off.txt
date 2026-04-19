@@ -2,6 +2,7 @@
 #-------------------------------
 [Move,KNOCKOFF]
 Name = Essentials
+HidesDataBoxes = true
 Credit = Maruno
 <User>
     MoveX = 0,2,32

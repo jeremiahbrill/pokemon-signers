@@ -3,6 +3,7 @@
 [Move,BITE]
 Name = Essentials
 NoUser = true
+HidesDataBoxes = true
 Credit = Maruno
 <Target>
     FoeInvertX = true

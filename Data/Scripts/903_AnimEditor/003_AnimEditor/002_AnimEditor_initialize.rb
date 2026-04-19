@@ -86,8 +86,13 @@ class AnimationEditor
     )
     @components[:help].label_offset_x = 140
     [:editor_settings, :animation_properties, :particle_properties].each do |pop_up|
+      size = {
+        :editor_settings      => [EDITOR_SETTINGS_X, EDITOR_SETTINGS_Y, EDITOR_SETTINGS_WIDTH, EDITOR_SETTINGS_HEIGHT],
+        :animation_properties => [ANIM_PROPERTIES_X, ANIM_PROPERTIES_Y, ANIM_PROPERTIES_WIDTH, ANIM_PROPERTIES_HEIGHT],
+        :particle_properties  => [PARTICLE_PROPERTIES_X, PARTICLE_PROPERTIES_Y, PARTICLE_PROPERTIES_WIDTH, PARTICLE_PROPERTIES_HEIGHT],
+      }[pop_up]
       @components[pop_up] = UIControls::ListedContainer.new(
-        ANIM_PROPERTIES_X + 4, ANIM_PROPERTIES_Y, ANIM_PROPERTIES_WIDTH - 8, ANIM_PROPERTIES_HEIGHT, @pop_up_viewport
+        size[0] + 4, size[1], size[2] - 8, size[3], @pop_up_viewport
       )
       @components[pop_up].label_offset_x = 170
     end
@@ -242,12 +247,15 @@ class AnimationEditor
     anim_properties.add_labelled_checkbox(:has_user, _INTL("Involves a user?"), true)
     anim_properties.add_labelled_checkbox(:opp_variant, _INTL("User is on far side?"), false)
     anim_properties.add_labelled_checkbox(:has_target, _INTL("Involves a target?"), true)
+    # Playing
+    anim_properties.add_underlined_label(:playing_label, _INTL("Playing"))
+    anim_properties.add_labelled_number_text_box(:fps, _INTL("FPS"), 1, 100, 20)
+    anim_properties.add_labelled_checkbox(:hides_data_boxes, _INTL("Hides data boxes?"), false)
     # Animation completion status
     anim_properties.add_underlined_label(:completion_label, _INTL("Completion"))
     anim_properties.add_labelled_checkbox(:usable, _INTL("Can be used in battle?"), true)
     # Other
     anim_properties.add_underlined_label(:other_label, _INTL("Other"))
-    anim_properties.add_labelled_number_text_box(:fps, _INTL("FPS"), 1, 100, 20)
     anim_properties.add_labelled_text_box(:credit, _INTL("Credit"), "")
     # Close button
     anim_properties.increment_row_count

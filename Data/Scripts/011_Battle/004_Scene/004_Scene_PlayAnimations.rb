@@ -634,6 +634,13 @@ class Battle::Scene
         old_battler_coords[target.index] = [sprite.x, sprite.y]
       end
     end
+    # Memorize data box visibilities
+    old_data_box_visibilities = {}
+    @battle.battlers.each_with_index do |b, i|
+      next if !@sprites["dataBox_#{i}"]
+      old_data_box_visibilities[i] = @sprites["dataBox_#{i}"].visible
+      @sprites["dataBox_#{i}"].visible = false if anim_data.hides_data_boxes
+    end
     # Create animation player
     anim_player = AnimationPlayer.new(anim_data, user, targets, self)
     anim_player.set_up
@@ -651,6 +658,10 @@ class Battle::Scene
       sprite = @sprites["pokemon_#{i}"]
       sprite.x = values[0]
       sprite.y = values[1]
+    end
+    # Restore data box visibilities
+    old_data_box_visibilities.each_pair do |index, val|
+      @sprites["dataBox_#{index}"].visible = val
     end
   end
 

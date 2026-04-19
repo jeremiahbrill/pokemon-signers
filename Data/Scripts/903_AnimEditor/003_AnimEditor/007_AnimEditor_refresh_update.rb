@@ -73,14 +73,15 @@ class AnimationEditor
       ctrls.get_control(:move).options = COMMON_ANIMATIONS.sort
       ctrls.get_control(:type).value = :common
     end
-    ctrls.get_control(:opp_variant).value = ([:opp_move, :opp_common].include?(@anim[:type]))
     ctrls.get_control(:version).value = @anim[:version] || 0
     ctrls.get_control(:name).value = @anim[:name] || ""
     ctrls.get_control(:pbs_path).value = (@anim[:pbs_path] || "unsorted") + ".txt"
     ctrls.get_control(:has_user).value = !@anim[:no_user]
+    ctrls.get_control(:opp_variant).value = ([:opp_move, :opp_common].include?(@anim[:type]))
     ctrls.get_control(:has_target).value = !@anim[:no_target]
-    ctrls.get_control(:usable).value = !(@anim[:ignore] || false)
     ctrls.get_control(:fps).value = @anim[:fps] || 20
+    ctrls.get_control(:hides_data_boxes).value = @anim[:hides_data_boxes] || false
+    ctrls.get_control(:usable).value = !(@anim[:ignore] || false)
     ctrls.get_control(:credit).value = @anim[:credit] || "Anon"
   end
 

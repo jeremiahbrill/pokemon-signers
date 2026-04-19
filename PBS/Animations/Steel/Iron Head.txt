@@ -2,6 +2,7 @@
 #-------------------------------
 [Move,IRONHEAD]
 Name = Essentials
+HidesDataBoxes = true
 Credit = Maruno
 <User>
     FoeInvertX = true

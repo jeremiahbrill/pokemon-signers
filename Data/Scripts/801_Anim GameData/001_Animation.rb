@@ -7,6 +7,7 @@ module GameData
     attr_reader :no_user      # Whether there is no "User" particle (false by default)
     attr_reader :no_target    # Whether there is no "Target" particle (false by default)
     attr_reader :ignore       # Whether the animation can't be played in battle
+    attr_reader :hides_data_boxes
     attr_reader :fps          # Frames per second, 20 by default
     attr_reader :credit
     attr_reader :flags
@@ -84,15 +85,16 @@ module GameData
     # Properties that apply to the animation in general, not to individual
     # particles. They don't change during the animation.
     SCHEMA = {
-      "SectionName" => [:id,        "esU", {"Move" => :move, "OppMove" => :opp_move,
-                                            "Common" => :common, "OppCommon" => :opp_common}],
-      "Name"        => [:name,      "s"],
-      "NoUser"      => [:no_user,   "b"],
-      "NoTarget"    => [:no_target, "b"],
-      "Ignore"      => [:ignore,    "b"],
-      "FPS"         => [:fps,       "v"],
-      "Credit"      => [:credit,    "s"],
-      "Particle"    => [:particles, "s"]   # Is a subheader line like <text>
+      "SectionName"    => [:id,               "esU", {"Move" => :move, "OppMove" => :opp_move,
+                                                      "Common" => :common, "OppCommon" => :opp_common}],
+      "Name"           => [:name,             "s"],
+      "NoUser"         => [:no_user,          "b"],
+      "NoTarget"       => [:no_target,        "b"],
+      "Ignore"         => [:ignore,           "b"],
+      "HidesDataBoxes" => [:hides_data_boxes, "b"],
+      "FPS"            => [:fps,              "v"],
+      "Credit"         => [:credit,           "s"],
+      "Particle"       => [:particles,        "s"]   # Is a subheader line like <text>
     }
     # For individual particles. Any property whose schema begins with "^" can
     # change during the animation.
@@ -395,40 +397,42 @@ module GameData
 
     def self.new_hash(anim_type = 0, move = nil)
       ret = {}
-      ret[:type]      = (anim_type == 0) ? :move : :common
-      ret[:move]      = (anim_type == 0) ? "STRUGGLE" : "Shiny"
-      ret[:move]      = move if !move.nil?
-      ret[:version]   = 0
-      ret[:name]      = _INTL("New animation")
-      ret[:no_user]   = false
-      ret[:no_target] = false
-      ret[:ignore]    = false
-      ret[:fps]       = 20
-      ret[:credit]    = "Anon"
-      ret[:particles] = [
+      ret[:type]             = (anim_type == 0) ? :move : :common
+      ret[:move]             = (anim_type == 0) ? "STRUGGLE" : "Shiny"
+      ret[:move]             = move if !move.nil?
+      ret[:version]          = 0
+      ret[:name]             = _INTL("New animation")
+      ret[:no_user]          = false
+      ret[:no_target]        = false
+      ret[:ignore]           = false
+      ret[:hides_data_boxes] = false
+      ret[:fps]              = 20
+      ret[:credit]           = "Anon"
+      ret[:particles]        = [
         {:name => "User", :focus => :user, :graphic => "USER"},
         {:name => "Target", :focus => :target, :graphic => "TARGET"},
         {:name => "SE"}
       ]
-      ret[:flags]     = []
-      ret[:pbs_path]  = "New animation"
+      ret[:flags]            = []
+      ret[:pbs_path]         = "New animation"
       return ret
     end
 
     def initialize(hash)
       # NOTE: hash has an :id entry, but it's unused here.
-      @type       = hash[:type]
-      @move       = hash[:move]
-      @version    = hash[:version]   || 0
-      @name       = hash[:name]
-      @no_user    = hash[:no_user]   || false
-      @no_target  = hash[:no_target] || false
-      @ignore     = hash[:ignore]    || false
-      @fps        = hash[:fps]       || 20
-      @credit     = hash[:credit]    || "Anon"
-      @particles  = hash[:particles] || []
-      @flags      = hash[:flags]     || []
-      @pbs_path   = hash[:pbs_path]  || @move
+      @type             = hash[:type]
+      @move             = hash[:move]
+      @version          = hash[:version]          || 0
+      @name             = hash[:name]
+      @no_user          = hash[:no_user]          || false
+      @no_target        = hash[:no_target]        || false
+      @ignore           = hash[:ignore]           || false
+      @hides_data_boxes = hash[:hides_data_boxes] || false
+      @fps              = hash[:fps]              || 20
+      @credit           = hash[:credit]           || "Anon"
+      @particles        = hash[:particles]        || []
+      @flags            = hash[:flags]            || []
+      @pbs_path         = hash[:pbs_path]         || @move
     end
 
     # Returns a clone of the animation in a hash format, the same as created by
@@ -442,6 +446,7 @@ module GameData
       ret[:no_user] = @no_user
       ret[:no_target] = @no_target
       ret[:ignore] = @ignore
+      ret[:hides_data_boxes] = @hides_data_boxes
       ret[:fps] = @fps
       ret[:credit] = @credit
       ret[:particles] = []   # Clone the @particles array, which is nested hashes and arrays

@@ -3,6 +3,7 @@
 [Move,ROCKTHROW]
 Name = Essentials
 NoUser = true
+HidesDataBoxes = true
 Credit = Maruno
 <Target>
     SetY = 5,2

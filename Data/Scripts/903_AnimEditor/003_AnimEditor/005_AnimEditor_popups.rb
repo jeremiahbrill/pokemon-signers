@@ -111,7 +111,7 @@ class AnimationEditor
     editor_settings = @components[:editor_settings]
     editor_settings.visible = true
     @pop_up_bg_bitmap.visible = true
-    bg_bitmap = create_pop_up_window(ANIM_PROPERTIES_WIDTH, ANIM_PROPERTIES_HEIGHT)
+    bg_bitmap = create_pop_up_window(EDITOR_SETTINGS_WIDTH, EDITOR_SETTINGS_HEIGHT)
     # Set control values
     refresh_component(:editor_settings)
     # Interaction loop
@@ -123,7 +123,7 @@ class AnimationEditor
         break if editor_settings.changed_controls.has_key?(:close)
         editor_settings.changed_controls.each_pair do |property, value|
           apply_changed_value(:editor_settings, property, value)
-          create_pop_up_window(ANIM_PROPERTIES_WIDTH, ANIM_PROPERTIES_HEIGHT, bg_bitmap)
+          create_pop_up_window(EDITOR_SETTINGS_WIDTH, EDITOR_SETTINGS_HEIGHT, bg_bitmap)
           @pop_up_bg_bitmap.visible = true
         end
         editor_settings.clear_changed
@@ -182,7 +182,7 @@ class AnimationEditor
     part_properties = @components[:particle_properties]
     part_properties.visible = true
     @pop_up_bg_bitmap.visible = true
-    bg_bitmap = create_pop_up_window(ANIM_PROPERTIES_WIDTH, ANIM_PROPERTIES_HEIGHT)
+    bg_bitmap = create_pop_up_window(PARTICLE_PROPERTIES_WIDTH, PARTICLE_PROPERTIES_HEIGHT)
     # Set control values
     refresh_component(:particle_properties, idx_particle)
     # Interaction loop
