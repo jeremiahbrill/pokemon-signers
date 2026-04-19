@@ -434,13 +434,13 @@ class Battle::Battler
     itm = item_to_use || self.item
     if Battle::ItemEffects.triggerOnEndOfUsingMove(itm, self, @battle, !item_to_use.nil?)
       pbHeldItemTriggered(itm, item_to_use.nil?, fling)
-    elsif Battle::ItemEffects.triggerOnEndOfUsingMoveStatRestore(itm, self, @battle, !item_to_use.nil?)
+    elsif Battle::ItemEffects.triggerOnEndOfUsingMoveStatRestore(itm, self, @battle, !item_to_use.nil?)   # White Herb
       pbHeldItemTriggered(itm, item_to_use.nil?, fling)
     end
   end
 
-  # Used for White Herb (restore lowered stats). Only called by Moody and Sticky
-  # Web, as all other stat reduction happens because of/during move usage and
+  # Used for White Herb (restore lowered stats). Only called upon switch in and
+  # in EOR, as all other stat reduction happens because of/during move usage and
   # this handler is also called at the end of each move's usage.
   # item_to_use is an item ID for Bug Bite/Pluck and Fling, and nil otherwise.
   # fling is for Fling only.

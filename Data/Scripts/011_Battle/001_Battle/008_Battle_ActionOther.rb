@@ -58,7 +58,8 @@ class Battle
       battler.pbCureStatus
     elsif battler.pbCanRaiseStatStage?(:ACCURACY, battler)
       battler.pbRaiseStatStage(:ACCURACY, 1, battler)
-      battler.pbItemOnStatDropped
+      battler.pbItemStatRestoreCheck   # White Herb
+      battler.pbItemOnStatDropped   # Eject Pack
     else
       pbDisplay(_INTL("But nothing happened!"))
     end

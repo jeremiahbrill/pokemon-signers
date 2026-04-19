@@ -128,7 +128,8 @@ class Battle
       if ItemHandlers.triggerCanUseInBattle(item, battler.pokemon, battler, ch[3], true, self, @scene, false)
         ItemHandlers.triggerBattleUseOnBattler(item, battler, @scene)
         ch[1] = nil   # Delete item from choice
-        battler.pbItemOnStatDropped
+        battler.pbItemStatRestoreCheck   # White Herb
+        battler.pbItemOnStatDropped   # Eject Pack
         return
       else
         pbDisplay(_INTL("But it had no effect!"))

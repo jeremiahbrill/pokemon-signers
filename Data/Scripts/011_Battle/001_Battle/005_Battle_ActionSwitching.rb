@@ -362,12 +362,14 @@ class Battle
       # Abilities that trigger upon switching in
       if (!b.fainted? && b.unstoppableAbility?) || b.abilityActive?
         Battle::AbilityEffects.triggerOnSwitchIn(b.ability, b, self, true)
+        pbPriority(true).each { |b| b.pbItemStatRestoreCheck }   # White Herb
       end
       # Check for end of primordial weather
       pbEndPrimordialWeather
       # Items that trigger upon switching in (Air Balloon message)
       if b.itemActive?
         Battle::ItemEffects.triggerOnSwitchIn(b.item, b, self)
+        pbPriority(true).each { |b| b.pbItemStatRestoreCheck }   # White Herb
       end
       # Berry check, status-curing ability check
       b.pbHeldItemTriggerCheck
@@ -379,7 +381,7 @@ class Battle
     # Check for triggering of Emergency Exit/Wimp Out/Eject Pack (only one will
     # be triggered)
     pbPriority(true, true).each do |b|
-      break if b.pbItemOnStatDropped
+      break if b.pbItemOnStatDropped   # Eject Pack
       break if b.pbAbilitiesOnDamageTaken
     end
     checkStatChangeResponses
@@ -478,7 +480,7 @@ class Battle
       pbDisplay(_INTL("{1} was caught in a sticky web!", battler.pbThis))
       if battler.pbCanLowerStatStage?(:SPEED)
         battler.pbLowerStatStage(:SPEED, 1, nil)
-        battler.pbItemStatRestoreCheck
+        battler.pbItemStatRestoreCheck   # White Herb
       end
     end
   end
