@@ -9,20 +9,24 @@ module Settings
   # The background graphic moves sideways at the start of battle, along with the
   # side bases and the trainer(s)/Pokémon. If this is true, the background will
   # not move (the bases/trainers/Pokémon still will).
-  DISABLE_SLIDING_BACKGROUND = false
+  DISABLE_SLIDING_BACKGROUND          = false
   # Whether the main color of a move's name in the Fight menu in battle matches
   # the pixel at coordinate (10,34) in cursor_fight.png for that move's type
   # (true), or whether the move name's color is the default black (false).
   BATTLE_MOVE_NAME_COLOR_FROM_GRAPHIC = true
   # Whether the data box for a selected Pokémon in battle (either because you're
   # choosing a command for it or targeting it) moves up and down a little.
-  BOB_BATTLE_DATA_BOX_IF_SELECTED = true
+  BOB_BATTLE_DATA_BOX_IF_SELECTED     = true
   # Whether the sprite of a selected Pokémon in battle (when choosing a command
   # for it) moves up and down a little.
-  BOB_BATTLER_SPRITE_IF_SELECTED = true
+  BOB_BATTLER_SPRITE_IF_SELECTED      = true
   # Whether the sprite of a selected Pokémon in battle (when targeting it)
   # flashes visible/invisible.
-  FLASH_BATTLER_SPRITE_IF_TARGETED = true
+  FLASH_BATTLER_SPRITE_IF_TARGETED    = true
+  # Whether the command UI will hide the buttons for useless commands (e.g.
+  # "Run" if you're not allowed to run from battle, or "Bag" if the "disableBag"
+  # battle rule is applied).
+  HIDE_USELESS_BATTLE_COMMANDS        = true
 
   #-----------------------------------------------------------------------------
   # Turn order and disobedience.
@@ -54,17 +58,17 @@ module Settings
 
   # Whether a move's physical/special category depends on the move itself as in
   # newer Gens (true), or on its type as in older Gens (false).
-  MOVE_CATEGORY_PER_MOVE          = (MECHANICS_GENERATION >= 4)
+  MOVE_CATEGORY_PER_MOVE           = (MECHANICS_GENERATION >= 4)
   # Whether critical hits do 1.5x damage and have 4 stages (true), or they do 2x
   # damage and have 5 stages as in Gen 5 (false). Also determines whether
   # critical hit rate can be copied by Transform/Psych Up.
-  NEW_CRITICAL_HIT_RATE_MECHANICS = (MECHANICS_GENERATION >= 6)
+  NEW_CRITICAL_HIT_RATE_MECHANICS  = (MECHANICS_GENERATION >= 6)
   # Whether several effects apply relating to a Pokémon's type:
   #   * Electric-type immunity to paralysis.
   #   * Ghost-type immunity to being trapped.
   #   * Grass-type immunity to powder moves and Effect Spore.
   #   * Poison-type Pokémon can't miss when using Toxic.
-  MORE_TYPE_EFFECTS               = (MECHANICS_GENERATION >= 6)
+  MORE_TYPE_EFFECTS                = (MECHANICS_GENERATION >= 6)
   # The minimum number of Gym Badges required to boost each stat of a player's
   # Pokémon by 1.1x, in battle only.
   NUM_BADGES_BOOST_ATTACK          = (MECHANICS_GENERATION >= 4) ? 999 : 1

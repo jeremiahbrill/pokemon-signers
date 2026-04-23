@@ -86,13 +86,13 @@ class Battle
         else
           pbDisplayPaused(_INTL("No! There's no running from a Trainer battle!"))
         end
+        return 0
       elsif pbDisplayConfirm(_INTL("Would you like to forfeit the match and quit now?"))
         pbSEPlay("Battle flee")
         pbDisplay(_INTL("{1} forfeited the match!", self.pbPlayer.name))
         @decision = Outcome::FLEE
         return 1
       end
-      return 0
     end
     if @rules[:cannot_run]
       pbDisplayPaused(_INTL("You can't escape!"))

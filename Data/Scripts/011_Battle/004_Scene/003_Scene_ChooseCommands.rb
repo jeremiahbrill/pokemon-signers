@@ -17,9 +17,19 @@ class Battle::Scene
     end
     cmds.push(nil)
     # Commands for bottom row
-    cmds.push(:bag)
+    cmds.push(:bag) if !@battle.rules[:disable_bag] || !Settings::HIDE_USELESS_BATTLE_COMMANDS
     cmds.push(:call) if @battle.battlers[idxBattler].shadowPokemon?
-    cmds.push(firstAction ? :run : :cancel)
+    if firstAction
+      if $DEBUG || !Settings::HIDE_USELESS_BATTLE_COMMANDS
+        cmds.push(:run)
+      elsif @battle.trainerBattle?
+        cmds.push(:run) if !@internalBattle || Settings::CAN_FORFEIT_TRAINER_BATTLES
+      elsif !@battle.rules[:cannot_run]
+        cmds.push(:run)
+      end
+    else
+      cmds.push(:cancel)
+    end
     cmds.push(:pokemon)
     # Open the menu
     ret = pbCommandMenuEx(idxBattler, cmds)

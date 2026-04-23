@@ -33,18 +33,21 @@ class Game_Temp
       rules[:side_sizes] = rule.to_s.downcase
     when "canlose"                then rules[:continue_if_lose]       = true
     when "cannotlose"             then rules[:continue_if_lose]       = false
+    when "autobattle"             then rules[:auto_battle]            = true
+    when "nopartner"              then rules[:no_partner_trainer]     = true
     when "canrun"                 then rules[:cannot_run]             = false
     when "cannotrun"              then rules[:cannot_run]             = true
     when "canswitch"              then rules[:cannot_switch]          = false
     when "cannotswitch"           then rules[:cannot_switch]          = true
+    when "switchstyle"            then rules[:no_switch_style]        = false
+    when "setstyle"               then rules[:no_switch_style]        = true
     when "roamerflees"            then rules[:roamer_flees]           = true
-    when "noexp"                  then rules[:no_exp_gain]            = true
-    when "nomoney"                then rules[:no_money_gain]          = true
+    when "disablebag"             then rules[:disable_bag]            = true
     when "disablepokeballs"       then rules[:disable_poke_balls]     = true
     when "certaincapture"         then rules[:certain_capture]        = true
     when "forcecatchintoparty"    then rules[:force_catch_into_party] = true
-    when "switchstyle"            then rules[:no_switch_style]        = false
-    when "setstyle"               then rules[:no_switch_style]        = true
+    when "noexp"                  then rules[:no_exp_gain]            = true
+    when "nomoney"                then rules[:no_money_gain]          = true
     when "anims"                  then rules[:no_battle_animations]   = false
     when "noanims"                then rules[:no_battle_animations]   = true
     when "environment", "environ"
@@ -56,7 +59,6 @@ class Game_Temp
     when "backdrop", "battleback" then rules[:backdrop_name]          = var
     when "base"                   then rules[:base_name]              = var
     when "outcome", "outcomevar"  then rules[:outcome_variable]       = var
-    when "nopartner"              then rules[:no_partner_trainer]     = true
     else
       raise _INTL("Battle rule \"{1}\" does not exist.", rule)
     end
@@ -213,10 +215,12 @@ module BattleCreationHelperMethods
     # Set default values for some rules
     battleRules[:no_switch_style] = ($PokemonSystem.battlestyle == 1) if battleRules[:no_switch_style].nil?
     battleRules[:no_battle_animations] = ($PokemonSystem.battlescene == 1) if battleRules[:no_battle_animations].nil?
-    battleRules[:certain_capture] = $game_map.metadata&.has_flag?("CertainCaptures") if battleRules[:certain_capture].nil?
     # The size of the battle, i.e. how many Pokémon on each side (default: "single")
     battle.setBattleMode(battleRules[:side_sizes]) if battleRules[:side_sizes]
+    # Whether the AI will control the player's Pokémon
+    battle.controlPlayer = true if battleRules[:auto_battle]
     # Whether all attempts to capture Pokémon this battle will succeed
+    battleRules[:certain_capture] = $game_map.metadata&.has_flag?("CertainCaptures") if battleRules[:certain_capture].nil?
     # Whether the player is asked what to do with a new Pokémon when their party is full
     battle.sendToBoxes = $PokemonSystem.sendtoboxes if Settings::NEW_CAPTURE_CAN_REPLACE_PARTY_MEMBER
     battle.sendToBoxes = 2 if battleRules[:force_catch_into_party]
