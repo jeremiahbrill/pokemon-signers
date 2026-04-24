@@ -489,8 +489,8 @@ MenuHandlers.add(:debug_menu, :set_battle_rules, {
     cmd = 0
     loop do
       # Create list of rules to display
-      rules = []
-      rules_syms = [[], []]
+      rules = [_INTL("[Clear all]")]
+      rules_syms = [[:clear_all], [nil]]
       Game_Temp::BATTLE_RULES.each_key do |rule|
         next if duplicate_rules.include?(rule)
         rule_sym = Game_Temp::BATTLE_RULES[rule][0]
@@ -521,6 +521,8 @@ MenuHandlers.add(:debug_menu, :set_battle_rules, {
       rule_sym = rules_syms[0][cmd]
       rule = rules_syms[1][cmd]
       case rule_sym
+      when :clear_all
+        applied_rules.clear
       when :side_sizes
         side_sizes = Game_Temp::BATTLE_RULES.keys.select { |key| Game_Temp::BATTLE_RULES[key][0] == :side_sizes }
         side_sizes.map! { |val| val.dup }
@@ -573,6 +575,31 @@ MenuHandlers.add(:debug_menu, :set_battle_rules, {
         end
       else
         applied_rules[rule_sym] = (applied_rules[rule_sym]) ? nil : true
+      end
+    end
+  }
+})
+
+MenuHandlers.add(:debug_menu, :partner_trainer, {
+  "name"        => _INTL("Set partner trainer"),
+  "parent"      => :battle_menu,
+  "description" => _INTL("Choose a trainer to fight alongside in battles."),
+  "effect"      => proc {
+    if $PokemonGlobal.partner
+      partner_name = sprintf("%s %s",
+                             GameData::TrainerType.get($PokemonGlobal.partner[0]).name,
+                             $PokemonGlobal.partner[1])
+      if pbConfirmMessage(_INTL("Your partner trainer is {1}. Remove them?", partner_name))
+        pbDeregisterPartner
+        pbMessage(_INTL("Your partner trainer was removed."))
+      end
+    else
+      if pbConfirmMessage(_INTL("You don't have a partner trainer. Do you want one?"))
+        chosen = pbListScreen(_INTL("Choose a partner trainer"), TrainerBattleLister.new(0, false))
+        if chosen
+          pbRegisterPartner(chosen[0], chosen[1], chosen[2])
+          pbMessage(_INTL("You gained a partner trainer."))
+        end
       end
     end
   }
