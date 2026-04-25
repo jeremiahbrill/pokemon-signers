@@ -15,7 +15,12 @@ class AnimationPlayer::Emitter
                          :angle, :angle2,
                          :visible,
                          :opacity, :opacity2,
-                         :color, :color2, :tone, :tone2]
+                         :color, :color2, :tone, :tone2,
+                         :invert_color, :invert_color2,
+                         :mask_blending,
+                         :mask_opacity,
+                         :mask_x, :mask_y,
+                         :mask_zoom_x, :mask_zoom_y]
 
   def initialize(viewport, particle, fps)
     @viewport = viewport
@@ -204,6 +209,9 @@ class AnimationPlayer::Emitter
         @particle, sprite2, @user&.index, target_idx,
         @battler_filenames[@user&.index || -1], @battler_filenames[target_idx]
       )
+    end
+    if sprite && (@particle[:mask_graphic] || "") != ""
+      sprite.pattern = RPG::Cache.load_bitmap("Graphics/Battle animations/", @particle[:mask_graphic] || "")
     end
   end
 

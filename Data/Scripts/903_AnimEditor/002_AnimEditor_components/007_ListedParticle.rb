@@ -8,14 +8,15 @@ class AnimationEditor::ListedParticle < UIControls::BaseContainer
   attr_reader   :particle
   attr_accessor :groups_expanded
 
-  # TODO: Add mask and crop properties.
+  # TODO: Add crop properties.
   PROPERTY_GROUPS = {
     :position_group       => [:x, :y, :z],
     :transformation_group => [:zoom_x, :zoom_y, :angle, :flip],
-    :appearance_group     => [:visible, :opacity, :color, :tone, :frame, :blending],
+    :appearance_group     => [:visible, :opacity, :color, :tone, :invert_color, :frame, :blending],
+    :mask_group           => [:mask_opacity, :mask_x, :mask_y, :mask_zoom_x, :mask_zoom_y, :mask_blending],
     :second_layer_group   => [:x2, :y2, :z2,
                               :zoom_x2, :zoom_y2, :angle2, :flip2,
-                              :opacity2, :color2, :tone2, :frame2, :blending2]
+                              :opacity2, :color2, :tone2, :invert_color2, :frame2, :blending2]
   }
   # NOTE: Any property in here that is also in PROPERTY_GROUPS above should be
   #       in the same group.
@@ -33,10 +34,11 @@ class AnimationEditor::ListedParticle < UIControls::BaseContainer
                                :emit_zoom_range, :emit_zoom_x_range, :emit_zoom_y_range],
     :position_group        => [:x, :y, :z, :radius_x, :radius_y, :radius_z],
     :transformation_group  => [:zoom_x, :zoom_y, :angle, :flip],
-    :appearance_group      => [:visible, :opacity, :color, :tone, :frame, :blending],
+    :appearance_group      => [:visible, :opacity, :color, :tone, :invert_color, :frame, :blending],
+    :mask_group            => [:mask_opacity, :mask_x, :mask_y, :mask_zoom_x, :mask_zoom_y, :mask_blending],
     :second_layer_group    => [:x2, :y2, :z2,
                                :zoom_x2, :zoom_y2, :angle2, :flip2,
-                               :opacity2, :color2, :tone2, :frame2, :blending2]
+                               :opacity2, :color2, :tone2, :invert_color2, :frame2, :blending2]
   }
   # The parameters in EMITTER_PROPERTY_GROUPS that aren't in PROPERTY_GROUPS
   # that are used for each emitter type. Parameters in :emitter_group are all
@@ -231,6 +233,7 @@ class AnimationEditor::ListedParticle < UIControls::BaseContainer
       :position_group        => _INTL("Position"),
       :transformation_group  => _INTL("Transformation"),
       :appearance_group      => _INTL("Appearance"),
+      :mask_group            => _INTL("Bitmap mask"),
       :second_layer_group    => _INTL("Second layer"),
       :emitter_group         => _INTL("Emitter"),
       :emit_parameters_group => _INTL("Emit parameters")
@@ -302,11 +305,13 @@ class AnimationEditor::ListedParticle < UIControls::BaseContainer
   end
 
   # TODO: Hide rows for properties that are disabled? e.g. :focus if the graphic
-  #       isn't a spritesheet (determined elsewhere). Also for mask if the
-  #       masking graphic is defined per particle rather than per keyframe, and
-  #       there isn't a masking graphic. I don't think any other properties
-  #       would need this.
+  #       isn't a spritesheet (determined elsewhere). I don't think any other
+  #       properties would need this.
   def row_always_hidden?(row)
+    if (@particle[:mask_graphic] || "") == "" &&
+       (row == :mask_group || PROPERTY_GROUPS[:mask_group].include?(row))
+      return true
+    end
     if !@particle[:second_layer] &&
        (row == :second_layer_group || GameData::Animation::SECOND_LAYER_PROPERTIES.include?(row))
       return true

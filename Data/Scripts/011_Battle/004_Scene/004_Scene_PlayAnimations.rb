@@ -658,6 +658,10 @@ class Battle::Scene
       sprite = @sprites["pokemon_#{i}"]
       sprite.x = values[0]
       sprite.y = values[1]
+      if sprite.pattern
+        sprite.pattern.dispose
+        sprite.pattern = nil
+      end
     end
     # Restore data box visibilities
     old_data_box_visibilities.each_pair do |index, val|

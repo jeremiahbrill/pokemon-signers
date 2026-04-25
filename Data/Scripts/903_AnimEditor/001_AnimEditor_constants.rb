@@ -20,6 +20,12 @@ class AnimationEditor
     :angle               => [-99999, 99999],
     :opacity             => [     0,   255],
     :frame               => [     0,    99],
+    # These properties are for the bitmap mask of a particle.
+    :mask_opacity        => [     0,   255],
+    :mask_x              => [-99999, 99999],
+    :mask_y              => [-99999, 99999],
+    :mask_zoom_x         => [     0,  1000],
+    :mask_zoom_y         => [     0,  1000],
     # These properties are for the second layer of a particle.
     :x2                  => [-99999, 99999],
     :y2                  => [-99999, 99999],

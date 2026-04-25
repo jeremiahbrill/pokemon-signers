@@ -256,7 +256,7 @@ class AnimationEditor
 
   #-----------------------------------------------------------------------------
 
-  def choose_graphic_file(selected)
+  def choose_graphic_file(selected, choosing_mask = false)
     selected ||= ""
     sprite_folder = "Graphics/Battle animations"
     # Show pop-up window
@@ -271,21 +271,25 @@ class AnimationEditor
       sprite_folder, [".png", ".jpg", ".jpeg"],
       ["USER", "USER_OPP", "USER_FRONT", "USER_BACK", "TARGET", "TARGET_OPP", "TARGET_FRONT", "TARGET_BACK"]
     )
-    if !@anim[:no_target]
-      all_files.prepend(
-        ["TARGET",       _INTL("[[Target's sprite]]")],
-        ["TARGET_OPP",   _INTL("[[Target's other side sprite]]")],
-        ["TARGET_FRONT", _INTL("[[Target's front sprite]]")],
-        ["TARGET_BACK",  _INTL("[[Target's back sprite]]")]
-      )
-    end
-    if !@anim[:no_user]
-      all_files.prepend(
-        ["USER",         _INTL("[[User's sprite]]")],
-        ["USER_OPP",     _INTL("[[User's other side sprite]]")],
-        ["USER_FRONT",   _INTL("[[User's front sprite]]")],
-        ["USER_BACK",    _INTL("[[User's back sprite]]")]
-      )
+    if choosing_mask
+      all_files.prepend(["", _INTL("[[None]]")])
+    else
+      if !@anim[:no_target]
+        all_files.prepend(
+          ["TARGET",       _INTL("[[Target's sprite]]")],
+          ["TARGET_OPP",   _INTL("[[Target's other side sprite]]")],
+          ["TARGET_FRONT", _INTL("[[Target's front sprite]]")],
+          ["TARGET_BACK",  _INTL("[[Target's back sprite]]")]
+        )
+      end
+      if !@anim[:no_user]
+        all_files.prepend(
+          ["USER",         _INTL("[[User's sprite]]")],
+          ["USER_OPP",     _INTL("[[User's other side sprite]]")],
+          ["USER_FRONT",   _INTL("[[User's front sprite]]")],
+          ["USER_BACK",    _INTL("[[User's back sprite]]")]
+        )
+      end
     end
     idx = 0
     all_files.each_with_index do |f, i|

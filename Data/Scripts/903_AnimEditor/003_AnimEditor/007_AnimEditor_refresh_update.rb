@@ -71,6 +71,7 @@ class AnimationEditor
     when :common, :opp_common
       ctrls.get_control(:move_label).text = _INTL("Common animation")
       ctrls.get_control(:move).options = COMMON_ANIMATIONS.sort
+      ctrls.get_control(:move).value = @anim[:move]
       ctrls.get_control(:type).value = :common
     end
     ctrls.get_control(:version).value = @anim[:version] || 0
@@ -100,8 +101,12 @@ class AnimationEditor
       "TARGET_FRONT" => _INTL("[[Target's front sprite]]"),
       "TARGET_BACK"  => _INTL("[[Target's back sprite]]"),
     }
-    graphic_name = graphic_override_names[graphic_name] || this_particle[:graphic]
+    graphic_name = this_particle[:graphic]
+    graphic_name = graphic_override_names[graphic_name] if graphic_override_names.has_key?(graphic_name)
     ctrls.get_control(:graphic_name).text = graphic_name
+    mask_graphic_name = this_particle[:mask_graphic]
+    mask_graphic_name = graphic_override_names[mask_graphic_name] if graphic_override_names.has_key?(mask_graphic_name)
+    ctrls.get_control(:mask_graphic_name).text = mask_graphic_name
     # Graphic button, focus, second layer
     if ["User", "Target"].include?(this_particle[:name])
       ctrls.get_control(:graphic).disable

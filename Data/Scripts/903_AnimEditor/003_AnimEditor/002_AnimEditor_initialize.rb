@@ -274,6 +274,9 @@ class AnimationEditor
     part_properties.add_labelled_label(:graphic_name, _INTL("Graphic"),
       GameData::Animation::PARTICLE_DEFAULT_VALUES[:graphic])
     part_properties.add_labelled_fitted_button(:graphic, "", _INTL("Change"))
+    part_properties.add_labelled_label(:mask_graphic_name, _INTL("Mask graphic"),
+      GameData::Animation::PARTICLE_DEFAULT_VALUES[:mask_graphic])
+    part_properties.add_labelled_fitted_button(:mask_graphic, "", _INTL("Change"))
     part_properties.add_labelled_dropdown_list(:focus, _INTL("Focus"), {},
       GameData::Animation::PARTICLE_DEFAULT_VALUES[:focus])
     part_properties.add_labelled_checkbox(:second_layer, _INTL("Second layer"),

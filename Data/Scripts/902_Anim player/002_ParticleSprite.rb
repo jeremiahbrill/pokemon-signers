@@ -373,6 +373,29 @@ class AnimationPlayer::ParticleSprite
       end
     when :tone2
       @sprite[1].tone = Tone.new_from_rgbg(value) if @sprite[1]
+    when :invert_color
+      @sprite[0].invert = value
+      apply_sprite_property(:invert_color2, @values[:invert_color2])
+      if @tiled_sprites
+        @tiled_sprites.each { |spr| spr.invert = @sprite[0].invert }
+      end
+    when :invert_color2
+      if @sprite[1]
+        @sprite[1].invert = @sprite[0].invert
+        @sprite[1].invert = !@sprite[1].invert if value
+      end
+    when :mask_blending
+      @sprite[0].pattern_blend_type = value
+    when :mask_opacity
+      @sprite[0].pattern_opacity = value
+    when :mask_x
+      @sprite[0].pattern_scroll_x = value
+    when :mask_y
+      @sprite[0].pattern_scroll_y = value
+    when :mask_zoom_x
+      @sprite[0].pattern_zoom_x = value / 100.0
+    when :mask_zoom_y
+      @sprite[0].pattern_zoom_y = value / 100.0
     end
   end
 

@@ -80,7 +80,7 @@ module GameData
     #       offsets relative to those properties of the base layer.
     SECOND_LAYER_PROPERTIES = [:frame2, :blending2, :flip2, :x2, :y2, :z2,
                                :zoom_x2, :zoom_y2, :angle2, :opacity2,
-                               :color2, :tone2]
+                               :color2, :tone2, :invert_color2]
 
     # Properties that apply to the animation in general, not to individual
     # particles. They don't change during the animation.
@@ -103,6 +103,7 @@ module GameData
       # NOTE: "Name" isn't a property here, because the particle's name comes
       #       from the "Particle" property above.
       "Graphic"              => [:graphic,             "s"],
+      "MaskGraphic"          => [:mask_graphic,        "s"],
       "Focus"                => [:focus,               "e", FOCUS_TYPES],
       "SecondLayer"          => [:second_layer,        "b"],
       "FoeInvertX"           => [:foe_invert_x,        "b"],
@@ -144,6 +145,19 @@ module GameData
       "MoveColor"            => [:color,               "^uusE", nil, nil, nil, INTERPOLATION_TYPES],
       "SetTone"              => [:tone,                "^us"],
       "MoveTone"             => [:tone,                "^uusE", nil, nil, nil, INTERPOLATION_TYPES],
+      "SetInvertColor"       => [:invert_color,        "^ub"],
+      # These properties are for the bitmap mask of a particle.
+      "SetMaskBlending"      => [:mask_blending,       "^uu"],   # 0, 1 or 2
+      "SetMaskOpacity"       => [:mask_opacity,        "^uu"],
+      "MoveMaskOpacity"      => [:mask_opacity,        "^uuuE", nil, nil, nil, INTERPOLATION_TYPES],
+      "SetMaskX"             => [:mask_x,              "^ui"],
+      "MoveMaskX"            => [:mask_x,              "^uuiE", nil, nil, nil, INTERPOLATION_TYPES],
+      "SetMaskY"             => [:mask_y,              "^ui"],
+      "MoveMaskY"            => [:mask_y,              "^uuiE", nil, nil, nil, INTERPOLATION_TYPES],
+      "SetMaskZoomX"         => [:mask_zoom_x,         "^uu"],
+      "MoveMaskZoomX"        => [:mask_zoom_x,         "^uuuE", nil, nil, nil, INTERPOLATION_TYPES],
+      "SetMaskZoomY"         => [:mask_zoom_y,         "^uu"],
+      "MoveMaskZoomY"        => [:mask_zoom_y,         "^uuuE", nil, nil, nil, INTERPOLATION_TYPES],
       # These properties are for the second layer of a particle. It has all the
       # same properties as the base layer, except for :visible.
       "SetFrame2"            => [:frame2,              "^uu"],   # Frame within the graphic if it's a spritesheet
@@ -168,6 +182,7 @@ module GameData
       "MoveColor2"           => [:color2,              "^uusE", nil, nil, nil, INTERPOLATION_TYPES],
       "SetTone2"             => [:tone2,               "^us"],
       "MoveTone2"            => [:tone2,               "^uusE", nil, nil, nil, INTERPOLATION_TYPES],
+      "SetInvertColor2"      => [:invert_color2,       "^ub"],
       # These properties are specifically for emitter particles.
       "SetEmitting"          => [:emitting,            "^ub"],
       "SetEmitX"             => [:emit_x,              "^ui"],
@@ -229,6 +244,7 @@ module GameData
     PARTICLE_DEFAULT_VALUES = {
       :name                => "",
       :graphic             => "",
+      :mask_graphic        => "",
       :focus               => :foreground,
       :second_layer        => false,
       :foe_invert_x        => false,
@@ -261,6 +277,14 @@ module GameData
       :opacity             => 255,
       :color               => "00000000",
       :tone                => "+00+00+00+00",
+      :invert_color        => false,
+      # These properties are for the bitmap mask of a particle.
+      :mask_blending       => 0,
+      :mask_opacity        => 0,
+      :mask_x              => 0,
+      :mask_y              => 0,
+      :mask_zoom_x         => 100,
+      :mask_zoom_y         => 100,
       # These properties are for the second layer of a particle. It has all the
       # same properties as the base layer, except for :visible.
       :frame2              => 0,
@@ -275,6 +299,7 @@ module GameData
       :opacity2            => 0,
       :color2              => "00000000",
       :tone2               => "+00+00+00+00",
+      :invert_color2       => false,
       # These properties are specifically for emitter particles.
       :emitting            => false,
       :emit_x              => 0,
@@ -324,6 +349,14 @@ module GameData
         :opacity             => _INTL("Opacity"),
         :color               => _INTL("Color"),
         :tone                => _INTL("Tone"),
+        :invert_color        => _INTL("Invert color"),
+        # These properties are for the bitmap mask of a particle.
+        :mask_blending       => _INTL("Blending"),
+        :mask_opacity        => _INTL("Opacity"),
+        :mask_x              => _INTL("X"),
+        :mask_y              => _INTL("Y"),
+        :mask_zoom_x         => _INTL("Zoom X"),
+        :mask_zoom_y         => _INTL("Zoom Y"),
         # These properties are for the second layer of a particle. It has all
         # the same properties as the base layer, except for :visible.
         :frame2              => _INTL("Frame"),
@@ -338,6 +371,7 @@ module GameData
         :opacity2            => _INTL("Opacity ±"),
         :color2              => _INTL("Color"),
         :tone2               => _INTL("Tone"),
+        :invert_color2       => _INTL("Invert color"),
         # These properties are specifically for emitter particles
         :emitting            => _INTL("Emitting"),
         :emit_x              => _INTL("X"),
@@ -561,6 +595,7 @@ module GameData
         ret = []
         @particles[index].each_pair do |key, val|
           next if !val.is_a?(Array)
+          next if key.to_s[0, 4] == "mask" && (@particles[index][:mask_graphic] || "") == ""
           next if key.to_s[0, 4] == "emit" && (@particles[index][:emitter_type] || :none) == :none
           next if key.to_s[0, 6] == "radius" && (@particles[index][:emitter_type] || :none) == :none
           next if SECOND_LAYER_PROPERTIES.include?(key) && !@particles[index][:second_layer]

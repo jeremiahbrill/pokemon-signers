@@ -450,6 +450,24 @@ class AnimationEditor
         refresh_component(:particle_properties, idx_particle)
         refresh_component(:canvas)
       end
+    when :mask_graphic
+      this_particle = @anim[:particles][idx_particle]
+      new_file = choose_graphic_file(this_particle[:mask_graphic], true)
+      if this_particle[:mask_graphic] != new_file
+        this_particle[:mask_graphic] = new_file
+        if (new_file || "") == ""
+          this_particle.delete(:mask_blending)
+          this_particle.delete(:mask_opacity)
+          this_particle.delete(:mask_x)
+          this_particle.delete(:mask_y)
+          this_particle.delete(:mask_zoom_x)
+          this_particle.delete(:mask_zoom_y)
+        end
+        @components[:timeline].set_particles(@anim[:particles])
+        refresh_component(:particle_properties, idx_particle)
+        refresh_component(:canvas)
+        refresh_component(:timeline)
+      end
     when :duplicate
       p_index = idx_particle
       AnimationEditor::ParticleDataHelper.duplicate_particle(@anim[:particles], p_index)
@@ -467,6 +485,7 @@ class AnimationEditor
       if @anim[:particles][idx_particle][property] != value
         @anim[:particles][idx_particle][property] = value
         add_to_change_history
+        @components[:timeline].set_particles(@anim[:particles]) if [:second_layer, :emitter_type].include?(property)
         refresh_component(:particle_properties, idx_particle)
         refresh_component(:canvas)
         refresh_component(:timeline)   # If focus changes

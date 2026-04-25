@@ -32,7 +32,14 @@ class AnimationEditor::Canvas < Sprite
     :flip, :flip2,
     :blending, :blending2,
     :color, :color2,
-    :tone, :tone2
+    :tone, :tone2,
+    :invert_color, :invert_color2,
+    :mask_blending,
+    :mask_opacity,
+    :mask_x,
+    :mask_y,
+    :mask_zoom_x,
+    :mask_zoom_y
   ]
 
   include UIControls::StyleMixin
@@ -572,6 +579,9 @@ class AnimationEditor::Canvas < Sprite
       particle, spr, user_index, target_idx,
       [@user_bitmap_front_name, @user_bitmap_back_name], [@target_bitmap_front_name, @target_bitmap_back_name]
     )
+    if spr && (particle[:mask_graphic] || "") != ""
+      spr.pattern = RPG::Cache.load_bitmap("Graphics/Battle animations/", particle[:mask_graphic] || "")
+    end
     AnimationPlayer::Helper.set_bitmap_and_origin(
       particle, spr2, user_index, target_idx,
       [@user_bitmap_front_name, @user_bitmap_back_name], [@target_bitmap_front_name, @target_bitmap_back_name]
@@ -789,6 +799,28 @@ class AnimationEditor::Canvas < Sprite
         ton = Tone.new_from_rgbg(value)
         sprite2.tone.set(ton.red, ton.green, ton.blue, ton.gray)
       end
+    when :invert_color
+      sprite1.invert = value
+      if @particle_tiled_sprites[index]
+        @particle_tiled_sprites[index].each { |ts| ts.invert = sprite1.invert }
+      end
+    when :invert_color2
+      if sprite2
+        sprite2.invert = sprite1.invert
+        sprite2.invert = !sprite2.invert if value
+      end
+    when :mask_blending
+      sprite1.pattern_blend_type = value
+    when :mask_opacity
+      sprite1.pattern_opacity = value
+    when :mask_x
+      sprite1.pattern_scroll_x = value
+    when :mask_y
+      sprite1.pattern_scroll_y = value
+    when :mask_zoom_x
+      sprite1.pattern_zoom_x = value / 100.0
+    when :mask_zoom_y
+      sprite1.pattern_zoom_y = value / 100.0
     end
   end
 

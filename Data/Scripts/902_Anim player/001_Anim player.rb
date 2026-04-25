@@ -225,6 +225,9 @@ class AnimationPlayer
                                           @battler_filenames[target_idx])
       end
     end
+    if sprite && (particle[:mask_graphic] || "") != ""
+      sprite.pattern = RPG::Cache.load_bitmap("Graphics/Battle animations/", particle[:mask_graphic] || "")
+    end
   end
 
   # Calculate x/y/z focus values and additional x/y modifier and pass them all
