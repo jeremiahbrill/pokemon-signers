@@ -108,8 +108,6 @@ class Battle::Battler
 
   def pbSetPP(move, pp)
     move.pp = pp
-    # No need to care about @effects[PBEffects::Mimic], since Mimic can't copy
-    # Mimic
     if move.realMove && move.id == move.realMove.id && !@effects[PBEffects::Transform]
       move.realMove.pp = pp
     end

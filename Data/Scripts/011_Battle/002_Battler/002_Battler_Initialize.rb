@@ -278,6 +278,7 @@ class Battle::Battler
     @effects[PBEffects::Stockpile]           = 0
     @effects[PBEffects::StockpileDef]        = 0
     @effects[PBEffects::StockpileSpDef]      = 0
+    @effects[PBEffects::SupremeOverlord]     = 0
     @effects[PBEffects::SyrupBomb]           = 0
     @effects[PBEffects::SyrupBombUser]       = -1
     @battle.allBattlers(true).each do |b|   # Other battlers no longer syruped by self
