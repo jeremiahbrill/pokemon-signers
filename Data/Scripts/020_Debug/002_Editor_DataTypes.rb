@@ -544,12 +544,10 @@ end
 #
 #===============================================================================
 class MovePropertyForSpecies
-  def initialize(pokemondata)
-    @pokemondata = pokemondata
-  end
+  attr_writer :species
 
   def set(_settingname, oldsetting)
-    ret = pbChooseMoveListForSpecies(@pokemondata[0], oldsetting || nil)
+    ret = pbChooseMoveListForSpecies(@species, oldsetting || nil)
     return ret || oldsetting
   end
 
@@ -693,10 +691,6 @@ end
 #
 #===============================================================================
 class BallProperty
-  def initialize(pokemondata)
-    @pokemondata = pokemondata
-  end
-
   def set(_settingname, oldsetting)
     return pbChooseBallList(oldsetting)
   end
