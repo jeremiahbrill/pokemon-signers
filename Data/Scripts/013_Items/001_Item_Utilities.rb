@@ -937,7 +937,7 @@ def pbLearnMove(pkmn, move, ignore_if_known = false, by_machine = false, screen 
   if pbConfirmMessage(_INTL("Should {1} forget a move to learn {2}?", pkmn_name, move_name), &block)
     loop do
       move_index = pbForgetMove(pkmn, move, screen)
-      if move_index >= 0
+      if move_index >= 0 && pkmn.moves[move_index]
         old_move_name = pkmn.moves[move_index].name
         old_move_pp = pkmn.moves[move_index].pp
         pkmn.moves[move_index] = Pokemon::Move.new(move)   # Replaces current/total PP
@@ -965,6 +965,7 @@ def pbForgetMove(pkmn, move_to_learn, screen = nil)
   pbFadeOutInWithUpdate(screen&.sprites) do
     summary_screen = UI::PokemonSummary.new([pkmn], 0, mode: :choose_move, new_move: move_to_learn)
     ret = summary_screen.choose_move
+    ret = -1 if ret >= pkmn.numMoves
   end
   return ret
 end
