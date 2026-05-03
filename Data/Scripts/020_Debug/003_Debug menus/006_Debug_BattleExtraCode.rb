@@ -3,6 +3,7 @@
 #===============================================================================
 module Battle::DebugVariables
   BATTLER_EFFECTS = {
+    PBEffects::AllySwitchRate => {name: "Ally Switch success chance 1/x",                  default: 1, max: 999},
     PBEffects::AquaRing       => {name: "Aqua Ring applies",                               default: false},
     PBEffects::Attract        => {name: "Battler that self is attracted to",               default: -1},   # Battler index
     PBEffects::BanefulBunker  => {name: "Baneful Bunker applies this round",               default: false},
@@ -10,12 +11,18 @@ module Battle::DebugVariables
     PBEffects::Bide           => {name: "Bide number of rounds remaining",                 default: 0},
     PBEffects::BideDamage     => {name: "Bide damage accumulated",                         default: 0, max: 999},
     PBEffects::BideTarget     => {name: "Bide last battler to hurt self",                  default: -1},   # Battler index
+    PBEffects::BoosterEnergy  => {name: "Booster Energy's effect applies",                 default: false},
+    PBEffects::BurningBulwark => {name: "Burning Bulwark applies this round",              default: false},
     PBEffects::BurnUp         => {name: "Burn Up has removed self's Fire type",            default: false},
     PBEffects::Charge         => {name: "Charge number of rounds remaining",               default: 0},
     PBEffects::ChoiceBand     => {name: "Move locked into by Choice items",                default: nil, type: :move},
+#    PBEffects::CommandedBy - not suitable for setting via debug
+#    PBEffects::Commanding - not suitable for setting via debug
     PBEffects::Confusion      => {name: "Confusion number of rounds remaining",            default: 0},
 #    PBEffects::Counter - not suitable for setting via debug
 #    PBEffects::CounterTarget - not suitable for setting via debug
+    PBEffects::CudChewBerry   => {name: "Item to be eaten by Cud Chew",                    default: nil, type: :item},
+    PBEffects::CudChewCounter => {name: "Cud Chew number of rounds remaining",             default: 0},
     PBEffects::Curse          => {name: "Curse damaging applies",                          default: false},
 #    PBEffects::Dancer - only used while Dancer is running, not suitable for setting via debug
     PBEffects::DefenseCurl    => {name: "Used Defense Curl",                               default: false},
@@ -24,22 +31,24 @@ module Battle::DebugVariables
 #    PBEffects::DestinyBondTarget - not suitable for setting via debug
     PBEffects::Disable        => {name: "Disable number of rounds remaining",              default: 0},
     PBEffects::DisableMove    => {name: "Disabled move",                                   default: nil, type: :move},
+    PBEffects::DoubleShock    => {name: "Double Shock has removed self's Electric type",   default: false},
     PBEffects::Electrify      => {name: "Electrify making moves Electric",                 default: false},
     PBEffects::Embargo        => {name: "Embargo number of rounds remaining",              default: 0},
     PBEffects::Encore         => {name: "Encore number of rounds remaining",               default: 0},
     PBEffects::EncoreMove     => {name: "Encored move",                                    default: nil, type: :move},
     PBEffects::Endure         => {name: "Endures all lethal damage this round",            default: false},
+#    PBEffects::ExtraType - set elsewhere
 #    PBEffects::FirstPledge - only applies to use of specific move, not suitable for setting via debug
     PBEffects::FlashFire      => {name: "Flash Fire powering up Fire moves",               default: false},
     PBEffects::Flinch         => {name: "Will flinch this round",                          default: false},
     PBEffects::FocusEnergy    => {name: "Focus Energy critical hit stages (0-4)",          default: 0, max: 4},
 #    PBEffects::FocusPunch - only applies to use of specific move, not suitable for setting via debug
     PBEffects::FollowMe       => {name: "Follow Me drawing in attacks (if 1+)",            default: 0},   # Order of use, lowest takes priority
-    PBEffects::RagePowder     => {name: "Rage Powder applies (use with Follow Me)",        default: false},
     PBEffects::Foresight      => {name: "Foresight applies (Ghost loses immunities)",      default: false},
     PBEffects::FuryCutter     => {name: "Fury Cutter power multiplier 2**x (0-4)",         default: 0, max: 4},
     PBEffects::GastroAcid     => {name: "Gastro Acid is negating self's ability",          default: false},
 #    PBEffects::GemConsumed - only applies during use of move, not suitable for setting via debug
+    PBEffects::GigatonHammer  => {name: "Gigaton Hammer/Blood Moon is the last used move", default: false},
     PBEffects::Grudge         => {name: "Grudge will apply if self faints",                default: false},
     PBEffects::HealBlock      => {name: "Heal Block number of rounds remaining",           default: 0},
     PBEffects::HelpingHand    => {name: "Helping Hand will power up self's move",          default: false},
@@ -86,11 +95,16 @@ module Battle::DebugVariables
 #    PBEffects::PriorityItem - not suitable for setting via debug
     PBEffects::Protect        => {name: "Protect applies this round",                      default: false},
     PBEffects::ProtectRate    => {name: "Protect success chance 1/x",                      default: 1, max: 999},
+#    PBEffects::ProtosynthesisStat - TODO: code doesn't support choosing a stat
 #    PBEffects::Quash - not suitable for setting via debug
 #    PBEffects::Rage - only applies to use of specific move, not suitable for setting via debug
+    PBEffects::RagePowder     => {name: "Rage Powder applies (use with Follow Me)",        default: false},
     PBEffects::Rollout        => {name: "Rollout rounds remaining (lower=stronger)",       default: 0},
     PBEffects::Roost          => {name: "Roost removing Flying type this round",           default: false},
+    PBEffects::SaltCure       => {name: "Salt Cure applies (takes damage each round)",     default: false},
+#    PBEffects::ShedTail - only applies while switching with Shed Tail, not suitable for setting via debug
 #    PBEffects::ShellTrap - only applies to use of specific move, not suitable for setting via debug
+    PBEffects::SilkTrap       => {name: "Silk Trap applies this round",                    default: false},
 #    PBEffects::SkyDrop - only applies to use of specific move, not suitable for setting via debug
     PBEffects::SlowStart      => {name: "Slow Start rounds remaining",                     default: 0},
     PBEffects::SmackDown      => {name: "Smack Down is grounding self",                    default: false},
@@ -101,6 +115,8 @@ module Battle::DebugVariables
     PBEffects::StockpileDef   => {name: "Def stages gained by Stockpile (0-12)",           default: 0, max: 12},
     PBEffects::StockpileSpDef => {name: "Sp. Def stages gained by Stockpile (0-12)",       default: 0, max: 12},
     PBEffects::Substitute     => {name: "Substitute's HP",                                 default: 0, max: 999},
+    PBEffects::SyrupBomb      => {name: "Syrup Bomb number of rounds remaining",           default: 0},
+    PBEffects::SyrupBombUser  => {name: "Battler that used Syrup Bomb on self",            default: -1},   # Battler index
     PBEffects::TarShot        => {name: "Tar Shot weakening self to Fire",                 default: false},
     PBEffects::Taunt          => {name: "Taunt number of rounds remaining",                default: 0},
     PBEffects::Telekinesis    => {name: "Telekinesis number of rounds remaining",          default: 0},
@@ -114,13 +130,26 @@ module Battle::DebugVariables
     PBEffects::TrappingUser   => {name: "Battler trapping self (for Binding Band)",        default: -1},   # Battler index
     PBEffects::Truant         => {name: "Truant will loaf around this round",              default: false},
 #    PBEffects::TwoTurnAttack - only applies to use of specific moves, not suitable for setting via debug
-#    PBEffects::ExtraType - set elsewhere
     PBEffects::Unburden       => {name: "Self lost its item (for Unburden)",               default: false},
     PBEffects::Uproar         => {name: "Uproar number of rounds remaining",               default: 0},
+    PBEffects::Vulnerable     => {name: "Attacks definitely hit self (Glaive Rush)",       default: false},
     PBEffects::WaterSport     => {name: "Used Water Sport (Gen 5 and older)",              default: false},
     PBEffects::WeightChange   => {name: "Weight change +0.1*x kg",                         default: 0, min: -99_999, max: 99_999},
     PBEffects::Yawn           => {name: "Yawn rounds remaining until falling asleep",      default: 0}
   }
+
+  POSITION_EFFECTS = {
+#    PBEffects::FutureSightCounter - too complex to be worth bothering with
+#    PBEffects::FutureSightMove - too complex to be worth bothering with
+#    PBEffects::FutureSightUserIndex - too complex to be worth bothering with
+#    PBEffects::FutureSightUserPartyIndex - too complex to be worth bothering with
+    PBEffects::HealingWish => {name: "Whether Healing Wish is waiting to apply", default: false},
+    PBEffects::LunarDance  => {name: "Whether Lunar Dance is waiting to apply",  default: false}
+#    PBEffects::Wish - too complex to be worth bothering with
+#    PBEffects::WishAmount - too complex to be worth bothering with
+#    PBEffects::WishMaker - too complex to be worth bothering with
+    }
+  end
 
   SIDE_EFFECTS = {
     PBEffects::AuroraVeil         => {name: "Aurora Veil duration",                   default: 0},
@@ -162,19 +191,6 @@ module Battle::DebugVariables
     PBEffects::WaterSportField => {name: "Water Sport duration (Gen 6+)",    default: 0},
     PBEffects::WonderRoom      => {name: "Wonder Room duration",             default: 0}
   }
-
-  POSITION_EFFECTS = {
-#    PBEffects::FutureSightCounter - too complex to be worth bothering with
-#    PBEffects::FutureSightMove - too complex to be worth bothering with
-#    PBEffects::FutureSightUserIndex - too complex to be worth bothering with
-#    PBEffects::FutureSightUserPartyIndex - too complex to be worth bothering with
-    PBEffects::HealingWish => {name: "Whether Healing Wish is waiting to apply", default: false},
-    PBEffects::LunarDance  => {name: "Whether Lunar Dance is waiting to apply",  default: false}
-#    PBEffects::Wish - too complex to be worth bothering with
-#    PBEffects::WishAmount - too complex to be worth bothering with
-#    PBEffects::WishMaker - too complex to be worth bothering with
-  }
-end
 
 #===============================================================================
 # Screen for listing the above battle variables for modifying.

@@ -1,7 +1,11 @@
+#===============================================================================
+#
+#===============================================================================
 class Battle
-  #=============================================================================
-  # Clear commands
-  #=============================================================================
+  #-----------------------------------------------------------------------------
+  # Clear commands.
+  #-----------------------------------------------------------------------------
+
   def pbClearChoice(idxBattler)
     @choices[idxBattler] = [] if !@choices[idxBattler]
     @choices[idxBattler][0] = :None
@@ -22,19 +26,22 @@ class Battle
     pbClearChoice(idxBattler)
   end
 
-  #=============================================================================
-  # Use main command menu (Fight/Pokémon/Bag/Run)
-  #=============================================================================
+  #-----------------------------------------------------------------------------
+  # Use main command menu (Fight/Pokémon/Bag/Run).
+  #-----------------------------------------------------------------------------
+
   def pbCommandMenu(idxBattler, firstAction)
     return @scene.pbCommandMenu(idxBattler, firstAction)
   end
 
-  #=============================================================================
-  # Check whether actions can be taken
-  #=============================================================================
+  #-----------------------------------------------------------------------------
+  # Check whether actions can be taken.
+  #-----------------------------------------------------------------------------
+
   def pbCanShowCommands?(idxBattler)
     battler = @battlers[idxBattler]
     return false if !battler || battler.fainted?
+    return false if battler.effects[PBEffects::Commanding] >= 0
     return false if battler.usingMultiTurnAttack?
     return true
   end
@@ -53,9 +60,10 @@ class Battle
     return usable
   end
 
-  #=============================================================================
-  # Use sub-menus to choose an action, and register it if is allowed
-  #=============================================================================
+  #-----------------------------------------------------------------------------
+  # Use sub-menus to choose an action, and register it if is allowed.
+  #-----------------------------------------------------------------------------
+
   # Returns true if a choice was made, false if cancelled.
   def pbFightMenu(idxBattler)
     # Auto-use Encored move or no moves choosable, so auto-use Struggle
@@ -98,7 +106,7 @@ class Battle
   end
 
   def pbItemMenu(idxBattler, firstAction)
-    if !@internalBattle
+    if !@internalBattle || @rules[:disable_bag]
       pbDisplay(_INTL("Items can't be used here."))
       return false
     end
@@ -159,18 +167,21 @@ class Battle
   def pbDebugMenu
     pbBattleDebug(self)
     @scene.pbRefreshEverything
-    allBattlers.each { |b| b.pbCheckFormOnWeatherChange }
+    allBattlers(true).each { |b| b.pbCheckFormOnWeatherChange }
+    allBattlers(true).each { |b| b.pbCheckFormOnTerrainChange }
     pbEndPrimordialWeather
-    allBattlers.each { |b| b.pbAbilityOnTerrainChange }
-    allBattlers.each do |b|
+    allBattlers(true).each { |b| b.pbAbilityOnWeatherChange(@field.weather) }
+    allBattlers(true).each { |b| b.pbAbilityOnTerrainChange(@field.terrain) }
+    allBattlers(true).each do |b|
       b.pbCheckFormOnMovesetChange
       b.pbCheckFormOnStatusChange
     end
   end
 
-  #=============================================================================
-  # Command phase
-  #=============================================================================
+  #-----------------------------------------------------------------------------
+  # Command phase.
+  #-----------------------------------------------------------------------------
+
   def pbCommandPhase
     @command_phase = true
     @scene.pbBeginCommandPhase
@@ -187,7 +198,7 @@ class Battle
     end
     # Choose actions for the round (player first, then AI)
     pbCommandPhaseLoop(true)    # Player chooses their actions
-    if @decision != 0   # Battle ended, stop choosing actions
+    if decided?   # Battle ended, stop choosing actions
       @command_phase = false
       return
     end
@@ -201,13 +212,14 @@ class Battle
     actioned = []
     idxBattler = -1
     loop do
-      break if @decision != 0   # Battle ended, stop choosing actions
+      break if decided?   # Battle ended, stop choosing actions
       idxBattler += 1
       break if idxBattler >= @battlers.length
       next if !@battlers[idxBattler] || pbOwnedByPlayer?(idxBattler) != isPlayer
+      next if @battlers[idxBattler].effects[PBEffects::Commanding] >= 0
       if @choices[idxBattler][0] != :None || !pbCanShowCommands?(idxBattler)
         # Action is forced, can't choose one
-        PBDebug.log_ai("#{@battlers[idxBattler].pbThis} (#{idxBattler}) is forced to use a multi-turn move")
+        PBDebug.log("[Command phase] #{@battlers[idxBattler].pbThis} (#{idxBattler}) is forced to use a multi-turn move")
         next
       end
       # AI controls this battler
@@ -221,21 +233,24 @@ class Battle
       loop do
         cmd = pbCommandMenu(idxBattler, actioned.length == 1)
         # If being Sky Dropped, can't do anything except use a move
-        if cmd > 0 && @battlers[idxBattler].effects[PBEffects::SkyDrop] >= 0
+        if cmd != :fight && @battlers[idxBattler].effects[PBEffects::SkyDrop] >= 0
           pbDisplay(_INTL("Sky Drop won't let {1} go!", @battlers[idxBattler].pbThis(true)))
           next
         end
         case cmd
-        when 0    # Fight
+        when :fight, :fight2    # Fight
           break if pbFightMenu(idxBattler)
-        when 1    # Bag
+        when :shift   # Shift
+          pbUnregisterMegaEvolution(idxBattler)
+          break if pbRegisterShift(idxBattler)
+        when :bag, :throw_ball_contest    # Bag
           if pbItemMenu(idxBattler, actioned.length == 1)
             commandsEnd = true if pbItemUsesAllActions?(@choices[idxBattler][1])
             break
           end
-        when 2    # Pokémon
+        when :pokemon    # Pokémon
           break if pbPartyMenu(idxBattler)
-        when 3    # Run
+        when :run    # Run
           # NOTE: "Run" is only an available option for the first battler the
           #       player chooses an action for in a round. Attempting to run
           #       from battle prevents you from choosing any other actions in
@@ -244,12 +259,12 @@ class Battle
             commandsEnd = true
             break
           end
-        when 4    # Call
+        when :call    # Call
           break if pbCallMenu(idxBattler)
-        when -2   # Debug
+        when :debug   # Debug
           pbDebugMenu
           next
-        when -1   # Go back to previous battler's action choice
+        when :cancel   # Go back to previous battler's action choice
           next if actioned.length <= 1
           actioned.pop   # Forget this battler was done
           idxBattler = actioned.last - 1

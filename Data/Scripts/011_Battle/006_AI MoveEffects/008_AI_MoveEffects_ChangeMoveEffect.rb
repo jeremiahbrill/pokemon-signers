@@ -186,7 +186,7 @@ Battle::AI::Handlers::MoveEffectAgainstTargetScore.add("EffectDependsOnEnvironme
 #===============================================================================
 Battle::AI::Handlers::MoveBasePower.add("HitsAllFoesAndPowersUpInPsychicTerrain",
   proc { |power, move, user, target, ai, battle|
-    next move.move.pbBaseDamage(power, user.battler, target.battler)
+    next move.move.pbBasePower(power, user.battler, target.battler)
   }
 )
 
@@ -374,7 +374,7 @@ Battle::AI::Handlers::MoveFailureCheck.add("PowerDependsOnUserStockpile",
 )
 Battle::AI::Handlers::MoveBasePower.add("PowerDependsOnUserStockpile",
   proc { |power, move, user, target, ai, battle|
-    next move.move.pbBaseDamage(power, user.battler, target.battler)
+    next move.move.pbBasePower(power, user.battler, target.battler)
   }
 )
 Battle::AI::Handlers::MoveEffectScore.add("PowerDependsOnUserStockpile",

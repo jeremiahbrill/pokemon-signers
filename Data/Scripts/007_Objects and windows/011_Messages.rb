@@ -112,23 +112,13 @@ class ChooseNumberParams
   end
 
   def minNumber
-    ret = 0
-    if @maxDigits > 0
-      ret = -((10**@maxDigits) - 1)
-    else
-      ret = @minNumber
-    end
+    ret = (@maxDigits > 0) ? -((10**@maxDigits) - 1) : @minNumber
     ret = 0 if !@negativeAllowed && ret < 0
     return ret
   end
 
   def maxNumber
-    ret = 0
-    if @maxDigits > 0
-      ret = ((10**@maxDigits) - 1)
-    else
-      ret = @maxNumber
-    end
+    ret = (@maxDigits > 0) ? ((10**@maxDigits) - 1) : @maxNumber
     ret = 0 if !@negativeAllowed && ret < 0
     return ret
   end
@@ -138,11 +128,8 @@ class ChooseNumberParams
   end
 
   def maxDigits
-    if @maxDigits > 0
-      return @maxDigits
-    else
-      return [numDigits(self.minNumber), numDigits(self.maxNumber)].max
-    end
+    return @maxDigits if @maxDigits > 0
+    return [numDigits(self.minNumber), numDigits(self.maxNumber)].max
   end
 
   #-----------------------------------------------------------------------------
@@ -254,9 +241,10 @@ end
 
 def pbGetMapNameFromId(id)
   name = GameData::MapMetadata.try_get(id)&.name
-  if nil_or_empty?(name)
-    name = pbGetBasicMapNameFromId(id)
-    name.gsub!(/\\PN/, $player.name) if $player
+  name = pbGetBasicMapNameFromId(id) if nil_or_empty?(name)
+  name = name.gsub(/\\PN/, $player.name) if $player
+  if $game_variables
+    name = name.gsub(/\\v\[(\d+)\]/) { |num| $game_variables[$~[1].to_i].to_s }
   end
   return name
 end
@@ -304,8 +292,46 @@ def pbCsvPosInt!(str)
   return ret.to_i
 end
 
+def pbReplaceMessageText(text, msg_window)
+  # \sign[something] gets turned into \op\cl\ts[]\w[something]
+  text.gsub!(/\\sign\[([^\]]*)\]/i) { next "\\op\\cl\\ts[]\\w[" + $1 + "]" }
+  # Escaped characters
+  text.gsub!(/\\\\/, "\5")
+  text.gsub!(/\\1/, "\1")
+  text.gsub!(/\\n/i, "\n")
+  # Text placeholders
+  text.gsub!(/\\pn/i, $player.name) if $player
+  text.gsub!(/\\pm/i, _INTL("${1}", $player.money.to_s_formatted)) if $player
+  loop do
+    last_text = text.clone
+    text.gsub!(/\\v\[([0-9]+)\]/i) { $game_variables[$1.to_i] }
+    break if text == last_text
+  end
+  if $game_actors
+    text.gsub!(/\\n\[([1-8])\]/i) { next $game_actors[$1.to_i].name }
+  end
+  # Male/female text colors
+  text.gsub!(/\\pg/i, "\\b") if $player&.male?
+  text.gsub!(/\\pg/i, "\\r") if $player&.female?
+  text.gsub!(/\\pog/i, "\\r") if $player&.male?
+  text.gsub!(/\\pog/i, "\\b") if $player&.female?
+  text.gsub!(/\\pg/i, "")
+  text.gsub!(/\\pog/i, "")
+  male_text_tag = shadowc3tag(MessageConfig::MALE_TEXT_MAIN_COLOR, MessageConfig::MALE_TEXT_SHADOW_COLOR)
+  female_text_tag = shadowc3tag(MessageConfig::FEMALE_TEXT_MAIN_COLOR, MessageConfig::FEMALE_TEXT_SHADOW_COLOR)
+  text.gsub!(/\\b/i, male_text_tag)
+  text.gsub!(/\\r/i, female_text_tag)
+  # Other text colors
+  text.gsub!(/\\\[([0-9a-f]{8,8})\]/i) { "<c2=" + $1 + ">" }
+  isDarkSkin = msg_window && isDarkWindowskin(msg_window.windowskin)
+  text.gsub!(/\\c\[([0-9]+)\]/i) do
+    main_color, shadow_color = get_text_colors_for_windowskin(msg_window&.windowskin, $1.to_i, isDarkSkin)
+    next shadowc3tag(main_color, shadow_color)
+  end
+end
+
 #===============================================================================
-# Money and coins windows
+# Money and coins windows.
 #===============================================================================
 def pbGetGoldString
   return _INTL("${1}", $player.money.to_s_formatted)
@@ -400,7 +426,7 @@ def pbDisposeMessageWindow(msgwindow)
 end
 
 #===============================================================================
-# Main message-displaying function
+# Main message-displaying function.
 #===============================================================================
 def pbMessageDisplay(msgwindow, message, letterbyletter = true, commandProc = nil)
   return if !msgwindow
@@ -419,28 +445,7 @@ def pbMessageDisplay(msgwindow, message, letterbyletter = true, commandProc = ni
   text = message.clone
   linecount = (Graphics.height > 400) ? 3 : 2
   ### Text replacement
-  text.gsub!(/\\sign\[([^\]]*)\]/i) do      # \sign[something] gets turned into
-    next "\\op\\cl\\ts[]\\w[" + $1 + "]"    # \op\cl\ts[]\w[something]
-  end
-  text.gsub!(/\\\\/, "\5")
-  text.gsub!(/\\1/, "\1")
-  if $game_actors
-    text.gsub!(/\\n\[([1-8])\]/i) { next $game_actors[$1.to_i].name }
-  end
-  text.gsub!(/\\pn/i,  $player.name) if $player
-  text.gsub!(/\\pm/i,  _INTL("${1}", $player.money.to_s_formatted)) if $player
-  text.gsub!(/\\n/i,   "\n")
-  text.gsub!(/\\\[([0-9a-f]{8,8})\]/i) { "<c2=" + $1 + ">" }
-  text.gsub!(/\\pg/i,  "\\b") if $player&.male?
-  text.gsub!(/\\pg/i,  "\\r") if $player&.female?
-  text.gsub!(/\\pog/i, "\\r") if $player&.male?
-  text.gsub!(/\\pog/i, "\\b") if $player&.female?
-  text.gsub!(/\\pg/i,  "")
-  text.gsub!(/\\pog/i, "")
-  male_text_tag = shadowc3tag(MessageConfig::MALE_TEXT_MAIN_COLOR, MessageConfig::MALE_TEXT_SHADOW_COLOR)
-  female_text_tag = shadowc3tag(MessageConfig::FEMALE_TEXT_MAIN_COLOR, MessageConfig::FEMALE_TEXT_SHADOW_COLOR)
-  text.gsub!(/\\b/i,   male_text_tag)
-  text.gsub!(/\\r/i,   female_text_tag)
+  pbReplaceMessageText(text, msgwindow)
   text.gsub!(/\\[Ww]\[([^\]]*)\]/) do
     w = $1.to_s
     if w == ""
@@ -449,15 +454,6 @@ def pbMessageDisplay(msgwindow, message, letterbyletter = true, commandProc = ni
       msgwindow.setSkin("Graphics/Windowskins/#{w}", false)
     end
     next ""
-  end
-  isDarkSkin = isDarkWindowskin(msgwindow.windowskin)
-  text.gsub!(/\\c\[([0-9]+)\]/i) do
-    next getSkinColor(msgwindow.windowskin, $1.to_i, isDarkSkin)
-  end
-  loop do
-    last_text = text.clone
-    text.gsub!(/\\v\[([0-9]+)\]/i) { $game_variables[$1.to_i] }
-    break if text == last_text
   end
   loop do
     last_text = text.clone
@@ -469,9 +465,12 @@ def pbMessageDisplay(msgwindow, message, letterbyletter = true, commandProc = ni
   end
   colortag = ""
   if $game_system && $game_system.message_frame != 0
-    colortag = getSkinColor(msgwindow.windowskin, 0, true)
+    main_color, shadow_color = get_text_colors_for_windowskin(msgwindow.windowskin, 0, true)
+    colortag = shadowc3tag(main_color, shadow_color)
   else
-    colortag = getSkinColor(msgwindow.windowskin, 0, isDarkSkin)
+    isDarkSkin = isDarkWindowskin(msgwindow.windowskin)
+    main_color, shadow_color = get_text_colors_for_windowskin(msgwindow.windowskin, 0, isDarkSkin)
+    colortag = shadowc3tag(main_color, shadow_color)
   end
   text = colortag + text
   ### Controls
@@ -682,7 +681,7 @@ def pbMessageDisplay(msgwindow, message, letterbyletter = true, commandProc = ni
 end
 
 #===============================================================================
-# Message-displaying functions
+# Message-displaying functions.
 #===============================================================================
 def pbMessage(message, commands = nil, cmdIfCancel = 0, skin = nil, defaultCmd = 0, &block)
   ret = 0
@@ -720,7 +719,7 @@ end
 
 def pbShowCommands(msgwindow, commands = nil, cmdIfCancel = 0, defaultCmd = 0)
   return 0 if !commands
-  cmdwindow = Window_CommandPokemonEx.new(commands)
+  cmdwindow = Window_AdvancedCommandPokemon.new(commands)
   cmdwindow.z = 99999
   cmdwindow.visible = true
   cmdwindow.resizeToFit(cmdwindow.commands)
@@ -730,8 +729,8 @@ def pbShowCommands(msgwindow, commands = nil, cmdIfCancel = 0, defaultCmd = 0)
   loop do
     Graphics.update
     Input.update
-    cmdwindow.update
     msgwindow&.update
+    cmdwindow.update
     yield if block_given?
     if Input.trigger?(Input::BACK)
       if cmdIfCancel > 0
@@ -760,7 +759,7 @@ def pbShowCommandsWithHelp(msgwindow, commands, help, cmdIfCancel = 0, defaultCm
   oldlbl = msgwin.letterbyletter
   msgwin.letterbyletter = false
   if commands
-    cmdwindow = Window_CommandPokemonEx.new(commands)
+    cmdwindow = Window_AdvancedCommandPokemon.new(commands)
     cmdwindow.z = 99999
     cmdwindow.visible = true
     cmdwindow.resizeToFit(cmdwindow.commands)

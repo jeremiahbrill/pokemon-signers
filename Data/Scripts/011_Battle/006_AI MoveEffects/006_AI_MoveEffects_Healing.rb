@@ -60,12 +60,16 @@ Battle::AI::Handlers::MoveEffectScore.add("HealUserDependingOnWeather",
     # Consider how much HP will be restored
     score = Battle::AI::Handlers.apply_move_effect_score("HealUserHalfOfTotalHP",
        score, move, user, ai, battle)
-    case user.battler.effectiveWeather
-    when :Sun, :HarshSun
+    if user.has_active_ability?(:MEGASOL)
       score += 5
-    when :None, :StrongWinds
     else
-      score -= 10
+      case user.battler.effectiveWeather
+      when :Sun, :HarshSun
+        score += 5
+      when :None, :StrongWinds
+      else
+        score -= 10
+      end
     end
     next score
   }
@@ -126,7 +130,7 @@ Battle::AI::Handlers::MoveEffectAgainstTargetScore.add("CureTargetStatusHealUser
 #===============================================================================
 Battle::AI::Handlers::MoveFailureAgainstTargetCheck.add("HealUserByTargetAttackLowerTargetAttack1",
   proc { |move, user, target, ai, battle|
-    if !battle.moldBreaker && target.has_active_ability?(:CONTRARY)
+    if target.has_active_ability?(:CONTRARY) && !target.being_mold_broken?
       next target.statStageAtMax?(:ATTACK)
     end
     next target.statStageAtMin?(:ATTACK)
@@ -148,11 +152,11 @@ Battle::AI::Handlers::MoveEffectAgainstTargetScore.add("HealUserByTargetAttackLo
         heal_amt = target.rough_stat(:ATTACK)
         heal_amt *= 1.3 if user.has_active_item?(:BIGROOT)
         heal_amt = [heal_amt, user.totalhp - user.hp].min
-        if heal_amt > user.totalhp * 0.3   # Only modify the score if it'll heal a decent amount
+        if heal_amt > user.totalhp * 0.2   # Only modify the score if it'll heal a decent amount
           if user.hp < user.totalhp * 0.5
             score += 20 * (user.totalhp - user.hp) / user.totalhp   # +10 to +20
           end
-          score += 20 * heal_amt / user.totalhp   # +6 to +20
+          score += 20 * heal_amt / user.totalhp   # +4 to +20
         end
       end
     end
@@ -175,11 +179,11 @@ Battle::AI::Handlers::MoveEffectAgainstTargetScore.add("HealUserByHalfOfDamageDo
         heal_amt = rough_dmg / 2
         heal_amt *= 1.3 if user.has_active_item?(:BIGROOT)
         heal_amt = [heal_amt, user.totalhp - user.hp].min
-        if heal_amt > user.totalhp * 0.3   # Only modify the score if it'll heal a decent amount
+        if heal_amt > user.totalhp * 0.2   # Only modify the score if it'll heal a decent amount
           if user.hp < user.totalhp * 0.5
             score += 20 * (user.totalhp - user.hp) / user.totalhp   # +10 to +20
           end
-          score += 20 * heal_amt / user.totalhp   # +6 to +20
+          score += 20 * heal_amt / user.totalhp   # +4 to +20
         end
       end
     end
@@ -201,6 +205,21 @@ Battle::AI::Handlers::MoveEffectAgainstTargetScore.copy("HealUserByHalfOfDamageD
 #===============================================================================
 #
 #===============================================================================
+Battle::AI::Handlers::MoveEffectAgainstTargetScore.add("HealUserByHalfOfDamageDoneBurnTarget",
+  proc { |score, move, user, target, ai, battle|
+    # Score for healing
+    score = Battle::AI::Handlers.apply_move_effect_score("HealUserByHalfOfDamageDone",
+       score, move, user, ai, battle)
+    # Score for causing a burn
+    score = Battle::AI::Handlers.apply_move_effect_score("BurnTarget",
+       score, move, user, ai, battle)
+    next score
+  }
+)
+
+#===============================================================================
+#
+#===============================================================================
 Battle::AI::Handlers::MoveEffectAgainstTargetScore.add("HealUserByThreeQuartersOfDamageDone",
   proc { |score, move, user, target, ai, battle|
     rough_dmg = move.rough_damage
@@ -213,11 +232,11 @@ Battle::AI::Handlers::MoveEffectAgainstTargetScore.add("HealUserByThreeQuartersO
         heal_amt = rough_dmg * 0.75
         heal_amt *= 1.3 if user.has_active_item?(:BIGROOT)
         heal_amt = [heal_amt, user.totalhp - user.hp].min
-        if heal_amt > user.totalhp * 0.3   # Only modify the score if it'll heal a decent amount
+        if heal_amt > user.totalhp * 0.2   # Only modify the score if it'll heal a decent amount
           if user.hp < user.totalhp * 0.5
             score += 20 * (user.totalhp - user.hp) / user.totalhp   # +10 to +20
           end
-          score += 20 * heal_amt / user.totalhp   # +6 to +20
+          score += 20 * heal_amt / user.totalhp   # +4 to +20
         end
       end
     end
@@ -456,7 +475,7 @@ Battle::AI::Handlers::MoveEffectScore.add("UserLosesHalfOfTotalHP",
 #===============================================================================
 Battle::AI::Handlers::MoveFailureCheck.add("UserLosesHalfOfTotalHPExplosive",
   proc { |move, user, ai, battle|
-    next !battle.moldBreaker && battle.pbCheckGlobalAbility(:DAMP)
+    next !battle.pbCheckGlobalAbility(:DAMP, true).nil?
   }
 )
 Battle::AI::Handlers::MoveEffectScore.copy("UserLosesHalfOfTotalHP",
@@ -677,6 +696,36 @@ Battle::AI::Handlers::MoveEffectScore.add("SetAttackerMovePPTo0IfUserFaints",
       score += 20 if user.hp <= user.totalhp * 0.4
       score += 10 if user.hp <= user.totalhp * 0.25
       score += 15 if user.hp <= user.totalhp * 0.1
+    end
+    next score
+  }
+)
+
+#===============================================================================
+#
+#===============================================================================
+Battle::AI::Handlers::MoveFailureCheck.add("RevivePokemonToHalfHP",
+  proc { |move, user, ai, battle|
+    failed = true
+    battle.eachInTeamFromBattlerIndex(user.index) do |pkmn, party_index|
+      failed = false if pkmn.fainted?
+      break if !failed
+    end
+    next failed
+  }
+)
+Battle::AI::Handlers::MoveEffectScore.add("RevivePokemonToHalfHP",
+  proc { |score, move, user, ai, battle|
+    party_count = 0
+    unfainted_count = 0
+    battle.eachInTeamFromBattlerIndex(user.index) do |pkmn, party_index|
+      party_count += 1
+      unfainted_count += 1 if !pkmn.fainted?
+    end
+    if unfainted_count == 1 || unfainted_count * 2 <= party_count   # 50% or more of party is fainted
+      score += 15
+    else
+      score -= 10
     end
     next score
   }

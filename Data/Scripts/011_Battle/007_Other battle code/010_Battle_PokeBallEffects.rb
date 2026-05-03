@@ -30,6 +30,7 @@ end
 #===============================================================================
 # IsUnconditional
 #===============================================================================
+
 Battle::PokeBallEffects::IsUnconditional.add(:MASTERBALL, proc { |ball, battle, battler|
   next true
 })
@@ -40,6 +41,7 @@ Battle::PokeBallEffects::IsUnconditional.add(:MASTERBALL, proc { |ball, battle, 
 #       Ball is a Beast Ball). In this case, all Balls' catch rates are set
 #       elsewhere to 0.1x.
 #===============================================================================
+
 Battle::PokeBallEffects::ModifyCatchRate.add(:GREATBALL, proc { |ball, catchRate, battle, battler|
   next catchRate * 1.5
 })
@@ -97,12 +99,12 @@ Battle::PokeBallEffects::ModifyCatchRate.add(:FASTBALL, proc { |ball, catchRate,
   baseStats = battler.pokemon.baseStats
   baseSpeed = baseStats[:SPEED]
   catchRate *= 4 if baseSpeed >= 100
-  next [catchRate, 255].min
+  next catchRate
 })
 
 Battle::PokeBallEffects::ModifyCatchRate.add(:LEVELBALL, proc { |ball, catchRate, battle, battler|
   maxlevel = 0
-  battle.allSameSideBattlers.each { |b| maxlevel = b.level if b.level > maxlevel }
+  battle.allSameSideBattlers(true).each { |b| maxlevel = b.level if b.level > maxlevel }
   if maxlevel >= battler.level * 4
     catchRate *= 8
   elsif maxlevel >= battler.level * 2
@@ -110,7 +112,7 @@ Battle::PokeBallEffects::ModifyCatchRate.add(:LEVELBALL, proc { |ball, catchRate
   elsif maxlevel > battler.level
     catchRate *= 2
   end
-  next [catchRate, 255].min
+  next catchRate
 })
 
 Battle::PokeBallEffects::ModifyCatchRate.add(:LUREBALL, proc { |ball, catchRate, battle, battler|
@@ -119,9 +121,12 @@ Battle::PokeBallEffects::ModifyCatchRate.add(:LUREBALL, proc { |ball, catchRate,
     multiplier = (Settings::NEW_POKE_BALL_CATCH_RATES) ? 5 : 3
     catchRate *= multiplier
   end
-  next [catchRate, 255].min
+  next catchRate
 })
 
+# NOTE: This is the only Poké Ball that directly modifies the original catch
+#       rate, rather than being a multiplier. As such, it needs to ensure that
+#       the catch rate remains in the range 1-255.
 Battle::PokeBallEffects::ModifyCatchRate.add(:HEAVYBALL, proc { |ball, catchRate, battle, battler|
   next 0 if catchRate == 0
   weight = battler.pbWeight
@@ -154,7 +159,7 @@ Battle::PokeBallEffects::ModifyCatchRate.add(:LOVEBALL, proc { |ball, catchRate,
     catchRate *= 8
     break
   end
-  next [catchRate, 255].min
+  next catchRate
 })
 
 Battle::PokeBallEffects::ModifyCatchRate.add(:MOONBALL, proc { |ball, catchRate, battle, battler|
@@ -165,7 +170,7 @@ Battle::PokeBallEffects::ModifyCatchRate.add(:MOONBALL, proc { |ball, catchRate,
   if moon_stone && battler.pokemon.species_data.family_item_evolutions_use_item?(moon_stone.id)
     catchRate *= 4
   end
-  next [catchRate, 255].min
+  next catchRate
 })
 
 Battle::PokeBallEffects::ModifyCatchRate.add(:SPORTBALL, proc { |ball, catchRate, battle, battler|
@@ -189,6 +194,7 @@ Battle::PokeBallEffects::ModifyCatchRate.add(:BEASTBALL, proc { |ball, catchRate
 #===============================================================================
 # OnCatch
 #===============================================================================
+
 Battle::PokeBallEffects::OnCatch.add(:HEALBALL, proc { |ball, battle, pkmn|
   pkmn.heal
 })

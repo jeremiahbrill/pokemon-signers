@@ -1,34 +1,39 @@
+#===============================================================================
 # Battle scene (the visuals of the battle)
+#===============================================================================
 class Battle::Scene
   attr_accessor :abortable   # For non-interactive battles, can quit immediately
+  attr_reader   :battle
   attr_reader   :viewport
   attr_reader   :sprites
 
-  USE_ABILITY_SPLASH   = (Settings::MECHANICS_GENERATION >= 5)
-  MESSAGE_PAUSE_TIME   = 1.0   # In seconds
+  USE_ABILITY_SPLASH            = (Settings::MECHANICS_GENERATION >= 5)
+  MESSAGE_PAUSE_TIME            = 1.0   # In seconds
   # Text colors
-  MESSAGE_BASE_COLOR   = Color.new(80, 80, 88)
-  MESSAGE_SHADOW_COLOR = Color.new(160, 160, 168)
+  MESSAGE_BASE_COLOR            = Color.new(80, 80, 88)
+  MESSAGE_SHADOW_COLOR          = Color.new(160, 160, 168)
+  MESSAGE_BASE_CRITICAL_COLOR   = Color.new(248, 96, 8)
+  MESSAGE_SHADOW_CRITICAL_COLOR = Color.new(248, 176, 128)
   # The number of party balls to show in each side's lineup.
-  NUM_BALLS            = Settings::MAX_PARTY_SIZE
+  NUM_BALLS                     = Settings::MAX_PARTY_SIZE
   # Centre bottom of the player's side base graphic
-  PLAYER_BASE_X        = 128
-  PLAYER_BASE_Y        = Settings::SCREEN_HEIGHT - 80
+  PLAYER_BASE_X                 = 128
+  PLAYER_BASE_Y                 = Settings::SCREEN_HEIGHT - 80
   # Centre middle of the foe's side base graphic
-  FOE_BASE_X           = Settings::SCREEN_WIDTH - 128
-  FOE_BASE_Y           = (Settings::SCREEN_HEIGHT * 3 / 4) - 112
+  FOE_BASE_X                    = Settings::SCREEN_WIDTH - 128
+  FOE_BASE_Y                    = (Settings::SCREEN_HEIGHT * 3 / 4) - 112
   # Default focal points of user and target in animations - do not change!
   # Is the centre middle of each sprite
-  FOCUSUSER_X          = 128
-  FOCUSUSER_Y          = 224
-  FOCUSTARGET_X        = 384
-  FOCUSTARGET_Y        = 96
+  FOCUSUSER_X                   = 128
+  FOCUSUSER_Y                   = 224
+  FOCUSTARGET_X                 = 384
+  FOCUSTARGET_Y                 = 96
   # Menu types
-  BLANK                = 0
-  MESSAGE_BOX          = 1
-  COMMAND_BOX          = 2
-  FIGHT_BOX            = 3
-  TARGET_BOX           = 4
+  BLANK                         = 0
+  MESSAGE_BOX                   = 1
+  COMMAND_BOX                   = 2
+  FIGHT_BOX                     = 3
+  TARGET_BOX                    = 4
 
   # Returns where the centre bottom of a battler's sprite should be, given its
   # index and the number of battlers on its side, assuming the battler has
@@ -73,10 +78,13 @@ class Battle::Scene
     return ret
   end
 
-  #=============================================================================
-  # Updating and refreshing
-  #=============================================================================
+  #-----------------------------------------------------------------------------
+  # Updating and refreshing.
+  #-----------------------------------------------------------------------------
+
   def pbUpdate(cw = nil)
+    Graphics.update
+    Input.update
     pbGraphicsUpdate
     pbInputUpdate
     pbFrameUpdate(cw)
@@ -97,11 +105,9 @@ class Battle::Scene
     end
     # Update other graphics
     @sprites["battle_bg"].update if @sprites["battle_bg"].respond_to?("update")
-    Graphics.update
   end
 
   def pbInputUpdate
-    Input.update
     if Input.trigger?(Input::BACK) && @abortable && !@aborted
       @aborted = true
       @battle.pbAbort
@@ -134,26 +140,26 @@ class Battle::Scene
     @battle.battlers.each_with_index do |battler, i|
       next if !battler
       pbChangePokemon(i, @sprites["pokemon_#{i}"].pkmn)
-      @sprites["dataBox_#{i}"].initializeDataBoxGraphic(@battle.pbSideSize(i))
+      @sprites["dataBox_#{i}"].initializeDataBoxBitmap
+      @sprites["dataBox_#{i}"].calculateDataBoxPosition
       @sprites["dataBox_#{i}"].refresh
     end
   end
 
-  #=============================================================================
-  # Party lineup
-  #=============================================================================
+  #-----------------------------------------------------------------------------
+  # Party lineup.
+  #-----------------------------------------------------------------------------
+
   # Returns whether the party line-ups are currently coming on-screen
   def inPartyAnimation?
     return @animations.length > 0
   end
 
-  #=============================================================================
-  # Window displays
-  #=============================================================================
+  #-----------------------------------------------------------------------------
+  # Window displays.
+  #-----------------------------------------------------------------------------
+
   def pbShowWindow(windowType)
-    # NOTE: If you are not using fancy graphics for the command/fight menus, you
-    #       will need to make "messageBox" also visible if the windowtype if
-    #       COMMAND_BOX/FIGHT_BOX respectively.
     @sprites["messageBox"].visible    = (windowType == MESSAGE_BOX)
     @sprites["messageWindow"].visible = (windowType == MESSAGE_BOX)
     @sprites["commandWindow"].visible = (windowType == COMMAND_BOX)
@@ -169,99 +175,65 @@ class Battle::Scene
   def pbWaitMessage
     return if !@briefMessage
     pbShowWindow(MESSAGE_BOX)
-    cw = @sprites["messageWindow"]
+    msg_window = @sprites["messageWindow"]
     timer_start = System.uptime
     while System.uptime - timer_start < MESSAGE_PAUSE_TIME
-      pbUpdate(cw)
+      pbUpdate(msg_window)
     end
-    cw.text    = ""
-    cw.visible = false
+    msg_window.text    = ""
+    msg_window.visible = false
     @briefMessage = false
   end
 
   # NOTE: A regular message is displayed for 1 second after it fully appears (or
-  #       less if Back/Use is pressed). Disappears automatically after that time.
+  #       less if Back/Use is pressed). Disappears automatically after that
+  #       time. Meanwhile, a brief message doesn't wait for 1 second (or an
+  #       input) afterwards, and the message doesn't disappear.
   def pbDisplayMessage(msg, brief = false)
     pbWaitMessage
     pbShowWindow(MESSAGE_BOX)
-    cw = @sprites["messageWindow"]
-    cw.setText(msg)
+    msg_window = @sprites["messageWindow"]
+    # Display message
     PBDebug.log_message(msg)
-    yielded = false
-    timer_start = nil
+    pbMessageDisplay(msg_window, msg, true, proc { |msg_wndw| }) { pbUpdate }
+    # Check if the message is brief
+    @briefMessage = true if brief   # Don't wait at all if a brief message
+    return if @briefMessage
+    # After message has finished displaying, wait for 1 second or input
+    timer_start = System.uptime
     loop do
-      pbUpdate(cw)
-      if !cw.busy?
-        if !yielded
-          yield if block_given?   # For playing SE as soon as the message is all shown
-          yielded = true
-        end
-        if brief
-          # NOTE: A brief message lingers on-screen while other things happen. A
-          #       regular message has to end before the game can continue.
-          @briefMessage = true
-          break
-        end
-        timer_start = System.uptime if !timer_start
-        if System.uptime - timer_start >= MESSAGE_PAUSE_TIME   # Autoclose after 1 second
-          cw.text = ""
-          cw.visible = false
-          break
-        end
-      end
-      if Input.trigger?(Input::BACK) || Input.trigger?(Input::USE) || @abortable
-        if cw.busy?
-          pbPlayDecisionSE if cw.pausing? && !@abortable
-          cw.skipAhead
-        elsif !@abortable
-          cw.text = ""
-          cw.visible = false
-          break
-        end
-      end
+      pbUpdate(msg_window)
+      break if Input.trigger?(Input::BACK) || Input.trigger?(Input::USE)
+      break if System.uptime - timer_start >= MESSAGE_PAUSE_TIME   # Autoclose after 1 second
     end
+    msg_window.text = ""
+    msg_window.visible = false
   end
   alias pbDisplay pbDisplayMessage
 
   # NOTE: A paused message has the arrow in the bottom corner indicating there
   #       is another message immediately afterward. It is displayed for 3
-  #       seconds after it fully appears (or less if B/C is pressed) and
+  #       seconds after it fully appears (or less if Back/Use is pressed) and
   #       disappears automatically after that time, except at the end of battle.
   def pbDisplayPausedMessage(msg)
     pbWaitMessage
     pbShowWindow(MESSAGE_BOX)
-    cw = @sprites["messageWindow"]
-    cw.text = msg + "\1"
+    msg_window = @sprites["messageWindow"]
+    # Display message
     PBDebug.log_message(msg)
-    yielded = false
-    timer_start = nil
+    pbMessageDisplay(msg_window, msg + "\1", true, proc { |msg_wndw| }) { pbUpdate }
+    # After message has finished displaying, wait for 3 seconds or input
+    timer_start = System.uptime
     loop do
-      pbUpdate(cw)
-      if !cw.busy?
-        if !yielded
-          yield if block_given?   # For playing SE as soon as the message is all shown
-          yielded = true
-        end
-        if !@battleEnd
-          timer_start = System.uptime if !timer_start
-          if System.uptime - timer_start >= MESSAGE_PAUSE_TIME * 3   # Autoclose after 3 seconds
-            cw.text = ""
-            cw.visible = false
-            break
-          end
-        end
+      pbUpdate(msg_window)
+      if Input.trigger?(Input::BACK) || Input.trigger?(Input::USE)
+        pbPlayDecisionSE
+        break
       end
-      if Input.trigger?(Input::BACK) || Input.trigger?(Input::USE) || @abortable
-        if cw.busy?
-          pbPlayDecisionSE if cw.pausing? && !@abortable
-          cw.skipAhead
-        elsif !@abortable
-          cw.text = ""
-          pbPlayDecisionSE
-          break
-        end
-      end
+      break if !@battleEnd && System.uptime - timer_start >= MESSAGE_PAUSE_TIME * 3   # Autoclose after 3 seconds
     end
+    msg_window.text = ""
+    msg_window.visible = false
   end
 
   def pbDisplayConfirmMessage(msg)
@@ -271,45 +243,21 @@ class Battle::Scene
   def pbShowCommands(msg, commands, defaultValue)
     pbWaitMessage
     pbShowWindow(MESSAGE_BOX)
-    dw = @sprites["messageWindow"]
-    dw.text = msg
-    cw = Window_CommandPokemon.new(commands)
-    cw.height   = Graphics.height - dw.height if cw.height > Graphics.height - dw.height
-    cw.x        = Graphics.width - cw.width
-    cw.y        = Graphics.height - cw.height - dw.height
-    cw.z        = dw.z + 1
-    cw.index    = 0
-    cw.viewport = @viewport
+    msg_window = @sprites["messageWindow"]
+    # Display message
     PBDebug.log_message(msg)
-    loop do
-      cw.visible = (!dw.busy?)
-      pbUpdate(cw)
-      dw.update
-      if Input.trigger?(Input::BACK) && defaultValue >= 0
-        if dw.busy?
-          pbPlayDecisionSE if dw.pausing?
-          dw.resume
-        else
-          cw.dispose
-          dw.text = ""
-          return defaultValue
-        end
-      elsif Input.trigger?(Input::USE)
-        if dw.busy?
-          pbPlayDecisionSE if dw.pausing?
-          dw.resume
-        else
-          cw.dispose
-          dw.text = ""
-          return cw.index
-        end
-      end
-    end
+    ret = pbMessageDisplay(msg_window, msg, true, proc { |msg_wndw|
+      next Kernel.pbShowCommands(msg_wndw, commands, defaultValue + 1, 0) { pbGraphicsUpdate; pbFrameUpdate(msg_window) }
+    }) { pbGraphicsUpdate; pbFrameUpdate(msg_window) }
+    msg_window.text = ""
+    msg_window.visible = false
+    return ret
   end
 
-  #=============================================================================
-  # Sprites
-  #=============================================================================
+  #-----------------------------------------------------------------------------
+  # Sprites.
+  #-----------------------------------------------------------------------------
+
   def pbAddSprite(id, x, y, filename, viewport)
     sprite = @sprites[id] || IconSprite.new(x, y, viewport)
     if filename
@@ -348,9 +296,10 @@ class Battle::Scene
     pbRefresh
   end
 
-  #=============================================================================
-  # Phases
-  #=============================================================================
+  #-----------------------------------------------------------------------------
+  # Phases.
+  #-----------------------------------------------------------------------------
+
   def pbBeginCommandPhase
     @sprites["messageWindow"].text = ""
   end
@@ -371,9 +320,10 @@ class Battle::Scene
     pbDisposeSprites
   end
 
-  #=============================================================================
+  #-----------------------------------------------------------------------------
   #
-  #=============================================================================
+  #-----------------------------------------------------------------------------
+
   def pbSelectBattler(idxBattler, selectMode = 1)
     numWindows = @battle.sideSizes.max * 2
     numWindows.times do |i|
@@ -393,6 +343,7 @@ class Battle::Scene
     shadowSprite.setPokemonBitmap(pkmn)
     # Set visibility of battler's shadow
     shadowSprite.visible = pkmn.species_data.shows_shadow? if shadowSprite && !back
+    @sprites["dataBox_#{idxBattler}"].refresh
   end
 
   def pbResetCommandsIndex(idxBattler)
@@ -400,9 +351,10 @@ class Battle::Scene
     @lastMove[idxBattler] = 0
   end
 
-  #=============================================================================
+  #-----------------------------------------------------------------------------
   #
-  #=============================================================================
+  #-----------------------------------------------------------------------------
+
   # This method is called when the player wins a wild Pokémon battle.
   # This method can change the battle's music for example.
   def pbWildBattleSuccess

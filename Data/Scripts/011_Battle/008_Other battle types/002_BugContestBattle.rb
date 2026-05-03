@@ -1,5 +1,5 @@
 #===============================================================================
-# Bug-Catching Contest battle scene (the visuals of the battle)
+# Bug-Catching Contest battle scene (the visuals of the battle).
 #===============================================================================
 class Battle::Scene
   alias _bugContest_pbInitSprites pbInitSprites unless method_defined?(:_bugContest_pbInitSprites)
@@ -27,7 +27,7 @@ class Battle::Scene
 end
 
 #===============================================================================
-# Bug-Catching Contest battle class
+# Bug-Catching Contest battle class.
 #===============================================================================
 class BugContestBattle < Battle
   attr_accessor :ballCount
@@ -43,12 +43,8 @@ class BugContestBattle < Battle
   end
 
   def pbCommandMenu(idxBattler, _firstAction)
-    return @scene.pbCommandMenuEx(idxBattler,
-                                  [_INTL("Sport Balls: {1}", @ballCount),
-                                   _INTL("Fight"),
-                                   _INTL("Ball"),
-                                   _INTL("Pokémon"),
-                                   _INTL("Run")], 4)
+    cmds = [:fight, nil, :throw_ball_contest, :run, :pokemon]
+    return @scene.pbCommandMenuEx(idxBattler, cmds)
   end
 
   def pbConsumeItemInBag(_item, _idxBattler)
@@ -78,6 +74,6 @@ class BugContestBattle < Battle
 
   def pbEndOfRoundPhase
     super
-    @decision = 3 if @ballCount <= 0 && @decision == 0
+    @decision = Battle::Outcome::FLEE if @ballCount <= 0 && !decided?
   end
 end

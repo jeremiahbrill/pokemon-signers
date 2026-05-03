@@ -10,17 +10,16 @@ class Battle::Move::UserTakesTargetItem < Battle::Move
     return if !target.item || user.item
     return if target.unlosableItem?(target.item)
     return if user.unlosableItem?(target.item)
-    return if target.hasActiveAbility?(:STICKYHOLD) && !@battle.moldBreaker
-    itemName = target.itemName
-    user.item = target.item
-    # Permanently steal the item from wild Pokémon
-    if target.wild? && !user.initialItem && target.item == target.initialItem
-      user.setInitialItem(target.item)
+    return if target.hasActiveAbility?(:STICKYHOLD) && !target.beingMoldBroken?
+    if Settings::STOLEN_HELD_ITEMS_GO_INTO_BAG && user.pbOwnedByPlayer? && target.wild? &&
+       $bag.can_add?(target.item_id)
+      $bag.add(target.item_id)
       target.pbRemoveItem
+      @battle.initialItems[target.idxOwnSide][target.pokemonIndex][0] = nil   # To avoid duplication
     else
-      target.pbRemoveItem(false)
+      @battle.swapHeldItems(user, target)
     end
-    @battle.pbDisplay(_INTL("{1} stole {2}'s {3}!", user.pbThis, target.pbThis(true), itemName))
+    @battle.pbDisplay(_INTL("{1} stole {2}'s {3}!", user.pbThis, target.pbThis(true), user.itemName))
     user.pbHeldItemTriggerCheck
   end
 end
@@ -52,16 +51,12 @@ class Battle::Move::TargetTakesUserItem < Battle::Move
   end
 
   def pbEffectAgainstTarget(user, target)
-    itemName = user.itemName
-    target.item = user.item
-    # Permanently steal the item from wild Pokémon
-    if user.wild? && !target.initialItem && user.item == user.initialItem
-      target.setInitialItem(user.item)
-      user.pbRemoveItem
+    @battle.swapHeldItems(user, target)
+    if Translation.more_possessive_messages?
+      @battle.pbDisplay(_INTL("{1} received {2} {3}!", target.pbThis, user.pbOfThis(true), target.itemName))
     else
-      user.pbRemoveItem(false)
+      @battle.pbDisplay(_INTL("{1} received {2} from {3}!", target.pbThis, target.itemName, user.pbThis(true)))
     end
-    @battle.pbDisplay(_INTL("{1} received {2} from {3}!", target.pbThis, itemName, user.pbThis(true)))
     target.pbHeldItemTriggerCheck
   end
 end
@@ -91,7 +86,7 @@ class Battle::Move::UserTargetSwapItems < Battle::Move
       @battle.pbDisplay(_INTL("But it failed!")) if show_message
       return true
     end
-    if target.hasActiveAbility?(:STICKYHOLD) && !@battle.moldBreaker
+    if target.hasActiveAbility?(:STICKYHOLD) && !target.beingMoldBroken?
       if show_message
         @battle.pbShowAbilitySplash(target)
         if Battle::Scene::USE_ABILITY_SPLASH
@@ -108,23 +103,10 @@ class Battle::Move::UserTargetSwapItems < Battle::Move
   end
 
   def pbEffectAgainstTarget(user, target)
-    oldUserItem = user.item
-    oldUserItemName = user.itemName
-    oldTargetItem = target.item
-    oldTargetItemName = target.itemName
-    user.item                             = oldTargetItem
-    user.effects[PBEffects::ChoiceBand]   = nil if !user.hasActiveAbility?(:GORILLATACTICS)
-    user.effects[PBEffects::Unburden]     = (!user.item && oldUserItem) if user.hasActiveAbility?(:UNBURDEN)
-    target.item                           = oldUserItem
-    target.effects[PBEffects::ChoiceBand] = nil if !target.hasActiveAbility?(:GORILLATACTICS)
-    target.effects[PBEffects::Unburden]   = (!target.item && oldTargetItem) if target.hasActiveAbility?(:UNBURDEN)
-    # Permanently steal the item from wild Pokémon
-    if target.wild? && !user.initialItem && oldTargetItem == target.initialItem
-      user.setInitialItem(oldTargetItem)
-    end
+    @battle.swapHeldItems(user, target)
     @battle.pbDisplay(_INTL("{1} switched items with its opponent!", user.pbThis))
-    @battle.pbDisplay(_INTL("{1} obtained {2}.", user.pbThis, oldTargetItemName)) if oldTargetItem
-    @battle.pbDisplay(_INTL("{1} obtained {2}.", target.pbThis, oldUserItemName)) if oldUserItem
+    @battle.pbDisplay(_INTL("{1} obtained {2}.", user.pbThis, user.itemName)) if user.item
+    @battle.pbDisplay(_INTL("{1} obtained {2}.", target.pbThis, target.itemName)) if target.item
     user.pbHeldItemTriggerCheck
     target.pbHeldItemTriggerCheck
   end
@@ -145,17 +127,15 @@ class Battle::Move::RestoreUserConsumedItem < Battle::Move
   end
 
   def pbEffectGeneral(user)
-    item = user.recycleItem
-    user.item = item
-    user.setInitialItem(item) if @battle.wildBattle? && !user.initialItem
+    user.item = user.recycleItem
     user.setRecycleItem(nil)
     user.effects[PBEffects::PickupItem] = nil
     user.effects[PBEffects::PickupUse]  = 0
-    itemName = GameData::Item.get(item).name
-    if itemName.starts_with_vowel?
-      @battle.pbDisplay(_INTL("{1} found an {2}!", user.pbThis, itemName))
+    item_name = user.itemName
+    if item_name.starts_with_vowel?
+      @battle.pbDisplay(_INTL("{1} found an {2}!", user.pbThis, item_name))
     else
-      @battle.pbDisplay(_INTL("{1} found a {2}!", user.pbThis, itemName))
+      @battle.pbDisplay(_INTL("{1} found a {2}!", user.pbThis, item_name))
     end
     user.pbHeldItemTriggerCheck
   end
@@ -166,14 +146,14 @@ end
 # If target has a losable item, damage is multiplied by 1.5.
 #===============================================================================
 class Battle::Move::RemoveTargetItem < Battle::Move
-  def pbBaseDamage(baseDmg, user, target)
+  def pbBasePower(base_power, user, target)
     if Settings::MECHANICS_GENERATION >= 6 &&
        target.item && !target.unlosableItem?(target.item)
       # NOTE: Damage is still boosted even if target has Sticky Hold or a
       #       substitute.
-      baseDmg = (baseDmg * 1.5).round
+      base_power = (base_power * 1.5).round
     end
-    return baseDmg
+    return base_power
   end
 
   def pbEffectAfterAllHits(user, target)
@@ -181,9 +161,10 @@ class Battle::Move::RemoveTargetItem < Battle::Move
     return if user.fainted?
     return if target.damageState.unaffected || target.damageState.substitute
     return if !target.item || target.unlosableItem?(target.item)
-    return if target.hasActiveAbility?(:STICKYHOLD) && !@battle.moldBreaker
+    return if target.hasActiveAbility?(:STICKYHOLD) && !target.beingMoldBroken?
     itemName = target.itemName
-    target.pbRemoveItem(false)
+    target.pbRemoveItem
+    target.knockOffItem
     @battle.pbDisplay(_INTL("{1} dropped its {2}!", target.pbThis, itemName))
   end
 end
@@ -197,10 +178,10 @@ class Battle::Move::DestroyTargetBerryOrGem < Battle::Move
     return if !target.item || (!target.item.is_berry? &&
               !(Settings::MECHANICS_GENERATION >= 6 && target.item.is_gem?))
     return if target.unlosableItem?(target.item)
-    return if target.hasActiveAbility?(:STICKYHOLD) && !@battle.moldBreaker
+    return if target.hasActiveAbility?(:STICKYHOLD) && !target.beingMoldBroken?
     item_name = target.itemName
     target.pbRemoveItem
-    @battle.pbDisplay(_INTL("{1}'s {2} was incinerated!", target.pbThis, item_name))
+    @battle.pbDisplay(_INTL("{1} {2} was incinerated!", target.pbOfThis, item_name))
   end
 end
 
@@ -219,7 +200,7 @@ class Battle::Move::CorrodeTargetItem < Battle::Move
       @battle.pbDisplay(_INTL("{1} is unaffected!", target.pbThis)) if show_message
       return true
     end
-    if target.hasActiveAbility?(:STICKYHOLD) && !@battle.moldBreaker
+    if target.hasActiveAbility?(:STICKYHOLD) && !target.beingMoldBroken?
       if show_message
         @battle.pbShowAbilitySplash(target)
         if Battle::Scene::USE_ABILITY_SPLASH
@@ -241,8 +222,8 @@ class Battle::Move::CorrodeTargetItem < Battle::Move
 
   def pbEffectAgainstTarget(user, target)
     @battle.corrosiveGas[target.index % 2][target.pokemonIndex] = true
-    @battle.pbDisplay(_INTL("{1} corroded {2}'s {3}!",
-                            user.pbThis, target.pbThis(true), target.itemName))
+    @battle.pbDisplay(_INTL("{1} corroded {2} {3}!",
+                            user.pbThis, target.pbOfThis(true), target.itemName))
   end
 end
 
@@ -338,7 +319,6 @@ end
 # that negates the move, e.g. Lightning Rod, the bearer of that ability will
 # have their ability triggered regardless of whether they are holding a berry,
 # and they will not consume their berry. (Teatime)
-# TODO: This isn't quite right for the messages shown when a berry is consumed.
 #===============================================================================
 class Battle::Move::AllBattlersConsumeBerry < Battle::Move
   def pbMoveFailed?(user, targets)
@@ -386,7 +366,7 @@ class Battle::Move::UserConsumeTargetBerry < Battle::Move
     return if user.fainted? || target.fainted?
     return if target.damageState.unaffected || target.damageState.substitute
     return if !target.item || !target.item.is_berry? || target.unlosableItem?(target.item)
-    return if target.hasActiveAbility?(:STICKYHOLD) && !@battle.moldBreaker
+    return if target.hasActiveAbility?(:STICKYHOLD) && !target.beingMoldBroken?
     item = target.item
     itemName = target.itemName
     user.setBelched
@@ -428,7 +408,7 @@ class Battle::Move::ThrowUserItemAtTarget < Battle::Move
 
   def pbNumHits(user, targets); return 1; end
 
-  def pbBaseDamage(baseDmg, user, target)
+  def pbBasePower(base_power, user, target)
     return 0 if !user.item
     user.item.flags.each do |flag|
       return [$~[1].to_i, 10].max if flag[/^Fling_(\d+)$/i]
@@ -438,7 +418,7 @@ class Battle::Move::ThrowUserItemAtTarget < Battle::Move
 
   def pbEffectAgainstTarget(user, target)
     return if target.damageState.substitute
-    return if target.hasActiveAbility?(:SHIELDDUST) && !@battle.moldBreaker
+    return if target.hasActiveAbility?(:SHIELDDUST) && !target.beingMoldBroken?
     case user.item_id
     when :POISONBARB
       target.pbPoison(user) if target.pbCanPoison?(user, false, self)

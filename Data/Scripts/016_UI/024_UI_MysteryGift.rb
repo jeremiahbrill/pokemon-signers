@@ -1,7 +1,7 @@
 #===============================================================================
-# Mystery Gift system
-# By Maruno
-#===============================================================================
+# Mystery Gift system.
+# By Maruno.
+#-------------------------------------------------------------------------------
 # This url is the location of an example Mystery Gift file.
 # You should change it to your file's url once you upload it.
 #===============================================================================
@@ -226,7 +226,7 @@ def pbRefreshMGCommands(master, online)
     elsif gift[1] > 0
       itemname = GameData::Item.get(gift[2]).name + sprintf(" x%d", gift[1])
     end
-    ontext = ["[  ]", "[X]"][(online.include?(gift[0])) ? 1 : 0]
+    ontext = ["[  ]", "[Y]"][(online.include?(gift[0])) ? 1 : 0]
     commands.push(_INTL("{1} {2}: {3} ({4})", ontext, gift[0], gift[3], itemname))
   end
   commands.push(_INTL("Export selected to file"))
@@ -388,11 +388,7 @@ def pbReceiveMysteryGift(id)
          $player.has_pokedex && $player.pokedex.species_in_unlocked_dex?(gift[2].species)
         pbMessage(_INTL("{1}'s data was added to the Pokédex.", gift[2].name))
         $player.pokedex.register_last_seen(gift[2])
-        pbFadeOutIn do
-          scene = PokemonPokedexInfo_Scene.new
-          screen = PokemonPokedexInfoScreen.new(scene)
-          screen.pbDexEntry(gift[2].species)
-        end
+        pbShowPokedexEntry(gift[2].species)
       end
       return true
     end

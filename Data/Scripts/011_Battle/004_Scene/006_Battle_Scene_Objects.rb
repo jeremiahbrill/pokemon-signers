@@ -1,10 +1,37 @@
 #===============================================================================
-# Data box for regular battles
+# Data box for regular battles.
 #===============================================================================
 class Battle::Scene::PokemonDataBox < Sprite
   attr_reader   :battler
   attr_accessor :selected
 
+  # An offset for drawing things on the data box, depending on the side it's on.
+  # Data boxes on the player's side have an extra sloped part on the left
+  # pointing at the battler sprites, and this padding is the width of that extra
+  # sloped part. Data boxes on the opponent's side have extra bar that becomes
+  # visible if there are multiple battlers on that side due to the horizontal
+  # offset (defined below).
+  DATA_BOX_LEFT_PADDING = [24, 16]
+  # Where the data box is positioned on-screen. The 1/2/3 are how many battlers
+  # are on that side, and then its value is an array of coordinates in order of
+  # battler index.
+  # NOTE: 256 is the maximum visible width of the data box graphic. The actual
+  #       graphics are all 16 pixels wider than this, because they are offset
+  #       horizontally if their side has 2+ battlers on it.
+  DATA_BOX_POSITIONS = {
+    1 => [[Settings::SCREEN_WIDTH - 256, Settings::SCREEN_HEIGHT - 188],
+          [-16, 24]],
+    2 => [[Settings::SCREEN_WIDTH - 256 - 12, Settings::SCREEN_HEIGHT - 192 - 20],
+          [-4, 0],
+          [Settings::SCREEN_WIDTH - 256, Settings::SCREEN_HEIGHT - 192 + 34],
+          [-16, 54]],
+    3 => [[Settings::SCREEN_WIDTH - 256 - 12, Settings::SCREEN_HEIGHT - 192 - 42],
+          [-4, -10],
+          [Settings::SCREEN_WIDTH - 256 - 6, Settings::SCREEN_HEIGHT - 192 + 4],
+          [-10, 36],
+          [Settings::SCREEN_WIDTH - 256, Settings::SCREEN_HEIGHT - 192 + 50],
+          [-16, 82]]
+  }
   # Time in seconds to fully fill the Exp bar (from empty).
   EXP_BAR_FILL_TIME = 1.75
   # Time in seconds for this data box to flash when the Exp fully fills.
@@ -13,93 +40,78 @@ class Battle::Scene::PokemonDataBox < Sprite
   HP_BAR_CHANGE_TIME = 1.0
   # Time (in seconds) for one complete sprite bob cycle (up and down) while
   # choosing a command for this battler or when this battler is being chosen as
-  # a target. Set to nil to prevent bobbing.
+  # a target.
   BOBBING_DURATION = 0.6
   # Height in pixels of a status icon
   STATUS_ICON_HEIGHT = 16
   # Text colors
-  NAME_BASE_COLOR         = Color.new(72, 72, 72)
-  NAME_SHADOW_COLOR       = Color.new(184, 184, 184)
-  MALE_BASE_COLOR         = Color.new(48, 96, 216)
-  MALE_SHADOW_COLOR       = NAME_SHADOW_COLOR
-  FEMALE_BASE_COLOR       = Color.new(248, 88, 40)
-  FEMALE_SHADOW_COLOR     = NAME_SHADOW_COLOR
+  NAME_COLOR   = [Color.new(72, 72, 72), Color.new(184, 184, 184)]
+  MALE_COLOR   = [Color.new(48, 96, 216), Color.new(184, 184, 184)]
+  FEMALE_COLOR = [Color.new(248, 88, 40), Color.new(184, 184, 184)]
 
   def initialize(battler, sideSize, viewport = nil)
     super(viewport)
     @battler         = battler
-    @sprites         = {}
-    @spriteX         = 0
-    @spriteY         = 0
-    @spriteBaseX     = 0
+    @sideSize        = sideSize
+    calculateDataBoxPosition
     @selected        = 0
-    @show_hp_numbers = false
-    @show_exp_bar    = false
-    initializeDataBoxGraphic(sideSize)
-    initializeOtherGraphics(viewport)
+    @show_hp_numbers = (@sideSize == 1 && @battler.index.even?)   # On the player's side
+    @show_exp_bar    = (@sideSize == 1 && @battler.index.even?)   # On the player's side
+    initializeBitmaps
+    @sprites         = {}
+    initializeSprites(viewport)
+    self.visible     = false
+    self.z           = 10150 + ((@battler.index / 2) * 5)
     refresh
   end
 
-  def initializeDataBoxGraphic(sideSize)
-    onPlayerSide = @battler.index.even?
-    # Get the data box graphic and set whether the HP numbers/Exp bar are shown
-    if sideSize == 1   # One Pokémon on side, use the regular dara box BG
+  # Determine the co-ordinates of the data box and the left edge padding width.
+  def calculateDataBoxPosition
+    @data_box_x, @data_box_y = DATA_BOX_POSITIONS[@sideSize][@battler.index]
+    @draw_offset_x = DATA_BOX_LEFT_PADDING[@battler.index % 2]
+  end
+
+  def initializeBitmaps
+    @numbersBitmap = AnimatedBitmap.new("Graphics/UI/Battle/numbers")
+    @hpBarBitmap   = AnimatedBitmap.new("Graphics/UI/Battle/hp_bar_fill")
+    @expBarBitmap  = AnimatedBitmap.new("Graphics/UI/Battle/exp_bar_fill")
+    initializeDataBoxBitmap
+    initializeSelfBitmap
+  end
+
+  # Get the data box graphic and set whether the HP numbers/Exp bar are shown.
+  def initializeDataBoxBitmap
+    if @sideSize == 1   # One Pokémon on side, use the regular data box BG
       bgFilename = [_INTL("Graphics/UI/Battle/databox_normal"),
                     _INTL("Graphics/UI/Battle/databox_normal_foe")][@battler.index % 2]
-      if onPlayerSide
-        @show_hp_numbers = true
-        @show_exp_bar    = true
-      end
-    else   # Multiple Pokémon on side, use the thin dara box BG
+    else   # Multiple Pokémon on side, use the thin data box BG
       bgFilename = [_INTL("Graphics/UI/Battle/databox_thin"),
                     _INTL("Graphics/UI/Battle/databox_thin_foe")][@battler.index % 2]
     end
     @databoxBitmap&.dispose
     @databoxBitmap = AnimatedBitmap.new(bgFilename)
-    # Determine the co-ordinates of the data box and the left edge padding width
-    if onPlayerSide
-      @spriteX = Graphics.width - 244
-      @spriteY = Graphics.height - 192
-      @spriteBaseX = 34
-    else
-      @spriteX = -16
-      @spriteY = 36
-      @spriteBaseX = 16
-    end
-    case sideSize
-    when 2
-      @spriteX += [-12,  12,  0,  0][@battler.index]
-      @spriteY += [-20, -34, 34, 20][@battler.index]
-    when 3
-      @spriteX += [-12,  12, -6,  6,  0,  0][@battler.index]
-      @spriteY += [-42, -46,  4,  0, 50, 46][@battler.index]
-    end
   end
 
-  def initializeOtherGraphics(viewport)
-    # Create other bitmaps
-    @numbersBitmap = AnimatedBitmap.new("Graphics/UI/Battle/icon_numbers")
-    @hpBarBitmap   = AnimatedBitmap.new("Graphics/UI/Battle/overlay_hp")
-    @expBarBitmap  = AnimatedBitmap.new("Graphics/UI/Battle/overlay_exp")
-    # Create sprite to draw HP numbers on
+  # Set this sprite's bitmap to a blank bitmap.
+  def initializeSelfBitmap
+    @contents = Bitmap.new(@databoxBitmap.width, @databoxBitmap.height)
+    self.bitmap  = @contents
+    pbSetSystemFont(self.bitmap)
+  end
+
+  def initializeSprites(viewport)
+    # Sprite to draw HP numbers on
     @hpNumbers = BitmapSprite.new(124, 16, viewport)
-#    pbSetSmallFont(@hpNumbers.bitmap)
     @sprites["hpNumbers"] = @hpNumbers
-    # Create sprite wrapper that displays HP bar
+    # Sprite that displays HP bar
     @hpBar = Sprite.new(viewport)
     @hpBar.bitmap = @hpBarBitmap.bitmap
     @hpBar.src_rect.height = @hpBarBitmap.height / 3
     @sprites["hpBar"] = @hpBar
-    # Create sprite wrapper that displays Exp bar
+    # Sprite that displays Exp bar
     @expBar = Sprite.new(viewport)
     @expBar.bitmap = @expBarBitmap.bitmap
     @sprites["expBar"] = @expBar
-    # Create sprite wrapper that displays everything except the above
-    @contents = Bitmap.new(@databoxBitmap.width, @databoxBitmap.height)
-    self.bitmap  = @contents
-    self.visible = false
-    self.z       = 150 + ((@battler.index / 2) * 5)
-    pbSetSystemFont(self.bitmap)
   end
 
   def dispose
@@ -112,11 +124,13 @@ class Battle::Scene::PokemonDataBox < Sprite
     super
   end
 
+  #-----------------------------------------------------------------------------
+
   def x=(value)
     super
-    @hpBar.x     = value + @spriteBaseX + 102
-    @expBar.x    = value + @spriteBaseX + 6
-    @hpNumbers.x = value + @spriteBaseX + 80
+    @hpBar.x     = value + @draw_offset_x + 124
+    @expBar.x    = value + @draw_offset_x + 28
+    @hpNumbers.x = value + @draw_offset_x + 102
   end
 
   def y=(value)
@@ -155,21 +169,13 @@ class Battle::Scene::PokemonDataBox < Sprite
     end
   end
 
-  def battler=(b)
-    @battler = b
+  def battler=(new_battler)
+    @battler = new_battler
     self.visible = (@battler && !@battler.fainted?)
   end
 
   def hp
     return (animating_hp?) ? @anim_hp_current : @battler.hp
-  end
-
-  def exp_fraction
-    if animating_exp?
-      return 0.0 if @anim_exp_range == 0
-      return @anim_exp_current.to_f / @anim_exp_range
-    end
-    return @battler.pokemon.exp_fraction
   end
 
   # NOTE: A change in HP takes the same amount of time to animate, no matter how
@@ -184,6 +190,14 @@ class Battle::Scene::PokemonDataBox < Sprite
 
   def animating_hp?
     return @anim_hp_timer_start != nil
+  end
+
+  def exp_fraction
+    if animating_exp?
+      return 0.0 if @anim_exp_range == 0
+      return @anim_exp_current.to_f / @anim_exp_range
+    end
+    return @battler.pokemon.exp_fraction
   end
 
   # NOTE: Filling the Exp bar from empty to full takes EXP_BAR_FILL_TIME seconds
@@ -203,6 +217,23 @@ class Battle::Scene::PokemonDataBox < Sprite
     return @anim_exp_timer_start != nil
   end
 
+  #-----------------------------------------------------------------------------
+
+  def refresh
+    self.bitmap.clear
+    return if !@battler.pokemon
+    draw_background
+    draw_name
+    draw_gender
+    draw_level
+    draw_status
+    draw_shiny_icon
+    draw_special_form_icon
+    draw_owned_icon
+    refresh_hp
+    refresh_exp
+  end
+
   def pbDrawNumber(number, btmp, startX, startY, align = :left)
     # -1 means draw the / character
     n = (number == -1) ? [10] : number.to_i.digits.reverse
@@ -220,28 +251,31 @@ class Battle::Scene::PokemonDataBox < Sprite
   end
 
   def draw_name
-    nameWidth = self.bitmap.text_size(@battler.name).width
-    nameOffset = 0
-    nameOffset = nameWidth - 116 if nameWidth > 116
-    pbDrawTextPositions(self.bitmap, [[@battler.name, @spriteBaseX + 8 - nameOffset, 12, :left,
-                                       NAME_BASE_COLOR, NAME_SHADOW_COLOR]]
-    )
-  end
-
-  def draw_level
-    # "Lv" graphic
-    pbDrawImagePositions(self.bitmap, [[_INTL("Graphics/UI/Battle/overlay_lv"), @spriteBaseX + 140, 16]])
-    # Level number
-    pbDrawNumber(@battler.level, self.bitmap, @spriteBaseX + 162, 16)
+    name_width = self.bitmap.text_size(@battler.name).width
+    name_x = 18
+    name_x -= (name_width - 128) if name_width > 128
+    pbDrawShadowText(self.bitmap, @draw_offset_x + name_x, 12, name_width, 32,
+                     @battler.name, *NAME_COLOR)
   end
 
   def draw_gender
     gender = @battler.displayGender
     return if ![0, 1].include?(gender)
     gender_text  = (gender == 0) ? _INTL("♂") : _INTL("♀")
-    base_color   = (gender == 0) ? MALE_BASE_COLOR : FEMALE_BASE_COLOR
-    shadow_color = (gender == 0) ? MALE_SHADOW_COLOR : FEMALE_SHADOW_COLOR
-    pbDrawTextPositions(self.bitmap, [[gender_text, @spriteBaseX + 126, 12, :left, base_color, shadow_color]])
+    gender_color = (gender == 0) ? MALE_COLOR : FEMALE_COLOR
+    name_width = self.bitmap.text_size(@battler.name).width
+    gender_x = 136
+    gender_x += (name_width - 116) if name_width > 116
+    gender_x = 148 if gender_x > 148
+    pbDrawShadowText(self.bitmap, @draw_offset_x + gender_x, 12, 32, 32,
+                     gender_text, *gender_color)
+  end
+
+  def draw_level
+    # "Lv" graphic
+    pbDrawImagePositions(self.bitmap, [["Graphics/UI/Battle/" + _INTL("level"), @draw_offset_x + 162, 16]])
+    # Level number
+    pbDrawNumber(@battler.level, self.bitmap, @draw_offset_x + 184, 16)
   end
 
   def draw_status
@@ -252,20 +286,19 @@ class Battle::Scene::PokemonDataBox < Sprite
       s = GameData::Status.get(@battler.status).icon_position
     end
     return if s < 0
-    pbDrawImagePositions(self.bitmap, [[_INTL("Graphics/UI/Battle/icon_statuses"), @spriteBaseX + 24, 36,
+    pbDrawImagePositions(self.bitmap, [["Graphics/UI/Battle/" + _INTL("statuses"), @draw_offset_x + 46, 36,
                                         0, s * STATUS_ICON_HEIGHT, -1, STATUS_ICON_HEIGHT]])
   end
 
   def draw_shiny_icon
     return if !@battler.shiny?
-    shiny_x = (@battler.opposes?(0)) ? 206 : -6   # Foe's/player's
-    pbDrawImagePositions(self.bitmap, [["Graphics/UI/shiny", @spriteBaseX + shiny_x, 36]])
+    pbDrawImagePositions(self.bitmap, [["Graphics/UI/shiny", @draw_offset_x + 18, 36]])
   end
 
   def draw_special_form_icon
     # Mega Evolution/Primal Reversion icon
     if @battler.mega?
-      pbDrawImagePositions(self.bitmap, [["Graphics/UI/Battle/icon_mega", @spriteBaseX + 8, 34]])
+      pbDrawImagePositions(self.bitmap, [["Graphics/UI/Battle/icon_mega", @draw_offset_x + 32, 34]])
     elsif @battler.primal?
       filename = nil
       if @battler.isSpecies?(:GROUDON)
@@ -273,29 +306,15 @@ class Battle::Scene::PokemonDataBox < Sprite
       elsif @battler.isSpecies?(:KYOGRE)
         filename = "Graphics/UI/Battle/icon_primal_Kyogre"
       end
-      primalX = (@battler.opposes?) ? 208 : -28   # Foe's/player's
-      pbDrawImagePositions(self.bitmap, [[filename, @spriteBaseX + primalX, 4]]) if filename
+      primal_x = (@battler.opposes?) ? 224 : -24   # Foe's/player's
+      pbDrawImagePositions(self.bitmap, [[filename, @draw_offset_x + primal_x, 18]]) if filename
     end
   end
 
   def draw_owned_icon
     return if !@battler.owned? || !@battler.opposes?(0)   # Draw for foe Pokémon only
-    pbDrawImagePositions(self.bitmap, [["Graphics/UI/Battle/icon_own", @spriteBaseX + 8, 36]])
-  end
-
-  def refresh
-    self.bitmap.clear
-    return if !@battler.pokemon
-    draw_background
-    draw_name
-    draw_level
-    draw_gender
-    draw_status
-    draw_shiny_icon
-    draw_special_form_icon
-    draw_owned_icon
-    refresh_hp
-    refresh_exp
+    owned_x = (@battler.shiny?) ? 2 : 18
+    pbDrawImagePositions(self.bitmap, [["Graphics/UI/Battle/icon_own", @draw_offset_x + owned_x, 36]])
   end
 
   def refresh_hp
@@ -303,9 +322,9 @@ class Battle::Scene::PokemonDataBox < Sprite
     return if !@battler.pokemon
     # Show HP numbers
     if @show_hp_numbers
-      pbDrawNumber(self.hp, @hpNumbers.bitmap, 54, 2, :right)
-      pbDrawNumber(-1, @hpNumbers.bitmap, 54, 2)   # / char
-      pbDrawNumber(@battler.totalhp, @hpNumbers.bitmap, 70, 2)
+      pbDrawNumber(self.hp, @hpNumbers.bitmap, 48, 2, :right)
+      pbDrawNumber(-1, @hpNumbers.bitmap, 48, 2)   # / char
+      pbDrawNumber(@battler.totalhp, @hpNumbers.bitmap, 64, 2)
     end
     # Resize HP bar
     w = 0
@@ -331,6 +350,8 @@ class Battle::Scene::PokemonDataBox < Sprite
     w = ((w / 2).round) * 2
     @expBar.src_rect.width = w
   end
+
+  #-----------------------------------------------------------------------------
 
   def update_hp_animation
     return if !animating_hp?
@@ -387,33 +408,31 @@ class Battle::Scene::PokemonDataBox < Sprite
   end
 
   def update_positions
-    self.x = @spriteX
-    self.y = @spriteY
+    self.x = @data_box_x
+    self.y = @data_box_y
     # Data box bobbing while Pokémon is selected
-    if (@selected == 1 || @selected == 2) && BOBBING_DURATION   # Choosing commands/targeted
+    if Settings::BOB_BATTLE_DATA_BOX_IF_SELECTED && BOBBING_DURATION &&
+       (@selected == 1 || @selected == 2)   # Choosing commands/targeted
       bob_delta = System.uptime % BOBBING_DURATION   # 0-BOBBING_DURATION
       bob_frame = (4 * bob_delta / BOBBING_DURATION).floor
       case bob_frame
-      when 1 then self.y = @spriteY - 2
-      when 3 then self.y = @spriteY + 2
+      when 1 then self.y = @data_box_y - 2
+      when 3 then self.y = @data_box_y + 2
       end
     end
   end
 
   def update
     super
-    # Animate HP bar
     update_hp_animation
-    # Animate Exp bar
     update_exp_animation
-    # Update coordinates of the data box
     update_positions
     pbUpdateSpriteHash(@sprites)
   end
 end
 
 #===============================================================================
-# Splash bar to announce a triggered ability
+# Splash bar to announce a triggered ability.
 #===============================================================================
 class Battle::Scene::AbilitySplashBar < Sprite
   attr_reader :battler
@@ -438,7 +457,7 @@ class Battle::Scene::AbilitySplashBar < Sprite
     # Position the bar
     self.x       = (side == 0) ? -Graphics.width / 2 : Graphics.width
     self.y       = (side == 0) ? 180 : 80
-    self.z       = 120
+    self.z       = 10120
     self.visible = false
   end
 
@@ -506,7 +525,7 @@ class Battle::Scene::AbilitySplashBar < Sprite
 end
 
 #===============================================================================
-# Pokémon sprite (used in battle)
+# Pokémon sprite (used in battle).
 #===============================================================================
 class Battle::Scene::BattlerSprite < RPG::Sprite
   attr_reader   :pkmn
@@ -515,10 +534,10 @@ class Battle::Scene::BattlerSprite < RPG::Sprite
   attr_reader   :sideSize
 
   # Time (in seconds) for one complete sprite bob cycle (up and down) while
-  # choosing a command for this battler. Set to nil to prevent bobbing.
+  # choosing a command for this battler.
   COMMAND_BOBBING_DURATION = 0.6
   # Time (in seconds) for one complete blinking cycle while this battler is
-  # being chosen as a target. Set to nil to prevent blinking.
+  # being chosen as a target.
   TARGET_BLINKING_DURATION = 0.3
 
   def initialize(viewport, sideSize, index, battleAnimations)
@@ -578,9 +597,9 @@ class Battle::Scene::BattlerSprite < RPG::Sprite
     return if !@_iconBitmap
     pbSetOrigin
     if @index.even?
-      self.z = 50 + (5 * @index / 2)
+      self.z = 1100 + (100 * @index / 2)
     else
-      self.z = 50 - (5 * (@index + 1) / 2)
+      self.z = 1000 - (100 * (@index + 1) / 2)
     end
     # Set original position
     p = Battle::Scene.pbBattlerPosition(@index, @sideSize)
@@ -614,7 +633,8 @@ class Battle::Scene::BattlerSprite < RPG::Sprite
     self.bitmap = @_iconBitmap.bitmap
     # Pokémon sprite bobbing while Pokémon is selected
     @spriteYExtra = 0
-    if @selected == 1 && COMMAND_BOBBING_DURATION    # When choosing commands for this Pokémon
+    if Settings::BOB_BATTLER_SPRITE_IF_SELECTED && COMMAND_BOBBING_DURATION &&
+       @selected == 1    # When choosing commands for this Pokémon
       bob_delta = System.uptime % COMMAND_BOBBING_DURATION   # 0-COMMAND_BOBBING_DURATION
       bob_frame = (4 * bob_delta / COMMAND_BOBBING_DURATION).floor
       case bob_frame
@@ -626,7 +646,8 @@ class Battle::Scene::BattlerSprite < RPG::Sprite
     self.y       = self.y
     self.visible = @spriteVisible
     # Pokémon sprite blinking when targeted
-    if @selected == 2 && @spriteVisible && TARGET_BLINKING_DURATION
+    if Settings::FLASH_BATTLER_SPRITE_IF_TARGETED && TARGET_BLINKING_DURATION &&
+       @selected == 2 && @spriteVisible
       blink_delta = System.uptime % TARGET_BLINKING_DURATION   # 0-TARGET_BLINKING_DURATION
       blink_frame = (3 * blink_delta / TARGET_BLINKING_DURATION).floor
       self.visible = (blink_frame != 0)
@@ -636,7 +657,7 @@ class Battle::Scene::BattlerSprite < RPG::Sprite
 end
 
 #===============================================================================
-# Shadow sprite for Pokémon (used in battle)
+# Shadow sprite for Pokémon (used in battle).
 #===============================================================================
 class Battle::Scene::BattlerShadowSprite < RPG::Sprite
   attr_reader   :pkmn
@@ -672,7 +693,7 @@ class Battle::Scene::BattlerShadowSprite < RPG::Sprite
   def pbSetPosition
     return if !@_iconBitmap
     pbSetOrigin
-    self.z = 3
+    self.z = -198
     # Set original position
     p = Battle::Scene.pbBattlerPosition(@index, @sideSize)
     self.x = p[0]

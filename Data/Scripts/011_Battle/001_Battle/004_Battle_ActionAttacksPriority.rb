@@ -1,7 +1,11 @@
+#===============================================================================
+#
+#===============================================================================
 class Battle
-  #=============================================================================
-  # Choosing a move/target
-  #=============================================================================
+  #-----------------------------------------------------------------------------
+  # Choosing a move/target.
+  #-----------------------------------------------------------------------------
+
   def pbCanChooseMove?(idxBattler, idxMove, showMessages, sleepTalk = false)
     battler = @battlers[idxBattler]
     move = battler.moves[idxMove]
@@ -130,9 +134,9 @@ class Battle
     return true
   end
 
-  #=============================================================================
-  # Turn order calculation (priority)
-  #=============================================================================
+  #-----------------------------------------------------------------------------
+  # Turn order calculation (priority).
+  #-----------------------------------------------------------------------------
   def pbCalculatePriority(fullCalc = false, indexArray = nil)
     needRearranging = false
     if fullCalc
@@ -158,17 +162,21 @@ class Battle
             if b.abilityActive?
               pri = Battle::AbilityEffects.triggerPriorityChange(b.ability, b, move, pri)
             end
+            if b.itemActive?
+              pri = Battle::ItemEffects.triggerPriorityChange(b.item, b, move, pri)
+            end
             entry[5] = pri
             @choices[b.index][4] = pri
           end
           # Calculate sub-priority changes (first/last within priority bracket)
-          # Abilities (Stall)
+          # Abilities (Stall, Quick Draw, Mycelium Might)
           if b.abilityActive?
             entry[2] = Battle::AbilityEffects.triggerPriorityBracketChange(b.ability, b, self)
           end
           # Items (Quick Claw, Custap Berry, Lagging Tail, Full Incense)
           if b.itemActive?
             entry[3] = Battle::ItemEffects.triggerPriorityBracketChange(b.item, b, self)
+            entry[3] = 0 if b.hasActiveAbility?(:MYCELIUMMIGHT) && entry[2] < 0
           end
         end
         @priority.push(entry)
@@ -194,6 +202,9 @@ class Battle
           pri = move.pbPriority(entry[0])
           if entry[0].abilityActive?
             pri = Battle::AbilityEffects.triggerPriorityChange(entry[0].ability, entry[0], move, pri)
+          end
+          if entry[0].itemActive?
+            pri = Battle::ItemEffects.triggerPriorityChange(entry[0].item, entry[0], move, pri)
           end
           needRearranging = true if pri != entry[5]
           entry[5] = pri
@@ -261,7 +272,7 @@ class Battle
     end
   end
 
-  def pbPriority(onlySpeedSort = false)
+  def pbPriority(onlySpeedSort = false, with_commanders = false)
     ret = []
     if onlySpeedSort
       # Sort battlers by their speed stats and tie-breaker order only.
@@ -273,6 +284,9 @@ class Battle
       # Sort battlers by priority, sub-priority and their speed. Ties are
       # resolved in the same way each time this method is called in a round.
       @priority.each { |pArray| ret.push(pArray[0]) if !pArray[0].fainted? }
+    end
+    if !with_commanders
+      ret.delete_if { |b| b.effects[PBEffects::Commanding] >= 0 }
     end
     return ret
   end

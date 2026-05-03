@@ -1,5 +1,5 @@
 #===============================================================================
-# Data type properties
+# Data type properties.
 #===============================================================================
 module UndefinedProperty
   def self.set(_settingname, oldsetting)
@@ -544,12 +544,10 @@ end
 #
 #===============================================================================
 class MovePropertyForSpecies
-  def initialize(pokemondata)
-    @pokemondata = pokemondata
-  end
+  attr_writer :species
 
   def set(_settingname, oldsetting)
-    ret = pbChooseMoveListForSpecies(@pokemondata[0], oldsetting || nil)
+    ret = pbChooseMoveListForSpecies(@species, oldsetting || nil)
     return ret || oldsetting
   end
 
@@ -693,10 +691,6 @@ end
 #
 #===============================================================================
 class BallProperty
-  def initialize(pokemondata)
-    @pokemondata = pokemondata
-  end
-
   def set(_settingname, oldsetting)
     return pbChooseBallList(oldsetting)
   end
@@ -923,18 +917,21 @@ end
 #===============================================================================
 module PocketProperty
   def self.set(_settingname, oldsetting)
-    commands = Settings.bag_pocket_names.clone
-    cmd = pbMessage(_INTL("Choose a pocket for this item."), commands, -1)
-    return (cmd >= 0) ? cmd + 1 : oldsetting
+    pockets = GameData::BagPocket.all_pockets
+    commands = []
+    pockets.each { |pckt| commands.push(GameData::BagPocket.get(pckt).name) }
+    initial_val = pockets.index(GameData::BagPocket.get(oldsetting || 1).id)
+    cmd = pbMessage(_INTL("Choose a pocket for this item."), commands, -1, nil, initial_val)
+    return (cmd >= 0) ? pockets[cmd] : oldsetting
   end
 
   def self.defaultValue
-    return 1
+    return GameData::BagPocket.all_pockets.first
   end
 
   def self.format(value)
-    return _INTL("No Pocket") if value == 0
-    return (value) ? Settings.bag_pocket_names[value - 1] : value.inspect
+    return _INTL("No Pocket") if value == 0 || value == :None
+    return (value) ? GameData::BagPocket.get(value).name : value.inspect
   end
 end
 
@@ -1619,7 +1616,7 @@ module EncounterSlotProperty
 end
 
 #===============================================================================
-# Core property editor script
+# Core property editor script.
 #===============================================================================
 def pbPropertyList(title, data, properties, saveprompt = false)
   viewport = Viewport.new(0, 0, Graphics.width, Graphics.height)

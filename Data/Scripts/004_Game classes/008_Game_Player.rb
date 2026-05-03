@@ -14,6 +14,9 @@ class Game_Player < Game_Character
   # Time in seconds for one cycle of bobbing (playing 4 charset frames) while
   # surfing or diving.
   SURF_BOB_DURATION = 1.5
+  # Time in seconds for a bump into an object to take place. 0.5 is double the
+  # time taken to walk 1 step.
+  BUMP_DURATION = 0.5
 
   def initialize(*arg)
     super(*arg)
@@ -35,6 +38,10 @@ class Game_Player < Game_Character
     return ret + 1
   end
 
+  def pattern
+    return @bump_pattern || super
+  end
+
   def has_follower?
     return $PokemonGlobal.followers.length > 0
   end
@@ -51,7 +58,6 @@ class Game_Player < Game_Character
 
   def can_run?
     return @move_speed > 3 if @move_route_forcing
-    return false if @bumping
     return false if $game_temp.in_menu || $game_temp.in_battle ||
                     $game_temp.message_window_showing || pbMapInterpreterRunning?
     return false if !$player.has_running_shoes && !$PokemonGlobal.diving &&
@@ -95,7 +101,6 @@ class Game_Player < Game_Character
       self.move_speed = 3 if !@move_route_forcing
       new_charset = pbGetPlayerCharset(meta.walk_charset)
     end
-    self.move_speed = 3 if @bumping
     @character_name = new_charset if new_charset
   end
 
@@ -119,12 +124,20 @@ class Game_Player < Game_Character
   #-----------------------------------------------------------------------------
 
   def bump_into_object
-    pbSEPlay("Player bump") if !@move_route_forcing
+    return if @move_route_forcing
+    return if @bump_time_start && (System.uptime - @bump_time_start < BUMP_DURATION)
+    pbSEPlay("Player bump")
     $stats.bump_count += 1
-    @move_initial_x = @x
-    @move_initial_y = @y
-    @move_timer = 0.0
-    @bumping = true
+    @bump_time_start = System.uptime
+  end
+
+  def end_bump_into_object
+    @bump_time_start = nil
+    @bump_pattern = nil
+  end
+
+  def bumping_into_object?
+    return !@bump_time_start.nil?
   end
 
   def add_move_distance_to_stats(distance = 1)
@@ -142,6 +155,7 @@ class Game_Player < Game_Character
     turn_generic(dir, true) if turn_enabled
     if !$game_temp.encounter_triggered
       if can_move_in_direction?(dir)
+        end_bump_into_object
         x_offset = (dir == 4) ? -1 : (dir == 6) ? 1 : 0
         y_offset = (dir == 8) ? -1 : (dir == 2) ? 1 : 0
         # Jump over ledges
@@ -180,6 +194,7 @@ class Game_Player < Game_Character
     old_direction = @direction
     super(dir)
     if @direction != old_direction && !@move_route_forcing && !pbMapInterpreterRunning?
+      end_bump_into_object
       EventHandlers.trigger(:on_player_change_direction)
       $game_temp.encounter_triggered = false if !keep_enc_indicator
     end
@@ -235,15 +250,15 @@ class Game_Player < Game_Character
   #     y : y-coordinate
   #     d : direction (0, 2, 4, 6, 8)
   #         * 0 = Determines if all directions are impassable (for jumping)
-  def passable?(x, y, d, strict = false)
+  def passable?(x, y, dir, strict = false)
     # Get new coordinates
-    new_x = x + (d == 6 ? 1 : d == 4 ? -1 : 0)
-    new_y = y + (d == 2 ? 1 : d == 8 ? -1 : 0)
+    new_x = x + (dir == 6 ? 1 : dir == 4 ? -1 : 0)
+    new_y = y + (dir == 2 ? 1 : dir == 8 ? -1 : 0)
     # If coordinates are outside of map
     return false if !$game_map.validLax?(new_x, new_y)
     if !$game_map.valid?(new_x, new_y)
       return false if !$map_factory
-      return $map_factory.isPassableFromEdge?(new_x, new_y)
+      return $map_factory.isPassableFromEdge?(new_x, new_y, 10 - dir)
     end
     # If debug mode is ON and Ctrl key was pressed
     return true if $DEBUG && Input.press?(Input::CTRL)
@@ -421,7 +436,7 @@ class Game_Player < Game_Character
     update_stop if $game_temp.in_menu && @stopped_last_frame
     update_screen_position(last_real_x, last_real_y)
     # Update dependent events
-    if (!@moved_last_frame || @stopped_last_frame) && (moving? || jumping?) && !@bumping
+    if (!@moved_last_frame || @stopped_last_frame) && (moving? || jumping?)
       $game_temp.followers.move_followers
     end
     $game_temp.followers.update
@@ -429,31 +444,35 @@ class Game_Player < Game_Character
   end
 
   def update_command_new
-    dir = Input.dir4
+    dir = Input.dir4(@moved_last_frame)
     if $PokemonGlobal.forced_movement?
       move_forward
-    elsif !pbMapInterpreterRunning? && !$game_temp.message_window_showing &&
-          !$game_temp.in_mini_update && !$game_temp.in_menu
-      # Move player in the direction the directional button is being pressed
-      if @moved_last_frame ||
-         (dir > 0 && dir == @lastdir && System.uptime - @lastdirframe >= 0.075)
-        case dir
-        when 2 then move_down
-        when 4 then move_left
-        when 6 then move_right
-        when 8 then move_up
-        end
-      elsif dir != @lastdir
-        case dir
-        when 2 then turn_down
-        when 4 then turn_left
-        when 6 then turn_right
-        when 8 then turn_up
-        end
+      @last_input_time = nil
+      return
+    elsif dir <= 0
+      @last_input_time = nil
+      return
+    end
+    return if pbMapInterpreterRunning? || $game_temp.message_window_showing ||
+              $game_temp.in_mini_update || $game_temp.in_menu
+    # Move player in the direction the directional button is being pressed
+    if @moved_last_frame ||
+       (dir == direction && (!@last_input_time || System.uptime - @last_input_time >= 0.075))
+      case dir
+      when 2 then move_down
+      when 4 then move_left
+      when 6 then move_right
+      when 8 then move_up
       end
-      # Record last direction input
-      @lastdirframe = System.uptime if dir != @lastdir
-      @lastdir = dir
+      @last_input_time = nil
+    elsif dir != direction
+      case dir
+      when 2 then turn_down
+      when 4 then turn_left
+      when 6 then turn_right
+      when 8 then turn_up
+      end
+      @last_input_time = System.uptime
     end
   end
 
@@ -515,6 +534,7 @@ class Game_Player < Game_Character
   end
 
   def update_pattern
+    # Bobbing up and down on/in water
     if $PokemonGlobal&.surfing || $PokemonGlobal&.diving
       bob_pattern = (4 * System.uptime / SURF_BOB_DURATION).to_i % 4
       @pattern = bob_pattern if !@lock_pattern
@@ -524,6 +544,17 @@ class Game_Player < Game_Character
     else
       @bob_height = 0
       super
+    end
+    # Bumping into an object
+    if bumping_into_object? && !$PokemonGlobal&.surfing && !$PokemonGlobal&.diving
+      pattern_time = BUMP_DURATION / 2   # 2 frames per step animation
+      bump_time = System.uptime - @bump_time_start
+      if bump_time >= BUMP_DURATION
+        end_bump_into_object
+      else
+        bump_frame = (bump_time / pattern_time).floor
+        @bump_pattern = (bump_frame + 1) % 4
+      end
     end
   end
 

@@ -1,11 +1,15 @@
+#===============================================================================
+#
+#===============================================================================
 class Battle
-  #=============================================================================
-  # Gaining Experience
-  #=============================================================================
+  #-----------------------------------------------------------------------------
+  # Gaining Experience.
+  #-----------------------------------------------------------------------------
+
   def pbGainExp
     # Play wild victory music if it's the end of the battle (has to be here)
     @scene.pbWildBattleSuccess if wildBattle? && pbAllFainted?(1) && !pbAllFainted?(0)
-    return if !@internalBattle || !@expGain
+    return if !@internalBattle || @rules[:no_exp_gain]
     # Go through each battler in turn to find the Pokémon that participated in
     # battle against it, and award those Pokémon Exp/EVs
     expAll = $player.has_exp_all || $bag.has?(:EXPALL)
@@ -25,7 +29,7 @@ class Battle
       if !expAll
         eachInTeam(0, 0) do |pkmn, i|
           next if !pkmn.able?
-          next if !pkmn.hasItem?(:EXPSHARE) && GameData::Item.try_get(@initialItems[0][i]) != :EXPSHARE
+          next if !pkmn.hasItem?(:EXPSHARE) && initialItem(0, i) != :EXPSHARE
           expShare.push(i)
         end
       end
@@ -64,7 +68,7 @@ class Battle
     GameData::Stat.each_main { |s| evTotal += pkmn.ev[s.id] }
     # Modify EV yield based on pkmn's held item
     if !Battle::ItemEffects.triggerEVGainModifier(pkmn.item, pkmn, evYield)
-      Battle::ItemEffects.triggerEVGainModifier(@initialItems[0][idxParty], pkmn, evYield)
+      Battle::ItemEffects.triggerEVGainModifier(initialItem(0, idxParty), pkmn, evYield)
     end
     # Double EV gain because of Pokérus
     if pkmn.pokerusStage >= 1   # Infected or cured
@@ -149,7 +153,7 @@ class Battle
     # Modify Exp gain based on pkmn's held item
     i = Battle::ItemEffects.triggerExpGainModifier(pkmn.item, pkmn, exp)
     if i < 0
-      i = Battle::ItemEffects.triggerExpGainModifier(@initialItems[0][idxParty], pkmn, exp)
+      i = Battle::ItemEffects.triggerExpGainModifier(initialItem(0, idxParty), pkmn, exp)
     end
     exp = i if i >= 0
     # Boost Exp gained with high affection
@@ -214,7 +218,7 @@ class Battle
       pkmn.calc_stats
       battler&.pbUpdate(false)
       @scene.pbRefreshOne(battler.index) if battler
-      pbDisplayPaused(_INTL("{1} grew to Lv. {2}!", pkmn.name, curLevel)) { pbSEPlay("Pkmn level up") }
+      pbDisplayPaused(_INTL("{1} grew to Lv. {2}!", pkmn.name, curLevel) + "\\se[Pkmn level up]\\wtnp[30]")
       @scene.pbLevelUp(pkmn, battler, oldTotalHP, oldAttack, oldDefense,
                        oldSpAtk, oldSpDef, oldSpeed)
       # Learn all moves learned at this level
@@ -223,10 +227,12 @@ class Battle
     end
   end
 
-  #=============================================================================
-  # Learning a move
-  #=============================================================================
+  #-----------------------------------------------------------------------------
+  # Learning a move.
+  #-----------------------------------------------------------------------------
+
   def pbLearnMove(idxParty, newMove)
+    return if $PokemonSystem.skip_move_learning == 1
     pkmn = pbParty(0)[idxParty]
     return if !pkmn
     pkmnName = pkmn.name
@@ -237,7 +243,7 @@ class Battle
     # Pokémon has space for the new move; just learn it
     if pkmn.numMoves < Pokemon::MAX_MOVES
       pkmn.learn_move(newMove)
-      pbDisplay(_INTL("{1} learned {2}!", pkmnName, moveName)) { pbSEPlay("Pkmn move learnt") }
+      pbDisplay(_INTL("{1} learned {2}!", pkmnName, moveName) + "\\se[Pkmn move learnt]\\wtnp[30]")
       if battler
         battler.moves.push(Move.from_pokemon_move(self, pkmn.moves.last))
         battler.pbCheckFormOnMovesetChange
@@ -254,9 +260,9 @@ class Battle
           oldMoveName = pkmn.moves[forgetMove].name
           pkmn.moves[forgetMove] = Pokemon::Move.new(newMove)   # Replaces current/total PP
           battler.moves[forgetMove] = Move.from_pokemon_move(self, pkmn.moves[forgetMove]) if battler
-          pbDisplayPaused(_INTL("1, 2, and... ... ... Ta-da!")) { pbSEPlay("Battle ball drop") }
+          pbDisplayPaused(_INTL("1, 2, and... ... ... Ta-da!") + "\\se[Battle ball drop]\\wtnp[10]")
           pbDisplayPaused(_INTL("{1} forgot how to use {2}. And...", pkmnName, oldMoveName))
-          pbDisplay(_INTL("{1} learned {2}!", pkmnName, moveName)) { pbSEPlay("Pkmn move learnt") }
+          pbDisplay(_INTL("{1} learned {2}!", pkmnName, moveName) + "\\se[Pkmn move learnt]\\wtnp[30]")
           battler&.pbCheckFormOnMovesetChange
           break
         elsif pbDisplayConfirm(_INTL("Give up on learning {1}?", moveName))

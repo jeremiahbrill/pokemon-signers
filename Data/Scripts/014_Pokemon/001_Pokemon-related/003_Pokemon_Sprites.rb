@@ -123,6 +123,21 @@ class PokemonIconSprite < Sprite
 
   def pokemon=(value)
     @pokemon = value
+    # Check if the bitmap needs to be reloaded
+    new_values = nil
+    if @pokemon
+      new_values = {
+        :species => @pokemon.species,
+        :form    => @pokemon.form,
+        :gender  => @pokemon.gender,
+        :shiny   => @pokemon.shiny?,
+        :shadow  => @pokemon.shadowPokemon?,
+        :egg     => @pokemon.egg?
+      }
+    end
+    return if @pokemon_values == new_values
+    @pokemon_values = new_values
+    # Reload the bitmap
     @animBitmap&.dispose
     @animBitmap = nil
     if !@pokemon
@@ -219,7 +234,7 @@ class PokemonSpeciesIconSprite < Sprite
     @species       = species
     @gender        = 0
     @form          = 0
-    @shiny         = 0
+    @shiny         = false
     @frames_count  = 0
     @current_frame = 0
     refresh

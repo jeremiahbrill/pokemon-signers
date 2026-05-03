@@ -1,8 +1,11 @@
+#===============================================================================
+#
+#===============================================================================
 module BattleAnimationEditor
   module_function
 
   #=============================================================================
-  # Controls
+  # Controls.
   #=============================================================================
   class Window_Menu < Window_CommandPokemon
     def initialize(commands, x, y)
@@ -42,7 +45,7 @@ module BattleAnimationEditor
   end
 
   #=============================================================================
-  # Clipboard
+  # Clipboard.
   #=============================================================================
   module Clipboard
     @data = nil
@@ -95,7 +98,7 @@ module BattleAnimationEditor
   end
 
   #=============================================================================
-  # Sprite sheet scrolling bar
+  # Sprite sheet scrolling bar.
   #=============================================================================
   class AnimationWindow < Sprite
     attr_reader :animbitmap
@@ -247,7 +250,7 @@ module BattleAnimationEditor
   end
 
   #=============================================================================
-  # Cel sprite
+  # Cel sprite.
   #=============================================================================
   class InvalidatableSprite < Sprite
     def initialize(viewport = nil)
@@ -260,17 +263,17 @@ module BattleAnimationEditor
       @invalid = true
     end
 
-    # Determines whether the control is invalid
+    # Determines whether the control is invalid.
     def invalid?
       return @invalid
     end
 
-    # Marks that the control is valid.  Normally called only by repaint.
+    # Marks that the control is valid. Normally called only by repaint.
     def validate
       @invalid = false
     end
 
-    # Redraws the sprite only if it is invalid, and then revalidates the sprite
+    # Redraws the sprite only if it is invalid, and then revalidates the sprite.
     def repaint
       if self.invalid?
         refresh
@@ -278,8 +281,8 @@ module BattleAnimationEditor
       end
     end
 
-    # Redraws the sprite.  This method should not check whether
-    # the sprite is invalid, to allow it to be explicitly called.
+    # Redraws the sprite. This method should not check whether the sprite is
+    # invalid, to allow it to be explicitly called.
     def refresh; end
   end
 
@@ -353,7 +356,7 @@ module BattleAnimationEditor
   end
 
   #=============================================================================
-  # Canvas
+  # Canvas.
   #=============================================================================
   class AnimationCanvas < Sprite
     attr_reader :viewport
@@ -575,7 +578,7 @@ module BattleAnimationEditor
       end
     end
 
-    # Clears all items in the frame except locked items
+    # Clears all items in the frame except locked items.
     def clearFrame(frame)
       if frame >= 0 && frame < @animation.length
         PBAnimation::MAX_SPRITES.times do |i|
@@ -620,7 +623,7 @@ module BattleAnimationEditor
       self.invalidate
     end
 
-    # This frame becomes a copy of the previous frame
+    # This frame becomes a copy of the previous frame.
     def pasteLast
       copyFrame(@currentframe - 1, @currentframe) if @currentframe > 0
     end
@@ -759,7 +762,6 @@ module BattleAnimationEditor
         return false
       end
       if usealpha
-        # TODO: This should account for sprite.angle as well.
         bitmapX = sprite.src_rect.x
         bitmapY = sprite.src_rect.y
         bitmapX += sprite.ox
@@ -931,7 +933,7 @@ module BattleAnimationEditor
   end
 
   #=============================================================================
-  # Window classes
+  # Window classes.
   #=============================================================================
   class BitmapDisplayWindow < SpriteWindow_Base
     attr_reader :bitmapname

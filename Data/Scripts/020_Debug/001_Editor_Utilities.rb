@@ -111,7 +111,7 @@ def pbMapTree
 end
 
 #===============================================================================
-# List all members of a class
+# List all members of a class.
 #===============================================================================
 def pbChooseFromGameDataList(game_data, default = nil)
   if !GameData.const_defined?(game_data.to_sym)
@@ -242,7 +242,7 @@ def pbChooseBallList(defaultMoveID = nil)
 end
 
 #===============================================================================
-# General list methods
+# General list methods.
 #===============================================================================
 def pbCommands2(cmdwindow, commands, cmdIfCancel, defaultindex = -1, noresize = false)
   cmdwindow.commands = commands
@@ -300,10 +300,7 @@ def pbCommands3(cmdwindow, commands, cmdIfCancel, defaultindex = -1, noresize = 
     Graphics.update
     Input.update
     cmdwindow.update
-    if Input.trigger?(Input::SPECIAL)
-      command = [5, cmdwindow.index]
-      break
-    elsif Input.press?(Input::ACTION)
+    if Input.press?(Input::ACTION)
       if Input.repeat?(Input::UP)
         command = [1, cmdwindow.index]
         break

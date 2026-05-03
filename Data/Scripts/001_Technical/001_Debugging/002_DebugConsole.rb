@@ -1,38 +1,47 @@
+#===============================================================================
 # To use the console, use the executable explicitly built with the console
 # enabled on Windows. On Linux and macOS, just launch the executable directly
 # from a terminal.
+#===============================================================================
 module Console
-  def self.setup_console
+  module_function
+
+  def setup_console
     return unless $DEBUG
     echoln "GPU Cache Max: #{Bitmap.max_size}"
-    echoln "-------------------------------------------------------------------------------"
-    echoln "#{System.game_title} Output Window"
-    echoln "-------------------------------------------------------------------------------"
-    echoln "If you can see this window, you are running the game in Debug Mode. This means"
-    echoln "that you're either playing a debug version of the game, or you're playing from"
-    echoln "within RPG Maker XP."
+    echoln Console.markup_style("You can ignore any messages above about fluidsynth.", text: :brown)
     echoln ""
-    echoln "Closing this window will close the game. If you want to get rid of this window,"
-    echoln "run the program from the Shell, or download a release version of the game."
-    echoln "-------------------------------------------------------------------------------"
-    echoln "Debug Output:"
-    echoln "-------------------------------------------------------------------------------"
+    echoln Console.markup_style("===============================================================================", text: :yellow)
+    echoln Console.markup_style("\"#{System.game_title}\" Debug Console Window", text: :yellow)
+    echoln Console.markup_style("===============================================================================", text: :yellow)
+    echoln "You are playing in Debug Mode, probably because you clicked the \"Playtest\""
+    echoln "button in RPG Maker XP. If you want to play as a regular player, run Game.exe"
+    echoln "directly."
+    echoln ""
+    echoln "Closing this window will close the game."
+    echoln ""
+    echoln Console.markup_style("===============================================================================", text: :yellow)
+    echoln Console.markup_style("Debug Output:", text: :yellow)
+    echoln Console.markup_style("===============================================================================", text: :yellow)
     echoln ""
   end
 
-  def self.readInput
+  def readInput
     return gets.strip
   end
 
-  def self.readInput2
+  def readInput2
     return self.readInput
   end
 
-  def self.get_input
+  def get_input
     echo self.readInput2
   end
 end
 
+#===============================================================================
+#
+#===============================================================================
 module Kernel
   def echo(string)
     return unless $DEBUG
@@ -45,33 +54,29 @@ module Kernel
   end
 end
 
-Console.setup_console
-
 #===============================================================================
-#  Console message formatting
+# Console message formatting
 #===============================================================================
 module Console
   module_function
 
   #-----------------------------------------------------------------------------
-  #  echo string into console (example shorthand for common options)
+  # echo string into console (example shorthand for common options)
   #-----------------------------------------------------------------------------
+
   # heading 1
   def echo_h1(msg)
     echoln markup_style("*** #{msg} ***", text: :brown)
-    echoln ""
   end
 
   # heading 2
   def echo_h2(msg, **options)
     echoln markup_style(msg, **options)
-    echoln ""
   end
 
   # heading 3
   def echo_h3(msg)
     echoln markup(msg)
-    echoln ""
   end
 
   # list item
@@ -130,6 +135,7 @@ module Console
   #-----------------------------------------------------------------------------
   # Markup options
   #-----------------------------------------------------------------------------
+
   def string_colors
     {
       default: "38", black: "30", red: "31", green: "32", brown: "33",
@@ -231,3 +237,8 @@ module Console
     return string
   end
 end
+
+#===============================================================================
+#
+#===============================================================================
+Console.setup_console

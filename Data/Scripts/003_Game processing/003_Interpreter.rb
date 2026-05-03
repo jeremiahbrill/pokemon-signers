@@ -322,9 +322,20 @@ class Interpreter
   # Sets another event's self switch (eg. pbSetSelfSwitch(20, "A", true) ).
   def pbSetSelfSwitch(eventid, switch_name, value, mapid = -1)
     mapid = @map_id if mapid < 0
-    old_value = $game_self_switches[[mapid, eventid, switch_name]]
-    $game_self_switches[[mapid, eventid, switch_name]] = value
-    if value != old_value && $map_factory.hasMap?(mapid)
+    changed = false
+    case eventid
+    when Array, Range
+      eventid.each do |ev_id|
+        old_value = $game_self_switches[[mapid, ev_id, switch_name]]
+        $game_self_switches[[mapid, ev_id, switch_name]] = value
+        changed = true if value != old_value
+      end
+    when Numeric
+      old_value = $game_self_switches[[mapid, eventid, switch_name]]
+      $game_self_switches[[mapid, eventid, switch_name]] = value
+      changed = (value != old_value)
+    end
+    if changed && $map_factory.hasMap?(mapid)
       $map_factory.getMap(mapid, false).need_refresh = true
     end
   end
@@ -442,9 +453,9 @@ class Interpreter
     $game_temp.mart_prices[item] = [-1, -1] if !$game_temp.mart_prices[item]
     $game_temp.mart_prices[item][0] = buy_price if buy_price > 0
     if sell_price >= 0   # 0=can't sell
-      $game_temp.mart_prices[item][1] = sell_price * 2
+      $game_temp.mart_prices[item][1] = sell_price
     elsif buy_price > 0
-      $game_temp.mart_prices[item][1] = buy_price
+      $game_temp.mart_prices[item][1] = buy_price / Settings::ITEM_SELL_PRICE_DIVISOR
     end
   end
 

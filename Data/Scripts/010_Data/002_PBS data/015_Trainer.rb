@@ -1,3 +1,6 @@
+#===============================================================================
+#
+#===============================================================================
 module GameData
   class Trainer
     attr_reader :id
@@ -12,7 +15,6 @@ module GameData
     DATA = {}
     DATA_FILENAME = "trainers.dat"
     PBS_BASE_FILENAME = "trainers"
-
     # "Pokemon" is specially mentioned in def compile_trainers and def
     # write_trainers, and acts as a subheading for a particular Pokémon.
     SCHEMA = {
@@ -30,8 +32,8 @@ module GameData
       "Ability"      => [:ability,         "e", :Ability],
       "AbilityIndex" => [:ability_index,   "u"],
       "Item"         => [:item,            "e", :Item],
-      "Gender"       => [:gender,          "e", {"M" => 0, "m" => 0, "Male" => 0, "male" => 0, "0" => 0,
-                                                 "F" => 1, "f" => 1, "Female" => 1, "female" => 1, "1" => 1}],
+      "Gender"       => [:gender,          "e", {"male" => 0, "Male" => 0, "m" => 0, "M" => 0, "0" => 0,
+                                                 "female" => 1, "Female" => 1, "f" => 1, "F" => 1, "1" => 1}],
       "Nature"       => [:nature,          "e", :Nature],
       "IV"           => [:iv,              "uUUUUU"],
       "EV"           => [:ev,              "uUUUUU"],
@@ -83,6 +85,8 @@ module GameData
       return (self::DATA.has_key?(key)) ? self::DATA[key] : nil
     end
 
+    #---------------------------------------------------------------------------
+
     def initialize(hash)
       @id              = hash[:id]
       @trainer_type    = hash[:trainer_type]
@@ -132,6 +136,7 @@ module GameData
         trainer.party.push(pkmn)
         # Set Pokémon's properties if defined
         pkmn.form_simple = pkmn_data[:form] if pkmn_data[:form]
+        pkmn.time_form_set = pbGetTimeNow.to_i   # To allow Furfrou/Hoopa alternate forms
         pkmn.item = pkmn_data[:item]
         if pkmn_data[:moves] && pkmn_data[:moves].length > 0
           pkmn_data[:moves].each { |move| pkmn.learn_move(move) }
@@ -171,7 +176,13 @@ module GameData
           pkmn.makeShadow
           pkmn.shiny = false
         end
-        pkmn.poke_ball = pkmn_data[:poke_ball] if pkmn_data[:poke_ball]
+        if pkmn_data[:poke_ball]
+          pkmn.poke_ball = pkmn_data[:poke_ball]
+        elsif trainer.default_poke_ball
+          pkmn.poke_ball = trainer.default_poke_ball
+        end
+        pkmn.form   # Called just to recalculate it in case a defined property has changed it, e.g. gender for Espurr
+        pkmn.reset_moves if !pkmn_data[:moves] || pkmn_data[:moves].empty?   # In case form changed
         pkmn.calc_stats
       end
       return trainer
@@ -194,8 +205,6 @@ module GameData
       ret = @pokemon[index][SUB_SCHEMA[key][0]]
       ret = nil if ret == false || (ret.is_a?(Array) && ret.length == 0) || ret == ""
       case key
-      when "Gender"
-        ret = ["male", "female"][ret] if ret
       when "IV", "EV"
         if ret
           new_ret = []

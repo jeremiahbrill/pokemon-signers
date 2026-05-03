@@ -1,6 +1,7 @@
 #===============================================================================
-# Battler Options
+# Battler options.
 #===============================================================================
+
 MenuHandlers.add(:battle_debug_menu, :battlers, {
   "name"        => _INTL("Battlers..."),
   "parent"      => :main,
@@ -14,7 +15,7 @@ MenuHandlers.add(:battle_debug_menu, :list_player_battlers, {
   "effect"      => proc { |battle|
     battlers = []
     cmds = []
-    battle.allSameSideBattlers.each do |b|
+    battle.allSameSideBattlers(0, true).each do |b|
       battlers.push(b)
       text = "[#{b.index}] #{b.name}"
       if b.pbOwnedByPlayer?
@@ -40,7 +41,7 @@ MenuHandlers.add(:battle_debug_menu, :list_foe_battlers, {
   "effect"      => proc { |battle|
     battlers = []
     cmds = []
-    battle.allOtherSideBattlers.each do |b|
+    battle.allOtherSideBattlers(0, true).each do |b|
       battlers.push(b)
       cmds.push("[#{b.index}] #{b.name}")
     end
@@ -58,7 +59,7 @@ MenuHandlers.add(:battle_debug_menu, :speed_order, {
   "parent"      => :battlers,
   "description" => _INTL("Show all battlers in order from fastest to slowest."),
   "effect"      => proc { |battle|
-    battlers = battle.allBattlers.map { |b| [b, b.pbSpeed] }
+    battlers = battle.allBattlers(true).map { |b| [b, b.pbSpeed] }
     battlers.sort! { |a, b| b[1] <=> a[1] }
     commands = []
     battlers.each do |value|
@@ -71,8 +72,9 @@ MenuHandlers.add(:battle_debug_menu, :speed_order, {
 })
 
 #===============================================================================
-# Pokémon
+# Pokémon.
 #===============================================================================
+
 MenuHandlers.add(:battle_debug_menu, :pokemon_teams, {
   "name"        => _INTL("Pokémon teams"),
   "parent"      => :main,
@@ -130,8 +132,9 @@ MenuHandlers.add(:battle_debug_menu, :pokemon_teams, {
 })
 
 #===============================================================================
-# Trainer Options
+# Trainer options.
 #===============================================================================
+
 MenuHandlers.add(:battle_debug_menu, :trainers, {
   "name"        => _INTL("Trainer options..."),
   "parent"      => :main,
@@ -226,8 +229,9 @@ MenuHandlers.add(:battle_debug_menu, :mega_evolution, {
 })
 
 #===============================================================================
-# Field Options
+# Field options.
 #===============================================================================
+
 MenuHandlers.add(:battle_debug_menu, :field, {
   "name"        => _INTL("Field effects..."),
   "parent"      => :main,

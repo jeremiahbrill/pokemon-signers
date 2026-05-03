@@ -54,15 +54,29 @@ class String
   def numeric?
     return !self[/\A[+-]?\d+(?:\.\d+)?\Z/].nil?
   end
+
+  def format_number
+    return self if !numeric?
+    str = self.split(".")
+    tho_separator = '\1' + Translation.thousands_separator
+    str[0] = "0" if str[0].nil?
+    str[0] = str[0].reverse.gsub(/(\d{3})(?=\d)/, tho_separator).reverse
+    if str[1]
+      dec_separator = Translation.decimal_separator
+      return str[0] + dec_separator + str[1]
+    end
+    return str[0]
+  end
 end
 
 #===============================================================================
 # class Numeric
 #===============================================================================
 class Numeric
-  # Turns a number into a string formatted like 12,345,678.
+  # Turns a number into a string formatted like 12,345,678. Some languages use
+  # different characters as the thousands separator.
   def to_s_formatted
-    return self.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\1,').reverse
+    return self.to_s.format_number
   end
 
   def to_word
@@ -72,8 +86,37 @@ class Numeric
            _INTL("twelve"), _INTL("thirteen"), _INTL("fourteen"), _INTL("fifteen"),
            _INTL("sixteen"), _INTL("seventeen"), _INTL("eighteen"), _INTL("nineteen"),
            _INTL("twenty")]
-    return ret[self] if self.is_a?(Integer) && self >= 0 && self <= ret.length
+    return ret[self] if self.is_a?(Integer) && self >= 0 && self <= ret.length - 1
     return self.to_s
+  end
+
+  def to_ordinal
+    ret = [_INTL("zeroth"), _INTL("first"), _INTL("second"), _INTL("third"),
+          _INTL("fourth"), _INTL("fifth"), _INTL("sixth"), _INTL("seventh"),
+          _INTL("eighth"), _INTL("ninth"), _INTL("tenth"), _INTL("eleventh"),
+          _INTL("twelfth"), _INTL("thirteenth"), _INTL("fourteenth"), _INTL("fifteenth"),
+          _INTL("sixteenth"), _INTL("seventeenth"), _INTL("eighteenth"), _INTL("nineteenth"),
+          _INTL("twentieth")]
+    return ret[self] if self.is_a?(Integer) && self >= 0 && self <= ret.length - 1
+    return self.to_ord
+  end
+
+  # Returns "1st", "2nd", "3rd", etc.
+  def to_ord
+    return self.to_s if !self.is_a?(Integer)
+    ret = self.to_s
+    if ((self % 100) / 10) == 1   # 10-19
+      ret += "th"
+    elsif (self % 10) == 1
+      ret += "st"
+    elsif (self % 10) == 2
+      ret += "nd"
+    elsif (self % 10) == 3
+      ret += "rd"
+    else
+      ret += "th"
+    end
+    return ret
   end
 end
 
@@ -187,7 +230,7 @@ class Color
         hex = args.first.to_s(16)
       when String
         try_rgb_format = args.first.split(",")
-        init_original(*try_rgb_format.map(&:to_i)) if try_rgb_format.length.between?(3, 4)
+        return init_original(*try_rgb_format.map(&:to_i)) if try_rgb_format.length.between?(3, 4)
         hex = args.first.delete("#")
       end
       pbPrintException("Wrong type of argument given!") if !hex
@@ -197,8 +240,8 @@ class Color
     when 3
       r, g, b = *args
     end
-    init_original(r, g, b) if r && g && b
-    init_original(*args)
+    return init_original(r, g, b) if r && g && b
+    return init_original(*args)
   end
 
   def self.new_from_rgb(param)

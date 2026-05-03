@@ -1,5 +1,5 @@
 #===============================================================================
-# Simple battler class for the wild Pokémon in a Safari Zone battle
+# Simple battler class for the wild Pokémon in a Safari Zone battle.
 #===============================================================================
 class Battle::FakeBattler
   attr_reader :battle
@@ -25,8 +25,8 @@ class Battle::FakeBattler
   def shiny?;         return @pokemon.shiny?;       end
   def super_shiny?;   return @pokemon.super_shiny?; end
 
-  def isSpecies?(check_species)
-    return @pokemon&.isSpecies?(check_species)
+  def isSpecies?(*check_species)
+    return @pokemon&.isSpecies?(*check_species)
   end
 
   def fainted?;       return false; end
@@ -52,10 +52,22 @@ class Battle::FakeBattler
   end
 
   def pbReset; end
+
+  def pbMaxLevelBadgeObedience
+    ret = 10 * (@battle.pbPlayer.badge_count + 1)
+    ret = GameData::GrowthRate.max_level if @battle.pbPlayer.badge_count >= 8
+    return ret
+  end
+
+  # This is the inverse of the above method.
+  def pbBadgesNeededToObey
+    return 8 if level > 80
+    return (level - 1) / 10
+  end
 end
 
 #===============================================================================
-# Data box for safari battles
+# Data box for safari battles.
 #===============================================================================
 class Battle::Scene::SafariDataBox < Sprite
   attr_accessor :selected
@@ -64,7 +76,7 @@ class Battle::Scene::SafariDataBox < Sprite
     super(viewport)
     @selected    = 0
     @battle      = battle
-    @databox     = AnimatedBitmap.new(_INTL("Graphics/UI/Battle/databox_safari"))
+    @databox     = AnimatedBitmap.new("Graphics/UI/Battle/databox_safari")
     self.x       = Graphics.width - 232
     self.y       = Graphics.height - 184
     @contents    = Bitmap.new(@databox.width, @databox.height)
@@ -134,7 +146,7 @@ class Battle::Scene::Animation::ThrowBait < Battle::Scene::Animation
     # Show Pokémon jumping before eating the bait
     delay = ball.totalDuration + 3
     2.times do
-      battler.setSE(delay, "player jump")
+      battler.setSE(delay, "Player jump")
       battler.moveDelta(delay, 3, 0, -16)
       battler.moveDelta(delay + 4, 3, 0, 16)
       delay = battler.totalDuration + 1
@@ -213,7 +225,7 @@ class Battle::Scene::Animation::ThrowRock < Battle::Scene::Animation
 end
 
 #===============================================================================
-# Safari Zone battle scene (the visuals of the battle)
+# Safari Zone battle scene (the visuals of the battle).
 #===============================================================================
 class Battle::Scene
   def pbSafariStart
@@ -230,12 +242,8 @@ class Battle::Scene
   end
 
   def pbSafariCommandMenu(index)
-    pbCommandMenuEx(index,
-                    [_INTL("What will\n{1} throw?", @battle.pbPlayer.name),
-                     _INTL("Ball"),
-                     _INTL("Bait"),
-                     _INTL("Rock"),
-                     _INTL("Run")], 3)
+    cmds = [:throw_ball, nil, :throw_bait, :run, :throw_rock]
+    return pbCommandMenuEx(index, cmds)
   end
 
   def pbThrowBait
@@ -269,7 +277,7 @@ class Battle::Scene
 end
 
 #===============================================================================
-# Safari Zone battle class
+# Safari Zone battle class.
 #===============================================================================
 class SafariBattle
   attr_reader   :battlers         # Array of fake battler objects
@@ -281,12 +289,6 @@ class SafariBattle
   attr_reader   :weather
   attr_reader   :player
   attr_accessor :party2
-  attr_accessor :canRun           # True if player can run from battle
-  attr_accessor :canLose          # True if player won't black out if they lose
-  attr_accessor :switchStyle      # Switch/Set "battle style" option
-  attr_accessor :showAnims        # "Battle scene" option (show anims)
-  attr_accessor :expGain          # Whether Pokémon can gain Exp/EVs
-  attr_accessor :moneyGain        # Whether the player can gain/lose money
   attr_accessor :rules
   attr_accessor :ballCount
 
@@ -294,9 +296,6 @@ class SafariBattle
 
   def pbRandom(x); return rand(x); end
 
-  #-----------------------------------------------------------------------------
-  # Initialize the battle class
-  #-----------------------------------------------------------------------------
   def initialize(scene, player, party2)
     @scene         = scene
     @peer          = Battle::Peer.new
@@ -305,7 +304,7 @@ class SafariBattle
     @time          = 0
     @environment   = :None   # e.g. Tall grass, cave, still water
     @weather       = :None
-    @decision      = 0
+    @decision      = Battle::Outcome::UNDECIDED
     @caughtPokemon = []
     @player        = [player]
     @party2        = party2
@@ -316,14 +315,18 @@ class SafariBattle
     @ballCount     = 0
   end
 
-  def disablePokeBalls=(value); end
+  def decided?
+    return Battle::Outcome.decided?(@decision)
+  end
+
   def sendToBoxes=(value); end
   def defaultWeather=(value); @weather = value; end
   def defaultTerrain=(value); end
 
   #-----------------------------------------------------------------------------
-  # Information about the type and size of the battle
+  # Information about the type and size of the battle.
   #-----------------------------------------------------------------------------
+
   def wildBattle?;    return true;  end
   def trainerBattle?; return false; end
 
@@ -334,15 +337,16 @@ class SafariBattle
   end
 
   #-----------------------------------------------------------------------------
-  # Trainers and owner-related
+  # Trainers and owner-related.
   #-----------------------------------------------------------------------------
+
   def pbPlayer; return @player[0]; end
   def opponent; return nil;        end
 
   def pbGetOwnerFromBattlerIndex(idxBattler); return pbPlayer; end
 
   def pbSetSeen(battler)
-    return if !battler || !@internalBattle
+    return if !battler
     if battler.is_a?(Battle::Battler)
       pbPlayer.pokedex.register(battler.displaySpecies, battler.displayGender,
                                 battler.displayForm, battler.shiny?)
@@ -352,7 +356,7 @@ class SafariBattle
   end
 
   def pbSetCaught(battler)
-    return if !battler || !@internalBattle
+    return if !battler
     if battler.is_a?(Battle::Battler)
       pbPlayer.pokedex.register_caught(battler.displaySpecies)
     else
@@ -361,8 +365,9 @@ class SafariBattle
   end
 
   #-----------------------------------------------------------------------------
-  # Get party info (counts all teams on the same side)
+  # Get party info (counts all teams on the same side).
   #-----------------------------------------------------------------------------
+
   def pbParty(idxBattler)
     return (opposes?(idxBattler)) ? @party2 : nil
   end
@@ -370,8 +375,9 @@ class SafariBattle
   def pbAllFainted?(idxBattler = 0); return false; end
 
   #-----------------------------------------------------------------------------
-  # Battler-related
+  # Battler-related.
   #-----------------------------------------------------------------------------
+
   def opposes?(idxBattler1, idxBattler2 = 0)
     idxBattler1 = idxBattler1.index if idxBattler1.respond_to?("index")
     idxBattler2 = idxBattler2.index if idxBattler2.respond_to?("index")
@@ -382,8 +388,9 @@ class SafariBattle
   def pbGainExp; end
 
   #-----------------------------------------------------------------------------
-  # Messages and animations
+  # Messages and animations.
   #-----------------------------------------------------------------------------
+
   def pbDisplay(msg, &block)
     @scene.pbDisplayMessage(msg, &block)
   end
@@ -407,8 +414,9 @@ class SafariBattle
   end
 
   #-----------------------------------------------------------------------------
-  # Safari battle-specific methods
+  # Safari battle-specific methods.
   #-----------------------------------------------------------------------------
+
   def pbEscapeRate(catch_rate)
     return 125 if catch_rate <= 45   # Escape factor 9 (45%)
     return 100 if catch_rate <= 60   # Escape factor 7 (35%)
@@ -435,7 +443,7 @@ class SafariBattle
       loop do
         cmd = @scene.pbSafariCommandMenu(0)
         case cmd
-        when 0   # Ball
+        when :throw_ball   # Ball
           if pbBoxesFull?
             pbDisplay(_INTL("The boxes are full! You can't catch any more Pokémon!"))
             next
@@ -447,41 +455,41 @@ class SafariBattle
             pbThrowPokeBall(1, safariBall, rare, true)
             if @caughtPokemon.length > 0
               pbRecordAndStoreCaughtPokemon
-              @decision = 4
+              @decision = Battle::Outcome::CATCH
             end
           end
-        when 1   # Bait
+        when :throw_bait   # Bait
           pbDisplayBrief(_INTL("{1} threw some bait at the {2}!", self.pbPlayer.name, pkmn.name))
           @scene.pbThrowBait
           catchFactor  /= 2 if pbRandom(100) < 90   # Harder to catch
           escapeFactor /= 2                       # Less likely to escape
-        when 2   # Rock
+        when :throw_rock   # Rock
           pbDisplayBrief(_INTL("{1} threw a rock at the {2}!", self.pbPlayer.name, pkmn.name))
           @scene.pbThrowRock
           catchFactor  *= 2                       # Easier to catch
           escapeFactor *= 2 if pbRandom(100) < 90   # More likely to escape
-        when 3   # Run
+        when :run   # Run
           pbSEPlay("Battle flee")
           pbDisplayPaused(_INTL("You got away safely!"))
-          @decision = 3
+          @decision = Battle::Outcome::FLEE
         else
           next
         end
         catchFactor  = [[catchFactor, 3].max, 20].min
         escapeFactor = [[escapeFactor, 2].max, 20].min
         # End of round
-        if @decision == 0
+        if !decided?
           if @ballCount <= 0
             pbSEPlay("Safari Zone end")
             pbDisplay(_INTL("PA: You have no Safari Balls left! Game over!"))
-            @decision = 2
+            @decision = Battle::Outcome::LOSE
           elsif pbRandom(100) < 5 * escapeFactor
             pbSEPlay("Battle flee")
             pbDisplay(_INTL("{1} fled!", pkmn.name))
-            @decision = 3
-          elsif cmd == 1   # Bait
+            @decision = Battle::Outcome::FLEE
+          elsif cmd == :throw_bait   # Bait
             pbDisplay(_INTL("{1} is eating!", pkmn.name))
-          elsif cmd == 2   # Rock
+          elsif cmd == :throw_rock   # Rock
             pbDisplay(_INTL("{1} is angry!", pkmn.name))
           else
             pbDisplay(_INTL("{1} is watching carefully!", pkmn.name))
@@ -490,11 +498,11 @@ class SafariBattle
           weather_data = GameData::BattleWeather.try_get(@weather)
           @scene.pbCommonAnimation(weather_data.animation) if weather_data
         end
-        break if @decision > 0
+        break if decided?
       end
       @scene.pbEndBattle(@decision)
     rescue BattleAbortedException
-      @decision = 0
+      @decision = Battle::Outcome::UNDECIDED
       @scene.pbEndBattle(@decision)
     end
     return @decision
