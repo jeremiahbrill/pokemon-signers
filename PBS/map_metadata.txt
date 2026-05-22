@@ -106,6 +106,9 @@ LocationSign = Pt route
 Weather = Rain,100
 BattleBack = field
 #-------------------------------
+[022]   # MAP022
+Name = MAP022
+#-------------------------------
 [023]   # Lerucean Town
 Name = Lerucean Town
 MapPosition = 0,15,8
