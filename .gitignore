@@ -1,10 +1,10 @@
 # Audio, Graphics and Plugins folders
 Audio/
-Graphics/
-Plugins/
-Screenshots/
+Graphics/*
 !Graphics/Tilesets/
 !Graphics/Autotiles/
+Plugins/
+Screenshots/
 
 # Data folder, but not Data/Scripts folder or messages_core.dat
 Data/*
