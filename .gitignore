@@ -1,12 +1,14 @@
 # Audio, Graphics and Plugins folders
 Audio/
 Graphics/*
-Graphics/Tilesets/*
+!Graphics/Autotiles/*
+!Graphics/Tilesets/*
 !Graphics/Tilesets/hi_res_interior_general_tileset_by_akizakura16_d9qifn2.png
 !Graphics/Tilesets/4th gen Indoor Tileset by Akizakura.png
 !Graphics/Tilesets/4th gen Outdoor Tileset by Akizakura.png
 !Graphics/Tilesets/Custom Outside tileset.png
-
+!Graphics/Tilesets/Act_1_E1_Exterior.png
+!Graphics/Autotiles/Waterfall_Auto.png
 Plugins/
 Screenshots/
 
