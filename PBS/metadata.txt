@@ -14,20 +14,20 @@ BicycleBGM = Bicycle
 #-------------------------------
 [1]
 TrainerType = POKEMONTRAINER_Red
-WalkCharset = trainer_POKEMONTRAINER_Red
-RunCharset = boy_run
-CycleCharset = boy_bike
-SurfCharset = boy_surf
-DiveCharset = boy_surf
-FishCharset = boy_fish_offset
-SurfFishCharset = boy_fish_offset
+WalkCharset = gen_4_trchar000
+RunCharset = gen_4_boy_run
+CycleCharset = gen_4_boy_bike
+SurfCharset = gen_4_boy_surf
+DiveCharset = gen_4_boy_surf
+FishCharset = gen_4_boy_fish_offset
+SurfFishCharset = gen_4_boy_fish_offset
 #-------------------------------
 [2]
 TrainerType = POKEMONTRAINER_Leaf
-WalkCharset = trainer_POKEMONTRAINER_Leaf
-RunCharset = girl_run
-CycleCharset = girl_bike
-SurfCharset = girl_surf
-DiveCharset = girl_surf
-FishCharset = girl_fish_offset
-SurfFishCharset = girl_fish_offset
+WalkCharset = gen_4_trchar001
+RunCharset = gen_4_girl_run
+CycleCharset = gen_4_girl_bike
+SurfCharset = gen_4_girl_surf
+DiveCharset = gen_4_girl_surf
+FishCharset = gen_4_girl_fish_offset
+SurfFishCharset = gen_4_girl_fish_offset
