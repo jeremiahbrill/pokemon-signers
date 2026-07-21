@@ -165,6 +165,9 @@ BattleBack = field
 [032]   # Fogwood Forest
 Name = Fogwood Forest
 #-------------------------------
+[033]   # Fogwood Forest v2
+Name = Fogwood Forest v2
+#-------------------------------
 [034]   # Ice Cave
 Name = Ice Cave
 MapPosition = 0,15,6
