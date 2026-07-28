@@ -106,7 +106,7 @@ LocationSign = Pt route
 Weather = Rain,100
 BattleBack = field
 #-------------------------------
-[022]   # MAP022
+[022]   # Test
 Name = MAP022
 #-------------------------------
 [023]   # Lerucean Town
@@ -161,6 +161,9 @@ Outdoor = true
 ShowArea = true
 LocationSign = Pt route
 BattleBack = field
+#-------------------------------
+[032]   # GravoineTown
+Name = GravoineTown
 #-------------------------------
 [034]   # Ice Cave
 Name = Ice Cave
