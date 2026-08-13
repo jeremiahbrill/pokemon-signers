@@ -106,7 +106,7 @@ LocationSign = Pt route
 Weather = Rain,100
 BattleBack = field
 #-------------------------------
-[022]   # Test
+[022]   # MAP022
 Name = MAP022
 #-------------------------------
 [023]   # Lerucean Town
@@ -161,12 +161,6 @@ Outdoor = true
 ShowArea = true
 LocationSign = Pt route
 BattleBack = field
-#-------------------------------
-[032]   # Fogwood Forest
-Name = Fogwood Forest
-#-------------------------------
-[033]   # Fogwood Forest v2
-Name = Fogwood Forest v2
 #-------------------------------
 [034]   # Ice Cave
 Name = Ice Cave
