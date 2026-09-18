@@ -40,63 +40,63 @@ Outdoor = true
 ShowArea = true
 LocationSign = Pt city
 #-------------------------------
-[008]
+[008]   # MC House
 Name = Lappet Town
 MapPosition = 0,13,12
 #-------------------------------
-[009]
+[009]   # MC Room
 Name = Cedolan City
 MapPosition = 0,14,10
 HealingSpot = 8,17,11
 #-------------------------------
-[010]
+[010]   # Parent's Room
 Name = Cedolan City
 MapPosition = 0,13,10
 BattleBack = indoor3
 Environment = Rock
 Flags = DisableBoxLink
 #-------------------------------
-[011]
+[011]   # Tyson's Room
 Name = Cedolan City
 MapPosition = 0,14,10
 #-------------------------------
-[012]
+[012]   # Reilly's House
 Name = Cedolan City
 MapPosition = 0,14,10
 #-------------------------------
-[013]
+[013]   # Reilly's Room
 Name = Cedolan City
 MapPosition = 0,14,10
 #-------------------------------
-[014]
+[014]   # NPC House 1 (Top Right)
 Name = Cedolan City
 MapPosition = 0,13,10
 #-------------------------------
-[015]
+[015]   # NPC House 2 (Green Left)
 Name = Cedolan City
 MapPosition = 0,13,10
 #-------------------------------
-[016]
+[016]   # NPC House 3 (Red Right)
 Name = Cedolan City
 MapPosition = 0,13,10
 #-------------------------------
-[017]
+[017]   # Church
 Name = Cedolan City
 MapPosition = 0,13,10
 #-------------------------------
-[018]
+[018]   # G.A.D. Building
 Name = Cedolan City
 MapPosition = 0,13,10
 #-------------------------------
-[019]
+[019]   # GAD Outdoor Battlefield
 Name = Cedolan City
 MapPosition = 0,13,10
 #-------------------------------
-[020]
+[020]   # NPC Red Upper Home
 Name = Cedolan City
 MapPosition = 0,13,10
 #-------------------------------
-[021]
+[021]   # NPC Blue Upper Home
 Name = Route 2
 MapPosition = 0,14,8
 MapSize = 1,11
@@ -106,34 +106,34 @@ LocationSign = Pt route
 Weather = Rain,100
 BattleBack = field
 #-------------------------------
-[022]
+[022]   # NPC Orange Upper Home
 Name = MAP022
 #-------------------------------
-[023]
+[023]   # Upper 2nd Floor Room
 Name = Lerucean Town
 MapPosition = 0,15,8
 Outdoor = true
 ShowArea = true
 LocationSign = Pt town
 #-------------------------------
-[024]
+[024]   # NPC Orange Middle Home
 Name = Lerucean Town
 MapPosition = 0,15,8
 HealingSpot = 23,11,15
 #-------------------------------
-[025]
+[025]   # Middle 2nd Floor Room
 Name = Lerucean Town
 MapPosition = 0,15,8
 #-------------------------------
-[026]
+[026]   # NPC Blue Center Home
 Name = Lerucean Town
 MapPosition = 0,15,8
 #-------------------------------
-[027]
+[027]   # NPC Red Center Home
 Name = Lerucean Town
 MapPosition = 0,15,8
 #-------------------------------
-[028]
+[028]   # NPC Blue Bottom Home
 Name = Natural Park
 MapPosition = 0,16,8
 Outdoor = true
@@ -142,18 +142,18 @@ LocationSign = Pt park
 BattleBack = field
 Flags = MossRock,BugContest
 #-------------------------------
-[029]
+[029]   # NPC Orange Bottom Home
 Name = Natural Park
 MapPosition = 0,16,8
 Bicycle = true
 Flags = BugContestReception
 #-------------------------------
-[030]
+[030]   # Bottom 2nd Floor Room
 Name = Natural Park
 MapPosition = 0,16,8
 Flags = BugContestReception
 #-------------------------------
-[031]
+[031]   # NPC Orange Right Home
 Name = Route 3
 MapPosition = 0,14,6
 MapSize = 2,1101
@@ -162,13 +162,13 @@ ShowArea = true
 LocationSign = Pt route
 BattleBack = field
 #-------------------------------
-[032]   # MAP032
+[032]   # Right 2nd Floor Room
 Name = MAP032
 #-------------------------------
-[033]   # MAP033
+[033]   # NPC Blue Right Home
 Name = MAP033
 #-------------------------------
-[034]
+[034]   # Transfer Building
 Name = Ice Cave
 MapPosition = 0,15,6
 ShowArea = true
@@ -178,30 +178,30 @@ BattleBack = cave1
 Environment = Cave
 Flags = IceRock
 #-------------------------------
-[035]
+[035]   # Cragspire Mines BF1
 Name = Ingido Plateau
 MapPosition = 0,13,6
 Outdoor = true
 ShowArea = true
 LocationSign = Pt route
 #-------------------------------
-[036]
+[036]   # Cragspire Mines BF2
 Name = Ingido Plateau
 MapPosition = 0,13,6
 HealingSpot = 35,17,7
 #-------------------------------
-[037]
+[037]   # Cragspire Mines Underside
 Name = Ingido Plateau
 MapPosition = 0,13,6
 BattleBack = elite1
 Flags = DisableBoxLink
 #-------------------------------
-[038]
+[038]   # Banskonne City
 Name = Ingido Plateau
 MapPosition = 0,13,6
 Flags = DisableBoxLink
 #-------------------------------
-[039]
+[039]   # Route 4
 Name = Route 4
 MapPosition = 0,11,6
 MapSize = 2,11
@@ -210,7 +210,7 @@ ShowArea = true
 LocationSign = Pt route
 BattleBack = field
 #-------------------------------
-[040]
+[040]   # Route 5
 Name = Route 4
 MapPosition = 0,11,6
 Outdoor = true
@@ -218,7 +218,7 @@ ShowArea = true
 LocationSign = Pt route
 BicycleAlways = true
 #-------------------------------
-[041]
+[041]   # PokeInn
 Name = Route 5
 MapPosition = 0,11,7
 MapSize = 1,111
@@ -227,7 +227,13 @@ ShowArea = true
 LocationSign = Pt route
 BicycleAlways = true
 #-------------------------------
-[044]
+[042]   # MALE Room
+Name = MALE Room
+#-------------------------------
+[043]   # FEMALE Room
+Name = FEMALE Room
+#-------------------------------
+[044]   # Banskonne City Gym
 Name = Route 6
 MapPosition = 0,11,10
 MapSize = 2,11
@@ -236,7 +242,7 @@ ShowArea = true
 LocationSign = Pt route
 BattleBack = field
 #-------------------------------
-[045]
+[045]   # Team Stoneward Guild Home
 Name = Route 6
 MapPosition = 0,11,10
 Outdoor = true
@@ -244,12 +250,12 @@ ShowArea = true
 LocationSign = Pt route
 BicycleAlways = true
 #-------------------------------
-[046]
+[046]   # Left 2F Apartment
 Name = Route 4
 MapPosition = 0,12,6
 Bicycle = true
 #-------------------------------
-[047]
+[047]   # Left 2nd Floor Room
 Name = Route 7
 MapPosition = 0,15,10
 MapSize = 2,11
